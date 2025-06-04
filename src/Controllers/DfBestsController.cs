@@ -34,7 +34,7 @@ public partial class BestsController : ControllerBase
 
         if (!System.IO.File.Exists(Path.Combine(FrameRootPath, $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png")))
         {
-            user.FrameId = 558001;
+            user.FrameId = 200502;
         }
 
         List<CommonRecord> bestEver = [];
@@ -82,12 +82,12 @@ public partial class BestsController : ControllerBase
         using Image bestsImage = new Draw().DrawBests(user, bestEver, bestCurrent, everTotal, currentTotal, BackgroundPath);
 
         MemoryStream outStream = new();
-        await bestsImage.SaveAsPngAsync(outStream);
+        await bestsImage.SaveAsJpegAsync(outStream);
         outStream.Seek(0, SeekOrigin.Begin);
-        return File(outStream, "image/png");
+        return File(outStream, "image/jpeg");
     }
 
-    [HttpGet("animation/diving-fish")]
+    [HttpGet("anime/diving-fish")]
     public async Task<IActionResult> GetDivingFishBestsAnimation([FromQuery] uint qq, [FromQuery] int frame = 200502, [FromQuery] int plate = 101)
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal, int currentTotal) = await PrepareDfData(qq, frame, plate);

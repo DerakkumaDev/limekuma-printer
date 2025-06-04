@@ -37,8 +37,8 @@ public class Draw
         using Image frameImage = Image.Load(Path.Combine(FrameRootPath, $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png"));
         using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
         using Image iconImage = Image.Load(Path.Combine(IconRootPath, $"{user.IconId}.png"));
-        using Image @class = Image.Load(Path.Combine(ClassRootPath, $"{user.ClassRank}.png"));
-        using Image course = Image.Load(Path.Combine(DaniRootPath, $"{user.CourseRank}.png"));
+        using Image @class = Image.Load(Path.Combine(ClassRootPath, $"{(int)user.ClassRank}.png"));
+        using Image course = Image.Load(Path.Combine(DaniRootPath, $"{(int)user.CourseRank}.png"));
         using Image shougoubase = Image.Load(Path.Combine(ShougouRootPath, $"{user.TrophyColor}.png"));
         using Image frameLine = Image.Load(FrameLinePath);
         using Image namebase = Image.Load(NamebasePath);
@@ -260,7 +260,7 @@ public class Draw
         string[] achievements = score.Achievements.ToString().Split('.');
         string achiPart1 = achievements[0].ToString();
         string achiPart2 = ".";
-        string achiPart3 = achievements.Length > 1 ? achievements[1].PadLeft(4, '0') : "0000";
+        string achiPart3 = achievements.Length > 1 ? achievements[1].PadRight(4, '0') : "0000";
         string achiPart4 = "%";
 
         Font achiPart1Font = heavyFont76;

@@ -6,13 +6,13 @@ public record CommonUser
 
     public required int Rating { get; set; }
 
-    public required string TrophyColor { get; set; }
+    public required TrophyColor TrophyColor { get; set; }
 
     public required string TrophyText { get; set; }
 
-    public required int CourseRank { get; set; }
+    public required CommonCourseRank CourseRank { get; set; }
 
-    public required int ClassRank { get; set; }
+    public required ClassRank ClassRank { get; set; }
 
     public required int IconId { get; set; }
 

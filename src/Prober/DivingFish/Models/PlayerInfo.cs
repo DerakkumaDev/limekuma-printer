@@ -12,7 +12,7 @@ public record PlayerInfo
     public required int Rating { get; set; }
 
     [JsonPropertyName("additional_rating")]
-    public required int ClassRank { get; set; }
+    public required CommonCourseRank ClassRank { get; set; }
 
     [JsonPropertyName("nickname")]
     public required string Name { get; set; }
@@ -32,13 +32,13 @@ public record PlayerInfo
         {
             Name = player.Name,
             Rating = player.Rating,
-            TrophyColor = "normal",
+            TrophyColor = TrophyColor.Normal,
             TrophyText = "新人出道",
-            ClassRank = 0,
+            ClassRank = Common.ClassRank.B5,
             CourseRank = player.ClassRank,
             IconId = 101,
-            FrameId = 558001,
-            PlateId = 458001,
+            FrameId = 200502,
+            PlateId = 101,
         };
     }
 }

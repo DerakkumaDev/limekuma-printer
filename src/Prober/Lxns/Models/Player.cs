@@ -24,10 +24,10 @@ public record Player
     public string? TrophyName { get; set; }
 
     [JsonPropertyName("course_rank")]
-    public required int CourseRank { get; set; }
+    public required CourseRank CourseRank { get; set; }
 
     [JsonPropertyName("class_rank")]
-    public required int ClassRank { get; set; }
+    public required ClassRank ClassRank { get; set; }
 
     [JsonPropertyName("star")]
     public required int Star { get; set; }
@@ -65,13 +65,13 @@ public record Player
         {
             Name = player.Name,
             Rating = player.Rating,
-            TrophyColor = player.Trophy?.Color ?? "normal",
-            TrophyText = player.TrophyName ?? "新人出道",
+            TrophyColor = player.Trophy?.Color ?? TrophyColor.Normal,
+            TrophyText = player.Trophy?.Name ?? "新人出道",
             ClassRank = player.ClassRank,
-            CourseRank = player.CourseRank - 1,
+            CourseRank = (CommonCourseRank)(player.CourseRank - 1),
             IconId = player.Icon?.Id ?? 101,
-            FrameId = player.Frame?.Id ?? 558001,
-            PlateId = player.NamePlate?.Id ?? 458001,
+            FrameId = player.Frame?.Id ?? 200502,
+            PlateId = player.NamePlate?.Id ?? 101,
         };
     }
 

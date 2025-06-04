@@ -41,7 +41,7 @@ public partial class BestsController : ControllerBase
 
         if (!System.IO.File.Exists(Path.Combine(FrameRootPath, $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png")))
         {
-            user.FrameId = 558001;
+            user.FrameId = 200502;
         }
 
         List<CommonRecord> bestEver = [];
@@ -85,12 +85,12 @@ public partial class BestsController : ControllerBase
         using Image bestsImage = new Draw().DrawBests(user, bestEver, bestCurrent, everTotal, currentTotal, BackgroundPath);
 
         MemoryStream outStream = new();
-        await bestsImage.SaveAsPngAsync(outStream);
+        await bestsImage.SaveAsJpegAsync(outStream);
         outStream.Seek(0, SeekOrigin.Begin);
-        return File(outStream, "image/png");
+        return File(outStream, "image/jpeg");
     }
 
-    [HttpGet("animation/lxns")]
+    [HttpGet("anime/lxns")]
     public async Task<IActionResult> GetLxnsBestsAnimation([FromQuery] string token, [FromQuery] uint qq)
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal, int currentTotal) = await PrepareLxnsData(token, qq);

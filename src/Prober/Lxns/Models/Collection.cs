@@ -1,3 +1,4 @@
+using DXKumaBot.Backend.Prober.Common;
 using System.Text.Json.Serialization;
 
 namespace DXKumaBot.Backend.Prober.Lxns.Models;
@@ -20,7 +21,7 @@ public record Collection
 public record Trophy : Collection
 {
     [JsonPropertyName("color")]
-    public required string Color { get; init; }
+    public required TrophyColor Color { get; init; }
 }
 
 public record Icon : Collection
