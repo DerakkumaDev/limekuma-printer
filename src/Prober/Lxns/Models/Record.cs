@@ -1,18 +1,18 @@
-using DXKumaBot.Backend.Prober.Common;
+using Limekuma.Prober.Common;
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.Lxns.Models;
+namespace Limekuma.Prober.Lxns.Models;
 
 public record Record : SimpleRecord
 {
     [JsonPropertyName("achievements")]
-    public required decimal Achievements { get; init; }
+    public required double Achievements { get; init; }
 
     [JsonPropertyName("dx_score")]
     public required int DXScore { get; init; }
 
     [JsonPropertyName("dx_rating")]
-    public decimal? DXRating { get; init; }
+    public double? DXRating { get; init; }
 
     [JsonPropertyName("rate")]
     public new Ranks? Rank { get; init; }

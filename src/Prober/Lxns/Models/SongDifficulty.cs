@@ -1,7 +1,7 @@
-using DXKumaBot.Backend.Prober.Lxns.Enums;
+using Limekuma.Prober.Lxns.Enums;
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.Lxns.Models;
+namespace Limekuma.Prober.Lxns.Models;
 
 public record SongDifficulty
 {
@@ -15,7 +15,7 @@ public record SongDifficulty
     public required string Level { get; init; }
 
     [JsonPropertyName("level_value")]
-    public required decimal LevelValue { get; init; }
+    public required double LevelValue { get; init; }
 
     [JsonPropertyName("note_designer")]
     public required string Charter { get; init; }

@@ -1,7 +1,7 @@
-using DXKumaBot.Backend.Prober.Lxns.Models;
+using Limekuma.Prober.Lxns.Models;
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.Lxns;
+namespace Limekuma.Prober.Lxns;
 
 public class LxnsResourceClient : LxnsClient
 {

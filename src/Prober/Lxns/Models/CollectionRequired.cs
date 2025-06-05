@@ -1,8 +1,8 @@
-using DXKumaBot.Backend.Prober.Common;
-using DXKumaBot.Backend.Prober.Lxns.Enums;
+using Limekuma.Prober.Common;
+using Limekuma.Prober.Lxns.Enums;
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.Lxns.Models;
+namespace Limekuma.Prober.Lxns.Models;
 
 public record CollectionRequired
 {

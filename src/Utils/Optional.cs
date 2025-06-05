@@ -2,12 +2,13 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Utils;
+namespace Limekuma.Utils;
 
 public class Optional<TA, TB>
 {
     private readonly TA? _valueA;
     private readonly TB? _valueB;
+
     public Optional(TA? value) => _valueA = value;
     public Optional(TB? value) => _valueB = value;
 
@@ -33,10 +34,20 @@ public class Optional<TA, TB>
 
     public static implicit operator TB?(Optional<TA, TB> o) => o._valueB;
 
+    public static implicit operator Optional<TA, TB>(TA a) => new(a);
+
+    public static implicit operator Optional<TA, TB>(TB b) => new(b);
+
     public new Type? GetType() => Value?.GetType();
+
+    public new string? ToString() => Value?.ToString();
+
+    public new bool? Equals(object? obj) => Value?.Equals(obj);
+
+    public new int? GetHashCode() => Value?.GetHashCode();
 }
 
-public class OptionalTATBConverter : JsonConverterFactory
+public class OptionalConverter : JsonConverterFactory
 {
     public override bool CanConvert(Type typeToConvert) =>
         typeToConvert.IsGenericType && typeToConvert.GetGenericTypeDefinition() == typeof(Optional<,>);
@@ -48,7 +59,7 @@ public class OptionalTATBConverter : JsonConverterFactory
         Type valueBType = typeArguments[1];
 
         JsonConverter converter = (JsonConverter)Activator.CreateInstance(
-            typeof(OptionsConverterInner<,>).MakeGenericType(
+            typeof(OptionalConverterInner<,>).MakeGenericType(
                 [valueAType, valueBType]),
             BindingFlags.Instance | BindingFlags.Public,
             binder: null,
@@ -58,7 +69,7 @@ public class OptionalTATBConverter : JsonConverterFactory
         return converter;
     }
 
-    private class OptionsConverterInner<TA, TB>(JsonSerializerOptions options) : JsonConverter<Optional<TA, TB>>
+    private class OptionalConverterInner<TA, TB>(JsonSerializerOptions options) : JsonConverter<Optional<TA, TB>>
     {
         private readonly JsonConverter<TA> _valueAConverter = (JsonConverter<TA>)options.GetConverter(typeof(TA));
         private readonly JsonConverter<TB> _valueBConverter = (JsonConverter<TB>)options.GetConverter(typeof(TB));
@@ -67,21 +78,19 @@ public class OptionalTATBConverter : JsonConverterFactory
 
         public override Optional<TA, TB> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            // Try to deserialize as TA
             try
             {
                 TA? valueA = JsonSerializer.Deserialize<TA>(ref reader, options);
                 return new Optional<TA, TB>(valueA);
             }
-            catch { }
+            catch (JsonException) { }
 
-            // If deserialization as TA fails, try TB
             try
             {
                 TB? valueB = JsonSerializer.Deserialize<TB>(ref reader, options);
                 return new Optional<TA, TB>(valueB);
             }
-            catch { }
+            catch (JsonException) { }
 
             throw new JsonException($"Unable to deserialize value as either {_valueAType} or {_valueBType}");
         }

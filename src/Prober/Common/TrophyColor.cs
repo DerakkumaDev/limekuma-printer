@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.Common;
+namespace Limekuma.Prober.Common;
 
 [JsonConverter(typeof(JsonStringEnumConverter<TrophyColor>))]
 public enum TrophyColor

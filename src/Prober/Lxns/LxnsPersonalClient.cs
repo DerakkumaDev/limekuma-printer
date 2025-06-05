@@ -1,8 +1,8 @@
-using DXKumaBot.Backend.Prober.Lxns.Models;
+using Limekuma.Prober.Lxns.Models;
 
-namespace DXKumaBot.Backend.Prober.Lxns;
+namespace Limekuma.Prober.Lxns;
 
-public class LxnsPersonalClient : LxnsClient
+public class LxnsPersonalClient : LxnsDataClient
 {
     public LxnsPersonalClient(string userToken) : base()
     {

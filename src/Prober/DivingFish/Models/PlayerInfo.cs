@@ -1,7 +1,7 @@
-using DXKumaBot.Backend.Prober.Common;
+using Limekuma.Prober.Common;
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.DivingFish.Models;
+namespace Limekuma.Prober.DivingFish.Models;
 
 public record PlayerInfo
 {

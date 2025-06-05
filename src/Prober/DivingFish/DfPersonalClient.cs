@@ -1,6 +1,6 @@
-using DXKumaBot.Backend.Prober.DivingFish.Models;
+using Limekuma.Prober.DivingFish.Models;
 
-namespace DXKumaBot.Backend.Prober.DivingFish;
+namespace Limekuma.Prober.DivingFish;
 
 public class DfPersonalClient(string importToken) : DfDataClient("Import-Token", importToken)
 {

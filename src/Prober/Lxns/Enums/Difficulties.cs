@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace DXKumaBot.Backend.Prober.Lxns.Enums;
+namespace Limekuma.Prober.Lxns.Enums;
 
 [DefaultValue(Dummy)]
 public enum Difficulties

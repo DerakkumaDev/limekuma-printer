@@ -1,38 +1,52 @@
-using DXKumaBot.Backend.Prober.Common;
-using DXKumaBot.Backend.Prober.Lxns;
-using DXKumaBot.Backend.Prober.Lxns.Models;
-using DXKumaBot.Backend.Utils;
+using Limekuma.Prober.Common;
+using Limekuma.Prober.Lxns.Models;
+using Limekuma.Utils;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using static DXKumaBot.Backend.Utils.Shared;
 
-namespace DXKumaBot.Backend;
+namespace Limekuma.Draw;
 
-public class Draw
+public class BestsDrawer : DrawerBase
 {
-    #region Font Families
-    // Main fonts (Rounded-X M+ 1p from 自家製フォント工房)
-    private static readonly FontCollection fonts = new();
-    private static readonly FontFamily mediumFont = fonts.Add(Path.Combine(FontRootPath, "rounded-x-mplus-1p-medium.ttf"));
-    private static readonly FontFamily boldFont = fonts.Add(Path.Combine(FontRootPath, "rounded-x-mplus-1p-bold.ttf"));
-    private static readonly FontFamily heavyFont = fonts.Add(Path.Combine(FontRootPath, "rounded-x-mplus-1p-heavy.ttf"));
+#if RELEASE
+    public const string IconRootPath = "./Static/maimai/Icon/";
+    public const string PlateRootPath = "./Cache/Plate/";
+    public const string FrameRootPath = "./Static/maimai/Frame/";
+    public const string PartRootPath = "./Static/Maimai/Bests/Part/";
+    public const string DxStarRootPath = "./Static/maimai/DXScoreStar/";
+    public const string ClassRootPath = "./Static/maimai/Class/";
+    public const string DaniRootPath = "./Static/maimai/Dani/";
+    public const string ShougouRootPath = "./Static/maimai/Shougou/";
+    public const string RatingRootPath = "./Static/Maimai/Rating/";
+    public const string FrameLinePath = "./Static/Maimai/Bests/frame.png";
+    public const string NamebasePath = "./Static/Maimai/Bests/namebase.png";
+    public const string ScorebasePath = "./Static/Maimai/Bests/scorebase.png";
+    public const string BackgroundPath = "./Static/Maimai/Bests/background.png";
+    public const string BackgroundAnimationPath = "./Static/Maimai/Bests/background_animation.gif";
+#elif DEBUG
+    public const string IconRootPath = "./Resources/Icon/";
+    public const string PlateRootPath = "./Resources/Plate/";
+    public const string FrameRootPath = "./Resources/Frame/";
+    public const string PartRootPath = "./Resources/Part/";
+    public const string DxStarRootPath = "./Resources/DXStar/";
+    public const string ClassRootPath = "./Resources/Class/";
+    public const string DaniRootPath = "./Resources/Dani/";
+    public const string ShougouRootPath = "./Resources/Shougou/";
+    public const string RatingRootPath = "./Resources/Rating/";
+    public const string FrameLinePath = "./Resources/Background/frame.png";
+    public const string NamebasePath = "./Resources/Background/namebase.png";
+    public const string ScorebasePath = "./Resources/Background/scorebase.png";
+    public const string BackgroundPath = "./Resources/Background/bests.png";
+    public const string BackgroundAnimationPath = "./Resources/Background/bests.gif";
+#endif
 
-    // Fallback fonts (思源黑体/Noto Sans from Adobe & Google)
-    private static readonly FontFamily notoMediumFont = fonts.Add(Path.Combine(FontRootPath, "NotoSansCJKsc-Medium.otf"));
-    private static readonly FontFamily notoBoldFont = fonts.Add(Path.Combine(FontRootPath, "NotoSansCJKsc-Bold.otf"));
-    private static readonly FontFamily notoBlackFont = fonts.Add(Path.Combine(FontRootPath, "NotoSansCJKsc-Black.otf"));
-    private static readonly FontFamily symbolsFont = fonts.Add(Path.Combine(FontRootPath, "NotoSansSymbols-Regular.ttf"));
-    private static readonly FontFamily symbols2Font = fonts.Add(Path.Combine(FontRootPath, "NotoSansSymbols2-Regular.ttf"));
-    #endregion
-
-    private static readonly LxnsResourceClient resource = new();
-    private static readonly SongList songList = resource.GetSongListAsync(includeNotes: true).Result;
-
-    public Image DrawBests(CommonUser user, List<CommonRecord> ever, List<CommonRecord> current, int everTotal, int currentTotal, string backgroundPath = BackgroundPath)
+    public Image Draw(CommonUser user, List<CommonRecord> ever, List<CommonRecord> current, int everTotal, int currentTotal, string backgroundPath = BackgroundPath)
     {
+        using Image sdBests = DrawScores(ever);
+        using Image dxBests = DrawScores(current, ever.Count);
         using Image image = new Image<Rgba32>(1440, 2560, new(0, 0, 0, 0));
         using Image frameImage = Image.Load(Path.Combine(FrameRootPath, $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png"));
         using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
@@ -45,13 +59,6 @@ public class Draw
         using Image scorebase = Image.Load(ScorebasePath);
         using Image ratingbase = Image.Load(Path.Combine(RatingRootPath, $"{user.RatingLevel}.png"));
 
-        List<char> ratingLE = [.. user.Rating.ToString().Reverse()];
-        int[] ratingPos = [114, 86, 56, 28, 0];
-        string shougou = $"{user.TrophyText}";
-
-        using Image sdBests = DrawScores(ever);
-        using Image dxBests = DrawScores(current, ever.Count);
-
         frameImage.Resize(0.95, KnownResamplers.Lanczos3);
         plate.Resize(0.95, KnownResamplers.Lanczos3);
         iconImage.Resize(0.75, KnownResamplers.Lanczos3);
@@ -61,9 +68,13 @@ public class Draw
         shougoubase.Resize(0.94, KnownResamplers.Lanczos3);
         frameLine.Resize(0.745, KnownResamplers.Lanczos3);
 
-        Font notoBlackFont16 = notoBlackFont.GetSizeFont(32);
-        Font heavyFont14 = heavyFont.GetSizeFont(14);
+        Font notoBlackFont16 = NotoBlackFont.GetSizeFont(32);
+        Font heavyFont14 = HeavyFont.GetSizeFont(14);
+        Font boldFont21 = BoldFont.GetSizeFont(21);
+        Font boldFont27 = BoldFont.GetSizeFont(27);
 
+        List<char> ratingLE = [.. user.Rating.ToString().Reverse()];
+        int[] ratingPos = [114, 86, 56, 28, 0];
         using Image ratingImage = new Image<Rgba32>(512, 64);
         ratingImage.Mutate(ctx =>
         {
@@ -75,18 +86,16 @@ public class Draw
             ctx.Resize(ratingImage.Width * 16 / 32, ratingImage.Height * 16 / 32, KnownResamplers.Spline);
         });
 
+        string shougou = $"{user.TrophyText}";
         FontRectangle shougouSize = TextMeasurer.MeasureAdvance(shougou, new(heavyFont14)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBoldFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
         Point shougoubasePos = new(181, 143);
         PointF shougouPos = new(shougoubasePos.X + ((shougoubase.Width - shougouSize.Width) / 2), 151);
 
-        using Image shougouImage = heavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)), Pens.Solid(new Rgb24(0, 0, 0), 2f), [symbolsFont, symbols2Font, notoBlackFont], KnownResamplers.Spline);
-        using Image nameImage = mediumFont.DrawImage(22, user.Name, new Color(new Rgb24(0, 0, 0)), [symbolsFont, symbols2Font, notoMediumFont], KnownResamplers.Lanczos3);
-
-        Font boldFont21 = boldFont.GetSizeFont(21);
-        Font boldFont27 = boldFont.GetSizeFont(27);
+        using Image shougouImage = HeavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)), Pens.Solid(new Rgb24(0, 0, 0), 2f), [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Spline);
+        using Image nameImage = MediumFont.DrawImage(22, user.Name, new Color(new Rgb24(0, 0, 0)), [SymbolsFont, Symbols2Font, NotoMediumFont], KnownResamplers.Lanczos3);
 
         string scorePart1 = everTotal.ToString();
         string scorePart2 = "B35";
@@ -97,31 +106,31 @@ public class Draw
         string scorePart7 = (everTotal + currentTotal).ToString();
         FontRectangle scorePart1Size = TextMeasurer.MeasureAdvance(scorePart1, new(boldFont27)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBoldFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
         FontRectangle scorePart2Size = TextMeasurer.MeasureAdvance(scorePart2, new(boldFont21)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBoldFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
         FontRectangle scorePart3Size = TextMeasurer.MeasureAdvance(scorePart3, new(boldFont27)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBoldFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
         FontRectangle scorePart4Size = TextMeasurer.MeasureAdvance(scorePart4, new(boldFont27)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBoldFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
         FontRectangle scorePart5Size = TextMeasurer.MeasureAdvance(scorePart5, new(boldFont21)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBoldFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
         FontRectangle scorePart6Size = TextMeasurer.MeasureAdvance(scorePart6, new(boldFont27)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBoldFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
         FontRectangle scorePart7Size = TextMeasurer.MeasureAdvance(scorePart7, new(boldFont27)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBoldFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
         float scoreWidth = scorePart1Size.Width + scorePart2Size.Width + scorePart3Size.Width + scorePart4Size.Width + scorePart5Size.Width + scorePart6Size.Width + scorePart7Size.Width;
         PointF scorePart1Pos = new(285 - (scoreWidth / 2), 532);
@@ -133,13 +142,13 @@ public class Draw
         PointF scorePart7Pos = new(scorePart6Pos.X + scorePart6Size.Width, 532);
         Rgb24 scoreColorValue = new(75, 77, 138);
         Color scoreColor = new(scoreColorValue);
-        using Image scorePart1Image = boldFont.DrawImage(27, scorePart1, scoreColor, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
-        using Image scorePart2Image = boldFont.DrawImage(21, scorePart2, scoreColor, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
-        using Image scorePart3Image = boldFont.DrawImage(27, scorePart3, scoreColor, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
-        using Image scorePart4Image = boldFont.DrawImage(27, scorePart4, scoreColor, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
-        using Image scorePart5Image = boldFont.DrawImage(21, scorePart5, scoreColor, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
-        using Image scorePart6Image = boldFont.DrawImage(27, scorePart6, scoreColor, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
-        using Image scorePart7Image = boldFont.DrawImage(27, scorePart7, scoreColor, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
+        using Image scorePart1Image = BoldFont.DrawImage(27, scorePart1, scoreColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image scorePart2Image = BoldFont.DrawImage(21, scorePart2, scoreColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image scorePart3Image = BoldFont.DrawImage(27, scorePart3, scoreColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image scorePart4Image = BoldFont.DrawImage(27, scorePart4, scoreColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image scorePart5Image = BoldFont.DrawImage(21, scorePart5, scoreColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image scorePart6Image = BoldFont.DrawImage(27, scorePart6, scoreColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image scorePart7Image = BoldFont.DrawImage(27, scorePart7, scoreColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
 
         image.Mutate(ctx =>
         {
@@ -172,16 +181,12 @@ public class Draw
 
         return bg;
     }
+
     public Image DrawScores(List<CommonRecord> scores, int start_index = 0)
     {
         int index = 0;
         int count = scores.Count;
-        int height = 110;
-        if (count > 3)
-        {
-            height = Convert.ToInt32(Math.Ceiling(((((Convert.ToDecimal(count) - 3) / 4) + 1) * 120) - 10));
-        }
-
+        int height = ((int)Math.Ceiling(((double)count + 1) / 4) * 120) - 10;
         Point point = new(350, 0);
         Image image = new Image<Rgba32>(1390, height, new(0, 0, 0, 0));
         for (int columnIndex = 0; index < count; point.X = 0, point.Y += 120, ++columnIndex)
@@ -192,21 +197,9 @@ public class Draw
                 rowMaxIndex = 4;
             }
 
-            for (int rowIndex = 0; rowIndex < rowMaxIndex; point.X += 350, ++index, ++rowIndex)
+            for (int rowIndex = 0; rowIndex < rowMaxIndex && index < count; point.X += 350, ++index, ++rowIndex)
             {
-                CommonRecord record = index < count ? scores[index] : new()
-                {
-                    Id = 0,
-                    Title = string.Empty,
-                    Difficulty = CommonDifficulties.Dummy,
-                    Type = CommonSongTypes.Standard,
-                    Achievements = 0,
-                    DXScore = 0,
-                    ComboFlag = ComboFlags.None,
-                    SyncFlag = SyncFlags.None,
-                    Rank = Ranks.D,
-                    DXRating = 0
-                };
+                CommonRecord record = scores[index];
                 int realIndex = index + start_index + 1;
                 using Image part = DrawScore(record, realIndex);
                 part.Resize(0.34, KnownResamplers.Lanczos3);
@@ -219,6 +212,14 @@ public class Draw
 
     public Image DrawScore(CommonRecord score, int index)
     {
+        Song song = SongList.Songs.First(x => x.Id == score.Id % 10000);
+        SongDifficulty chart = (score.Type switch
+        {
+            CommonSongTypes.Standard => song.Difficulties.Standard,
+            CommonSongTypes.DX => song.Difficulties.DX,
+            _ => throw new InvalidDataException()
+        })[((int)score.Difficulty) - 1];
+
         Rgb24 colorValue = new(255, 255, 255);
         if (score.Difficulty is CommonDifficulties.ReMaster)
         {
@@ -232,16 +233,13 @@ public class Draw
         using Image rank = Image.Load(Path.Combine(RateRootPath, $"{score.Rank}.png"));
 
         #region Fonts
-        Font boldFont20 = boldFont.GetSizeFont(20);
-        Font boldFont24 = boldFont.GetSizeFont(24);
-        Font boldFont28 = boldFont.GetSizeFont(28);
-        Font boldFont30 = boldFont.GetSizeFont(30);
-        Font boldFont34 = boldFont.GetSizeFont(34);
-        Font boldFont40 = boldFont.GetSizeFont(40);
-        Font boldFont76 = boldFont.GetSizeFont(76);
-        Font heavyFont54 = heavyFont.GetSizeFont(54);
-        Font heavyFont65 = heavyFont.GetSizeFont(65);
-        Font heavyFont76 = heavyFont.GetSizeFont(76);
+        Font boldFont24 = BoldFont.GetSizeFont(24);
+        Font boldFont30 = BoldFont.GetSizeFont(30);
+        Font boldFont34 = BoldFont.GetSizeFont(34);
+        Font boldFont40 = BoldFont.GetSizeFont(40);
+        Font boldFont76 = BoldFont.GetSizeFont(76);
+        Font heavyFont54 = HeavyFont.GetSizeFont(54);
+        Font heavyFont76 = HeavyFont.GetSizeFont(76);
         #endregion
 
         #region Title
@@ -253,7 +251,7 @@ public class Draw
              drawName = $"{title}…",
              size = TextMeasurer.MeasureSize(drawName, new(boldFont40))) { }
 
-        using Image titleImage = boldFont.DrawImage(40, drawName, color, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
+        using Image titleImage = BoldFont.DrawImage(40, drawName, color, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
         #endregion
 
         #region Achievements
@@ -268,15 +266,15 @@ public class Draw
         Font achiPart3Font = heavyFont54;
         FontRectangle achiPart1Size = TextMeasurer.MeasureAdvance(achiPart1, new(achiPart1Font)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBlackFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBlackFont]
         });
         FontRectangle achiPart2Size = TextMeasurer.MeasureAdvance(achiPart2, new(achiPart2Font)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBoldFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
         FontRectangle achiPart3Size = TextMeasurer.MeasureAdvance(achiPart3, new(achiPart3Font)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBlackFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBlackFont]
         });
 
         Point achiPart1Pos = new(371, 90);
@@ -284,10 +282,10 @@ public class Draw
         PointF achiPart3Pos = new(achiPart2Pos.X + achiPart2Size.Width, 108);
         PointF achiPart4Pos = new(achiPart3Pos.X + achiPart3Size.Width, 100);
 
-        using Image achiPart1Image = heavyFont.DrawImage(76, achiPart1, color, [symbolsFont, symbols2Font, notoBlackFont], KnownResamplers.Lanczos3);
-        using Image achiPart2Image = boldFont.DrawImage(76, achiPart2, color, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
-        using Image achiPart3Image = heavyFont.DrawImage(54, achiPart3, color, [symbolsFont, symbols2Font, notoBlackFont], KnownResamplers.Lanczos3);
-        using Image achiPart4Image = boldFont.DrawImage(65, achiPart4, color, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
+        using Image achiPart1Image = HeavyFont.DrawImage(76, achiPart1, color, [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Lanczos3);
+        using Image achiPart2Image = BoldFont.DrawImage(76, achiPart2, color, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image achiPart3Image = HeavyFont.DrawImage(54, achiPart3, color, [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Lanczos3);
+        using Image achiPart4Image = BoldFont.DrawImage(65, achiPart4, color, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
         #endregion
 
         #region Serial Number
@@ -295,30 +293,23 @@ public class Draw
         string indexPart2 = index.ToString();
         FontRectangle indexPart1Size = TextMeasurer.MeasureAdvance(indexPart1, new(boldFont24)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBoldFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
         FontRectangle indexPart2Size = TextMeasurer.MeasureAdvance(indexPart2, new(boldFont30)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBoldFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
         float indexWidth = indexPart1Size.Width + indexPart2Size.Width;
         PointF indexPart1Pos = new(335 - (indexWidth / 2), 250);
         PointF indexPart2Pos = new(indexPart1Pos.X + indexPart1Size.Width, 245);
         Rgb24 indexColorValue = new(255, 255, 255);
         Color indexColor = new(indexColorValue);
-        using Image indexPart1Image = boldFont.DrawImage(24, indexPart1, indexColor, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
-        using Image indexPart2Image = boldFont.DrawImage(30, indexPart2, indexColor, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
+        using Image indexPart1Image = BoldFont.DrawImage(24, indexPart1, indexColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image indexPart2Image = BoldFont.DrawImage(30, indexPart2, indexColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
         #endregion
 
         #region LevelValue
-        Song song = songList.Songs.First(x => x.Id == score.Id % 10000);
-        SongDifficulty chart = (score.Type switch
-        {
-            CommonSongTypes.Standard => song.Difficulties.Standard,
-            CommonSongTypes.DX => song.Difficulties.DX,
-            _ => throw new InvalidDataException()
-        })[((int)score.Difficulty) - 1];
-        decimal levelValue = chart.LevelValue;
+        double levelValue = chart.LevelValue;
 
         string[] level = levelValue.ToString().Split('.');
         string levelPart1 = $"{level[0]}.";
@@ -326,24 +317,24 @@ public class Draw
         Font levelPart1Font = boldFont34;
         FontRectangle levelPart1Size = TextMeasurer.MeasureAdvance(levelPart1, new(levelPart1Font)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBoldFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
 
         Point levelPart1Pos = new(375, 182);
         PointF levelPart2Pos = new(levelPart1Pos.X + levelPart1Size.Width, 187);
-        using Image levelPart1Image = boldFont.DrawImage(34, levelPart1, color, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
-        using Image levelPart2Image = boldFont.DrawImage(28, levelPart2, color, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
+        using Image levelPart1Image = BoldFont.DrawImage(34, levelPart1, color, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image levelPart2Image = BoldFont.DrawImage(28, levelPart2, color, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
         #endregion
 
         #region Rating
         string rating = Math.Floor(score.DXRating).ToString();
         FontRectangle ratingSize = TextMeasurer.MeasureAdvance(rating, new(levelPart1Font)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBoldFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
 
         PointF ratingPos = new(548 - ratingSize.Width, 182);
-        using Image ratingImage = boldFont.DrawImage(34, rating, color, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
+        using Image ratingImage = BoldFont.DrawImage(34, rating, color, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
         #endregion
 
         #region ID
@@ -352,7 +343,7 @@ public class Draw
 
         FontRectangle idPart1Size = TextMeasurer.MeasureAdvance(idPart1, new(boldFont30)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBoldFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
 
         Point idPart1Pos = new(386, 245);
@@ -360,8 +351,8 @@ public class Draw
 
         Rgb24 idColorValue = new(28, 43, 120);
         Color idColor = new(idColorValue);
-        using Image idPart1Image = boldFont.DrawImage(30, idPart1, idColor, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
-        using Image idPart2Image = boldFont.DrawImage(24, idPart2, idColor, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
+        using Image idPart1Image = BoldFont.DrawImage(30, idPart1, idColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image idPart2Image = BoldFont.DrawImage(24, idPart2, idColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
         #endregion
 
         #region DXScore
@@ -373,29 +364,29 @@ public class Draw
         Font dxScorePart2Font = boldFont24;
         FontRectangle dxScorePart1Size = TextMeasurer.MeasureAdvance(dxScorePart1, new(dxScorePart1Font)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBoldFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
         FontRectangle dxScorePart2Size = TextMeasurer.MeasureAdvance(dxScorePart2, new(dxScorePart2Font)
         {
-            FallbackFontFamilies = [symbolsFont, symbols2Font, notoBoldFont]
+            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
 
         PointF dxScorePart2Pos = new(734 - dxScorePart2Size.Width, 250);
         PointF dxScorePart1Pos = new(dxScorePart2Pos.X - dxScorePart1Size.Width, 245);
-        using Image dxScorePart1Image = boldFont.DrawImage(30, dxScorePart1, idColor, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
-        using Image dxScorePart2Image = boldFont.DrawImage(24, dxScorePart2, idColor, [symbolsFont, symbols2Font, notoBoldFont], KnownResamplers.Lanczos3);
+        using Image dxScorePart1Image = BoldFont.DrawImage(30, dxScorePart1, idColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image dxScorePart2Image = BoldFont.DrawImage(24, dxScorePart2, idColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
         #endregion
 
         #region DXStar
-        float dxScorePersent = (float)score.DXScore / totalDXScore;
+        double dxScorePersent = (double)score.DXScore / totalDXScore;
         if (dxScorePersent >= 0.85)
         {
             (int stars, int starIndex) = dxScorePersent switch
             {
-                < 0.90f => (1, 1),
-                < 0.93f => (2, 1),
-                < 0.95f => (3, 2),
-                < 0.97f => (4, 2),
+                < 0.90 => (1, 1),
+                < 0.93 => (2, 1),
+                < 0.95 => (3, 2),
+                < 0.97 => (4, 2),
                 <= 1 => (5, 3),
                 _ => throw new InvalidDataException()
             };

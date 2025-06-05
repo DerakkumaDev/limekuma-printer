@@ -1,4 +1,4 @@
-namespace DXKumaBot.Backend.Prober.Lxns.Enums;
+namespace Limekuma.Prober.Lxns.Enums;
 
 public enum CourseRank
 {

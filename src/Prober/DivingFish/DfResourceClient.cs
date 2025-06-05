@@ -1,7 +1,7 @@
-using DXKumaBot.Backend.Prober.DivingFish.Models;
+using Limekuma.Prober.DivingFish.Models;
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.DivingFish;
+namespace Limekuma.Prober.DivingFish;
 
 public class DfResourceClient : DfClient
 {
@@ -32,8 +32,8 @@ public class DfResourceClient : DfClient
         return response.VerList;
     }
 
-    public async Task<Dictionary<int, decimal>> GetHotSongListAsync(CancellationToken cancellationToken = default) =>
-        await GetAsync<Dictionary<int, decimal>>("/api/maimaidxprober/hot_music", cancellationToken);
+    public async Task<Dictionary<int, double>> GetHotSongListAsync(CancellationToken cancellationToken = default) =>
+        await GetAsync<Dictionary<int, double>>("/api/maimaidxprober/hot_music", cancellationToken);
 
     public async Task<Dictionary<int, VoteResult>> GetVoteResultAsync(CancellationToken cancellationToken = default) =>
         await GetAsync<Dictionary<int, VoteResult>>("/api/maimaidxprober/vote_result", cancellationToken);

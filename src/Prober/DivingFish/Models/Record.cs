@@ -1,21 +1,21 @@
-using DXKumaBot.Backend.Prober.Common;
-using DXKumaBot.Backend.Prober.DivingFish.Enums;
-using DXKumaBot.Backend.Utils;
+using Limekuma.Prober.Common;
+using Limekuma.Prober.DivingFish.Enums;
+using Limekuma.Utils;
 using Microsoft.Extensions.Options;
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.DivingFish.Models;
+namespace Limekuma.Prober.DivingFish.Models;
 
 public class Record
 {
     [JsonPropertyName("achievements")]
-    public required decimal Achievements { get; init; }
+    public required double Achievements { get; init; }
 
     [JsonPropertyName("cid")]
     public required int ChartId { get; init; }
 
     [JsonPropertyName("ds")]
-    public required decimal LevelValue { get; init; }
+    public required double LevelValue { get; init; }
 
     [JsonPropertyName("dxScore")]
     public required int DXScore { get; init; }

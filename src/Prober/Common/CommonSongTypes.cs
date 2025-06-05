@@ -1,4 +1,4 @@
-namespace DXKumaBot.Backend.Prober.Common;
+namespace Limekuma.Prober.Common;
 
 public enum CommonSongTypes
 {

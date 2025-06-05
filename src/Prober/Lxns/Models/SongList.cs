@@ -1,9 +1,16 @@
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.Lxns.Models;
+namespace Limekuma.Prober.Lxns.Models;
 
 public record SongList
 {
+    public SongList()
+    {
+        PullTime = DateTimeOffset.Now;
+    }
+
+    public DateTimeOffset PullTime { get; }
+
     [JsonPropertyName("songs")]
     public required List<Song> Songs { get; set; }
 

@@ -5,7 +5,6 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>preview</LangVersion>
-    <DebugType>none</DebugType>
     <PublishSingleFile>true</PublishSingleFile>
   </PropertyGroup>
 

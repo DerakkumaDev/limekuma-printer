@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.Lxns.Models;
+namespace Limekuma.Prober.Lxns.Models;
 
 public record Bests
 {

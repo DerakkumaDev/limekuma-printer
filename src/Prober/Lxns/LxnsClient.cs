@@ -1,7 +1,7 @@
-using DXKumaBot.Backend.Utils;
+using Limekuma.Utils;
 using System.Text.Json;
 
-namespace DXKumaBot.Backend.Prober.Lxns;
+namespace Limekuma.Prober.Lxns;
 
 public abstract class LxnsClient
 {
@@ -20,7 +20,7 @@ public abstract class LxnsClient
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
-        _jsonOptions.Converters.Add(new OptionalTATBConverter());
+        _jsonOptions.Converters.Add(new OptionalConverter());
     }
 
     protected async Task<T> GetAsync<T>(string path, CancellationToken cancellationToken = default) =>

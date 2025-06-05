@@ -5,15 +5,15 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
 
-namespace DXKumaBot.Backend.Utils;
+namespace Limekuma.Utils;
 
 internal static class DrawExtensions
 {
     extension(FontFamily font)
     {
-        public Font GetSizeFont(float size) => new(font, size);
+        internal Font GetSizeFont(float size) => new(font, size);
 
-        public Image DrawImage(float size, string text, Color color, IReadOnlyList<FontFamily> fallbacks, IResampler resampler)
+        internal Image DrawImage(float size, string text, Color color, IReadOnlyList<FontFamily> fallbacks, IResampler resampler)
         {
             float x = MathF.Log2(size);
             // 2^5 = 32
@@ -26,19 +26,20 @@ internal static class DrawExtensions
                 FallbackFontFamilies = fallbacks
             });
 
-            Image textImage = new Image<Rgba32>(Convert.ToInt32(Math.Ceiling(textbox.Width + z)), Convert.ToInt32(Math.Ceiling(textbox.Height + z)));
+            Image textImage = new Image<Rgba32>((int)Math.Ceiling(textbox.Width + z), (int)Math.Ceiling(textbox.Height + z));
             textImage.Mutate(ctx =>
             {
                 ctx.DrawText(new RichTextOptions(f)
                 {
                     FallbackFontFamilies = fallbacks
                 }, text, color);
-                ctx.Resize(Convert.ToInt32(Math.Ceiling(textImage.Width * size / z)), Convert.ToInt32(Math.Ceiling(textImage.Height * size / z)), resampler);
+                ctx.Resize((int)Math.Ceiling(textImage.Width * size / z), (int)Math.Ceiling(textImage.Height * size / z), resampler);
             });
 
             return textImage;
         }
-        public Image DrawImage(float size, string text, Brush brush, Pen pen, IReadOnlyList<FontFamily> fallbacks, IResampler resampler)
+
+        internal Image DrawImage(float size, string text, Brush brush, Pen pen, IReadOnlyList<FontFamily> fallbacks, IResampler resampler)
         {
             float x = MathF.Log2(size);
             // 2^5 = 32
@@ -51,14 +52,14 @@ internal static class DrawExtensions
                 FallbackFontFamilies = fallbacks
             });
 
-            Image textImage = new Image<Rgba32>(Convert.ToInt32(Math.Ceiling(textbox.Width + z)), Convert.ToInt32(Math.Ceiling(textbox.Height + z)));
+            Image textImage = new Image<Rgba32>((int)Math.Ceiling(textbox.Width + z), (int)Math.Ceiling(textbox.Height + z));
             textImage.Mutate(ctx =>
             {
                 ctx.DrawText(new RichTextOptions(f)
                 {
                     FallbackFontFamilies = fallbacks
                 }, text, brush, pen);
-                ctx.Resize(Convert.ToInt32(Math.Ceiling(textImage.Width * size / z)), Convert.ToInt32(Math.Ceiling(textImage.Height * size / z)), resampler);
+                ctx.Resize((int)Math.Ceiling(textImage.Width * size / z), (int)Math.Ceiling(textImage.Height * size / z), resampler);
             });
 
             return textImage;
@@ -67,10 +68,10 @@ internal static class DrawExtensions
 
     extension(Image image)
     {
-        public void Resize(int width, int height, IResampler resampler) =>
+        internal void Resize(int width, int height, IResampler resampler) =>
             image.Mutate(ctx => ctx.Resize(width, height, resampler));
 
-        public void Resize(double percent, IResampler resampler) =>
-            image.Mutate(ctx => ctx.Resize(Convert.ToInt32(Math.Ceiling(image.Width * percent)), Convert.ToInt32(Math.Ceiling(image.Height * percent)), resampler));
+        internal void Resize(double percent, IResampler resampler) =>
+            image.Mutate(ctx => ctx.Resize((int)Math.Ceiling(image.Width * percent), (int)Math.Ceiling(image.Height * percent), resampler));
     }
 }

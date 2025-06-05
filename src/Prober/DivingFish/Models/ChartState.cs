@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.DivingFish.Models;
+namespace Limekuma.Prober.DivingFish.Models;
 
 public record ChartState
 {
@@ -11,16 +11,16 @@ public record ChartState
     public required string Level { get; init; }
 
     [JsonPropertyName("fit_diff")]
-    public required decimal FitLevel { get; init; }
+    public required double FitLevel { get; init; }
 
     [JsonPropertyName("avg")]
-    public required decimal AverageAchievements { get; init; }
+    public required double AverageAchievements { get; init; }
 
     [JsonPropertyName("avg_dx")]
-    public required decimal AverageDXScore { get; init; }
+    public required double AverageDXScore { get; init; }
 
     [JsonPropertyName("std_dev")]
-    public required decimal StandardDeviation { get; init; }
+    public required double StandardDeviation { get; init; }
 
     [JsonPropertyName("dist")]
     public required List<int> RankDistribution { get; init; }

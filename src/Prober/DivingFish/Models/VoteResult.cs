@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.DivingFish.Models;
+namespace Limekuma.Prober.DivingFish.Models;
 
 public record VoteResult
 {

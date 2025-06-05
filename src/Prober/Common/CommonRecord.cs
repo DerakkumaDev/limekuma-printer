@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.Common;
+namespace Limekuma.Prober.Common;
 
 public record CommonRecord
 {
@@ -18,13 +18,13 @@ public record CommonRecord
 
     public required CommonSongTypes Type { get; init; }
 
-    public required decimal Achievements { get; init; }
+    public required double Achievements { get; init; }
 
     public required int DXScore { get; init; }
 
-    public required decimal DXRating { get; init; }
+    public required double DXRating { get; init; }
 
-    public string AudioUrl => $"https://assets2.lxns.net/maimai/music/{Id}.mp3";
+    public string AudioUrl => $"https://assets2.lxns.net/maimai/music/{Id % 10000}.mp3";
 
-    public string JacketUrl => $"https://assets2.lxns.net/maimai/jacket/{Id}.png";
+    public string JacketUrl => $"https://assets2.lxns.net/maimai/jacket/{Id % 10000}.png";
 }

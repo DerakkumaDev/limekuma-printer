@@ -1,15 +1,15 @@
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.DivingFish.Models;
+namespace Limekuma.Prober.DivingFish.Models;
 
 public record LevelState
 {
     [JsonPropertyName("achievements")]
-    public required decimal AverageAchievements { get; init; }
+    public required double AverageAchievements { get; init; }
 
     [JsonPropertyName("dist")]
-    public required List<decimal> RankDistribution { get; init; }
+    public required List<double> RankDistribution { get; init; }
 
     [JsonPropertyName("fc_dist")]
-    public required List<decimal> ComboDistribution { get; init; }
+    public required List<double> ComboDistribution { get; init; }
 }

@@ -1,9 +1,9 @@
-using DXKumaBot.Backend.Prober.DivingFish.Enums;
-using DXKumaBot.Backend.Utils;
+using Limekuma.Prober.DivingFish.Enums;
+using Limekuma.Utils;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.DivingFish;
+namespace Limekuma.Prober.DivingFish;
 
 public abstract class DfClient
 {
@@ -22,7 +22,7 @@ public abstract class DfClient
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
-        _jsonOptions.Converters.Add(new OptionalTATBConverter());
+        _jsonOptions.Converters.Add(new OptionalConverter());
     }
 
     protected async Task<T> GetAsync<T>(string path, CancellationToken cancellationToken = default)

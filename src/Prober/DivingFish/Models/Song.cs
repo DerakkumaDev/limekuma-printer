@@ -1,7 +1,7 @@
-using DXKumaBot.Backend.Prober.DivingFish.Enums;
+using Limekuma.Prober.DivingFish.Enums;
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.DivingFish.Models;
+namespace Limekuma.Prober.DivingFish.Models;
 
 public record Song
 {
@@ -15,7 +15,7 @@ public record Song
     public required SongTypes Type { get; init; }
 
     [JsonPropertyName("ds")]
-    public required List<decimal> LevelValues { get; init; }
+    public required List<double> LevelValues { get; init; }
 
     [JsonPropertyName("level")]
     public required List<string> Levels { get; init; }

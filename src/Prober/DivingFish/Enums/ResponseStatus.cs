@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace DXKumaBot.Backend.Prober.DivingFish.Enums;
+namespace Limekuma.Prober.DivingFish.Enums;
 
 [JsonConverter(typeof(JsonStringEnumConverter<SongTypes>))]
 public enum ResponseStatus
