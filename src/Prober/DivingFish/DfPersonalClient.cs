@@ -2,7 +2,7 @@ using Limekuma.Prober.DivingFish.Models;
 
 namespace Limekuma.Prober.DivingFish;
 
-public class DfPersonalClient(string importToken) : DfDataClient("Import-Token", importToken)
+public class DfPersonalClient(string personalToken) : DfDataClient("Import-Token", personalToken)
 {
     public async Task<Player> GetAllRecordsAsync(CancellationToken cancellationToken = default) =>
         await GetAsync<Player>("/api/maimaidxprober/player/records", cancellationToken);

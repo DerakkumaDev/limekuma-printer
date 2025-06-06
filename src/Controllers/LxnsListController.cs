@@ -103,9 +103,9 @@ public partial class ListController : ControllerBase
     }
 
     [HttpGet("lxns")]
-    public async Task<IActionResult> GetLxnsList([FromQuery] string importToken, [FromQuery] string level, [FromQuery] int page = 1)
+    public async Task<IActionResult> GetLxnsList([FromQuery(Name = "personal-token")] string personalToken, [FromQuery] string level, [FromQuery] int page = 1)
     {
-        (CommonUser user, List<CommonRecord> records, int count, int[] counts) = await PrepareLxnsData(importToken, level, page);
+        (CommonUser user, List<CommonRecord> records, int count, int[] counts) = await PrepareLxnsData(personalToken, level, page);
 
         int total = (int)Math.Ceiling((double)count / 50);
         using Image bestsImage = new ListDrawer().Draw(user, records, page, total, counts, level, ListDrawer.BackgroundPath);

@@ -10,12 +10,11 @@ namespace Limekuma.Controllers;
 
 public partial class ListController : ControllerBase
 {
-    private static async Task<(CommonUser, List<CommonRecord>, int, int[])> PrepareDfData(string token, uint qq, string level, int page = 1, int frame = 200502, int plate = 101)
+    private static async Task<(CommonUser, List<CommonRecord>, int, int[])> PrepareDfData(string token, uint qq, string level, int page = 1, int plate = 101)
     {
         DfDeveloperClient df = new(token);
         Player player = await df.GetAllRecordsAsync(qq);
         CommonUser user = player;
-        user.FrameId = frame;
         user.PlateId = plate;
 
         player.Records.Sort((x, y) =>
@@ -127,9 +126,9 @@ public partial class ListController : ControllerBase
     }
 
     [HttpGet("diving-fish")]
-    public async Task<IActionResult> GetDivingFishList([FromQuery] string token, [FromQuery] uint qq, [FromQuery] string level, [FromQuery] int page = 1, [FromQuery] int frame = 200502, [FromQuery] int plate = 101)
+    public async Task<IActionResult> GetDivingFishList([FromQuery(Name = "dev-token")] string token, [FromQuery] uint qq, [FromQuery] string level, [FromQuery] int page = 1, [FromQuery] int plate = 101)
     {
-        (CommonUser user, List<CommonRecord> records, int count, int[] counts) = await PrepareDfData(token, qq, level, page, frame, plate);
+        (CommonUser user, List<CommonRecord> records, int count, int[] counts) = await PrepareDfData(token, qq, level, page, plate);
 
         int total = (int)Math.Ceiling((double)count / 50);
         using Image bestsImage = new ListDrawer().Draw(user, records, page, total, counts, level, ListDrawer.BackgroundPath);

@@ -10,7 +10,7 @@ namespace Limekuma.Controllers;
 
 public partial class BestsController : ControllerBase
 {
-    private static async Task<(CommonUser, List<CommonRecord>, List<CommonRecord>, int, int)> PrepareLxnsData(string devToken, uint? qq, string? importToken)
+    private static async Task<(CommonUser, List<CommonRecord>, List<CommonRecord>, int, int)> PrepareLxnsData(string devToken, uint? qq, string? personalToken)
     {
         Player player;
         LxnsDeveloperClient lxnsDev = new(devToken);
@@ -18,9 +18,9 @@ public partial class BestsController : ControllerBase
         {
             player = await lxnsDev.GetPlayerByQQAsync(qq.Value);
         }
-        else if (!string.IsNullOrEmpty(importToken))
+        else if (!string.IsNullOrEmpty(personalToken))
         {
-            LxnsPersonalClient lxns = new(importToken);
+            LxnsPersonalClient lxns = new(personalToken);
             player = await lxns.GetPlayerAsync();
             player.Client = lxnsDev;
         }
@@ -90,9 +90,9 @@ public partial class BestsController : ControllerBase
     }
 
     [HttpGet("lxns")]
-    public async Task<IActionResult> GetLxnsBests([FromQuery(Name = "dev-token")] string devToken, [FromQuery] uint? qq, [FromQuery(Name = "import-token")] string? importToken)
+    public async Task<IActionResult> GetLxnsBests([FromQuery(Name = "dev-token")] string devToken, [FromQuery] uint? qq, [FromQuery(Name = "personal-token")] string? personalToken)
     {
-        (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal, int currentTotal) = await PrepareLxnsData(devToken, qq, importToken);
+        (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal, int currentTotal) = await PrepareLxnsData(devToken, qq, personalToken);
 
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, BestsDrawer.BackgroundPath);
 
@@ -103,9 +103,9 @@ public partial class BestsController : ControllerBase
     }
 
     [HttpGet("anime/lxns")]
-    public async Task<IActionResult> GetLxnsBestsAnimation([FromQuery(Name = "dev-token")] string devToken, [FromQuery] uint? qq, [FromQuery(Name = "import-token")] string? importToken)
+    public async Task<IActionResult> GetLxnsBestsAnimation([FromQuery(Name = "dev-token")] string devToken, [FromQuery] uint? qq, [FromQuery(Name = "personal-token")] string? personalToken)
     {
-        (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal, int currentTotal) = await PrepareLxnsData(devToken, qq, importToken);
+        (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal, int currentTotal) = await PrepareLxnsData(devToken, qq, personalToken);
 
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, BestsDrawer.BackgroundAnimationPath);
 

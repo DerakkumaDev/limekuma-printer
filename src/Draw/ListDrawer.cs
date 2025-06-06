@@ -24,7 +24,7 @@ public class ListDrawer : BestsDrawer
     {
         using Image recordsImage = DrawScores(records);
         using Image image = new Image<Rgba32>(1440, 2560, new(0, 0, 0, 0));
-        using Image frameImage = Image.Load(Path.Combine(FrameRootPath, $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png"));
+        using Image frameImage = Image.Load(FramePath);
         using Image levelImage = Image.Load(Path.Combine(LevelRootPath, $"{level}.png"));
         using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
         using Image iconImage = Image.Load(Path.Combine(IconRootPath, $"{user.IconId}.png"));
