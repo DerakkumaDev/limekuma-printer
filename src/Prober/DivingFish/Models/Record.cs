@@ -1,7 +1,6 @@
 using Limekuma.Prober.Common;
 using Limekuma.Prober.DivingFish.Enums;
 using Limekuma.Utils;
-using Microsoft.Extensions.Options;
 using System.Text.Json.Serialization;
 
 namespace Limekuma.Prober.DivingFish.Models;
