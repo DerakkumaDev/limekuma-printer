@@ -26,9 +26,8 @@ public record PlayerInfo
     [JsonPropertyName("user_general_data")]
     public required object? UserGeneralData { get; set; }
 
-    public static implicit operator CommonUser(PlayerInfo player)
-    {
-        return new()
+    public static implicit operator CommonUser(PlayerInfo player) =>
+        new()
         {
             Name = player.Name,
             Rating = player.Rating,
@@ -38,7 +37,6 @@ public record PlayerInfo
             CourseRank = player.ClassRank,
             IconId = 101,
             FrameId = 200502,
-            PlateId = 101,
+            PlateId = 101
         };
-    }
 }

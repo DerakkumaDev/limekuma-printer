@@ -53,9 +53,8 @@ public class Record
 
     public string JacketUrl => $"https://assets2.lxns.net/maimai/jacket/{Id % 10000}.png";
 
-    public static implicit operator CommonRecord(Record record)
-    {
-        return new()
+    public static implicit operator CommonRecord(Record record) =>
+        new()
         {
             Id = record.Id,
             Title = record.Title,
@@ -66,7 +65,6 @@ public class Record
             Type = (CommonSongTypes)record.Type,
             Achievements = record.Achievements,
             DXRating = record.DXRating,
-            DXScore = record.DXScore,
+            DXScore = record.DXScore
         };
-    }
 }

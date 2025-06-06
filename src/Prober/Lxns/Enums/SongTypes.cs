@@ -7,8 +7,10 @@ public enum SongTypes
 {
     [JsonStringEnumMemberName("standard")]
     Standard,
+
     [JsonStringEnumMemberName("dx")]
     DX,
+
     [JsonStringEnumMemberName("utage")]
     Utage
 }

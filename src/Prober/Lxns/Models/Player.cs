@@ -59,9 +59,8 @@ public record Player
         > 14999 => 11
     };
 
-    public static implicit operator CommonUser(Player player)
-    {
-        return new()
+    public static implicit operator CommonUser(Player player) =>
+        new()
         {
             Name = player.Name,
             Rating = player.Rating,
@@ -71,14 +70,15 @@ public record Player
             CourseRank = (CommonCourseRank)(player.CourseRank - 1),
             IconId = player.Icon?.Id ?? 101,
             FrameId = player.Frame?.Id ?? 200502,
-            PlateId = player.NamePlate?.Id ?? 101,
+            PlateId = player.NamePlate?.Id ?? 101
         };
-    }
 
-    public async Task<Record> GetBestAsync(int id, Difficulties difficulty, SongTypes type, CancellationToken cancellationToken = default) =>
+    public async Task<Record> GetBestAsync(int id, Difficulties difficulty, SongTypes type,
+        CancellationToken cancellationToken = default) =>
         await Client!.GetBestAsync(FriendCode, id, difficulty, type, cancellationToken);
 
-    public async Task<Record> GetBestAsync(string title, Difficulties difficulty, SongTypes type, CancellationToken cancellationToken = default) =>
+    public async Task<Record> GetBestAsync(string title, Difficulties difficulty, SongTypes type,
+        CancellationToken cancellationToken = default) =>
         await Client!.GetBestAsync(FriendCode, title, difficulty, type, cancellationToken);
 
     public async Task<Bests> GetBestsAsync(CancellationToken cancellationToken = default) =>
@@ -87,10 +87,12 @@ public record Player
     public async Task<Bests> GetAllPerfectBestsAsync(CancellationToken cancellationToken = default) =>
         await Client!.GetAllPerfectBestsAsync(FriendCode, cancellationToken);
 
-    public async Task<List<Record>> GetRecordsAsync(int id, SongTypes type, CancellationToken cancellationToken = default) =>
+    public async Task<List<Record>> GetRecordsAsync(int id, SongTypes type,
+        CancellationToken cancellationToken = default) =>
         await Client!.GetRecordsAsync(FriendCode, id, type, cancellationToken);
 
-    public async Task<List<Record>> GetRecordsAsync(string title, SongTypes type, CancellationToken cancellationToken = default) =>
+    public async Task<List<Record>> GetRecordsAsync(string title, SongTypes type,
+        CancellationToken cancellationToken = default) =>
         await Client!.GetRecordsAsync(FriendCode, title, type, cancellationToken);
 
     public async Task UploadRecordsAsync(List<Record> records, CancellationToken cancellationToken = default) =>
@@ -102,10 +104,12 @@ public record Player
     public async Task<List<SimpleRecord>> GetAllRecordsAsync(CancellationToken cancellationToken = default) =>
         await Client!.GetAllRecordsAsync(FriendCode, cancellationToken);
 
-    public async Task<List<RatingTrend>> GetDXRatingTrendAsync(int? version = null, CancellationToken cancellationToken = default) =>
+    public async Task<List<RatingTrend>> GetDXRatingTrendAsync(int? version = null,
+        CancellationToken cancellationToken = default) =>
         await Client!.GetDXRatingTrendAsync(FriendCode, version, cancellationToken);
 
-    public async Task<List<Record>> GetHistoryAsync(int id, SongTypes type, Difficulties difficulty, CancellationToken cancellationToken = default) =>
+    public async Task<List<Record>> GetHistoryAsync(int id, SongTypes type, Difficulties difficulty,
+        CancellationToken cancellationToken = default) =>
         await Client!.GetHistoryAsync(FriendCode, id, type, difficulty, cancellationToken);
 
     public async Task<NamePlate> GetNamePlateProgressAsync(int id, CancellationToken cancellationToken = default) =>

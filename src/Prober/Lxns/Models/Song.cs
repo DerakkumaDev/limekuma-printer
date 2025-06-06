@@ -33,6 +33,8 @@ public record Song
 
     [JsonPropertyName("difficulties")]
     public required SongDifficulties Difficulties { get; init; }
+
     public string AudioUrl => $"https://assets2.lxns.net/maimai/music/{Id}.mp3";
+
     public string JacketUrl => $"https://assets2.lxns.net/maimai/jacket/{Id}.png";
 }

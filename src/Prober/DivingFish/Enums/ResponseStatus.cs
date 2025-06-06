@@ -6,6 +6,7 @@ namespace Limekuma.Prober.DivingFish.Enums;
 public enum ResponseStatus
 {
     Success,
+
     [JsonStringEnumMemberName("error")]
     Error
 }

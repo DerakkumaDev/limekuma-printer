@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace Limekuma.Prober.Common;
 
 public record CommonRecord

@@ -10,6 +10,7 @@ public enum Difficulties
     Advanced,
     Expert,
     Master,
+
     [JsonStringEnumMemberName("Re:MASTER")]
     ReMaster
 }

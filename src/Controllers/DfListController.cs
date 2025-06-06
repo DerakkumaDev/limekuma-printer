@@ -2,7 +2,6 @@ using Limekuma.Draw;
 using Limekuma.Prober.Common;
 using Limekuma.Prober.DivingFish;
 using Limekuma.Prober.DivingFish.Models;
-using Limekuma.Utils;
 using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
 
@@ -10,7 +9,8 @@ namespace Limekuma.Controllers;
 
 public partial class ListController : ControllerBase
 {
-    private static async Task<(CommonUser, List<CommonRecord>, int, int[])> PrepareDfData(string token, uint qq, string level, int page = 1, int plate = 101)
+    private static async Task<(CommonUser, List<CommonRecord>, int, int[])> PrepareDfData(string token, uint qq,
+        string level, int page = 1, int plate = 101)
     {
         DfDeveloperClient df = new(token);
         Player player = await df.GetAllRecordsAsync(qq);
@@ -50,18 +50,22 @@ public partial class ListController : ControllerBase
         if (!System.IO.File.Exists(Path.Combine(BestsDrawer.IconRootPath, $"{user.IconId}.png")))
         {
             using HttpClient http = new();
-            using FileStream stream = System.IO.File.OpenWrite(Path.Combine(BestsDrawer.IconRootPath, $"{user.IconId}.png"));
+            using FileStream stream =
+                System.IO.File.OpenWrite(Path.Combine(BestsDrawer.IconRootPath, $"{user.IconId}.png"));
             http.GetStreamAsync(user.IconUrl).Result.CopyTo(stream);
         }
 
-        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.PlateRootPath, $"{user.PlateId.ToString().PadLeft(6, '0')}.png")))
+        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.PlateRootPath,
+                $"{user.PlateId.ToString().PadLeft(6, '0')}.png")))
         {
             using HttpClient http = new();
-            using FileStream stream = System.IO.File.OpenWrite(Path.Combine(BestsDrawer.PlateRootPath, $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
+            using FileStream stream = System.IO.File.OpenWrite(Path.Combine(BestsDrawer.PlateRootPath,
+                $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
             http.GetStreamAsync(user.PlateUrl).Result.CopyTo(stream);
         }
 
-        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.FrameRootPath, $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png")))
+        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.FrameRootPath,
+                $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png")))
         {
             user.FrameId = 200502;
         }
@@ -100,7 +104,8 @@ public partial class ListController : ControllerBase
                 }];
             }
 
-            if (record.SyncFlag.Value is SyncFlags syncFlag && syncFlag is >= SyncFlags.FullSync and <= SyncFlags.FullSyncDXPlus)
+            if (record.SyncFlag.Value is SyncFlags syncFlag &&
+                syncFlag is >= SyncFlags.FullSync and <= SyncFlags.FullSyncDXPlus)
             {
                 ++counts[syncFlag switch
                 {
@@ -118,7 +123,8 @@ public partial class ListController : ControllerBase
             }
 
             using HttpClient http = new();
-            using FileStream stream = System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
+            using FileStream stream =
+                System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
             http.GetStreamAsync(record.JacketUrl).Result.CopyTo(stream);
         }
 
@@ -126,12 +132,13 @@ public partial class ListController : ControllerBase
     }
 
     [HttpGet("diving-fish")]
-    public async Task<IActionResult> GetDivingFishList([FromQuery(Name = "dev-token")] string token, [FromQuery] uint qq, [FromQuery] string level, [FromQuery] int page = 1, [FromQuery] int plate = 101)
+    public async Task<IActionResult> GetDivingFishList([FromQuery(Name = "dev-token")] string token,
+        [FromQuery] uint qq, [FromQuery] string level, [FromQuery] int page = 1, [FromQuery] int plate = 101)
     {
-        (CommonUser user, List<CommonRecord> records, int count, int[] counts) = await PrepareDfData(token, qq, level, page, plate);
-
+        (CommonUser user, List<CommonRecord> records, int count, int[] counts) =
+            await PrepareDfData(token, qq, level, page, plate);
         int total = (int)Math.Ceiling((double)count / 50);
-        using Image bestsImage = new ListDrawer().Draw(user, records, page, total, counts, level, ListDrawer.BackgroundPath);
+        using Image bestsImage = new ListDrawer().Draw(user, records, page, total, counts, level);
 
         MemoryStream outStream = new();
         await bestsImage.SaveAsJpegAsync(outStream);

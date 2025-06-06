@@ -10,12 +10,12 @@ public abstract class LxnsClient
 
     protected LxnsClient()
     {
-        _httpClient = new HttpClient
+        _httpClient = new()
         {
-            BaseAddress = new Uri("https://maimai.lxns.net/")
+            BaseAddress = new("https://maimai.lxns.net/")
         };
 
-        _jsonOptions = new JsonSerializerOptions
+        _jsonOptions = new()
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
@@ -25,9 +25,10 @@ public abstract class LxnsClient
 
     protected async Task<T> GetAsync<T>(string path, CancellationToken cancellationToken = default) =>
         await _httpClient.GetFromJsonAsync<T>(path, _jsonOptions, cancellationToken)
-            ?? throw new InvalidOperationException("Failed to deserialize response");
+        ?? throw new InvalidOperationException("Failed to deserialize response");
 
-    protected async Task<HttpResponseMessage> PostAsync<T>(string path, T value, CancellationToken cancellationToken = default)
+    protected async Task<HttpResponseMessage> PostAsync<T>(string path, T value,
+        CancellationToken cancellationToken = default)
     {
         HttpResponseMessage response = await _httpClient.PostAsJsonAsync(path, value, _jsonOptions, cancellationToken);
         response.EnsureSuccessStatusCode();

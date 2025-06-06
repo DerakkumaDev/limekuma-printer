@@ -2,7 +2,6 @@ using Limekuma.Draw;
 using Limekuma.Prober.Common;
 using Limekuma.Prober.Lxns;
 using Limekuma.Prober.Lxns.Models;
-using Limekuma.Utils;
 using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
 
@@ -10,7 +9,8 @@ namespace Limekuma.Controllers;
 
 public partial class ListController : ControllerBase
 {
-    private static async Task<(CommonUser, List<CommonRecord>, int, int[])> PrepareLxnsData(string token, string level, int page = 1)
+    private static async Task<(CommonUser, List<CommonRecord>, int, int[])> PrepareLxnsData(string token, string level,
+        int page = 1)
     {
         LxnsPersonalClient lxns = new(token);
         List<Record> records = await lxns.GetRecordsAsync();
@@ -27,18 +27,22 @@ public partial class ListController : ControllerBase
         if (!System.IO.File.Exists(Path.Combine(BestsDrawer.IconRootPath, $"{user.IconId}.png")))
         {
             using HttpClient http = new();
-            using FileStream stream = System.IO.File.OpenWrite(Path.Combine(BestsDrawer.IconRootPath, $"{user.IconId}.png"));
+            using FileStream stream =
+                System.IO.File.OpenWrite(Path.Combine(BestsDrawer.IconRootPath, $"{user.IconId}.png"));
             http.GetStreamAsync(user.IconUrl).Result.CopyTo(stream);
         }
 
-        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.PlateRootPath, $"{user.PlateId.ToString().PadLeft(6, '0')}.png")))
+        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.PlateRootPath,
+                $"{user.PlateId.ToString().PadLeft(6, '0')}.png")))
         {
             using HttpClient http = new();
-            using FileStream stream = System.IO.File.OpenWrite(Path.Combine(BestsDrawer.PlateRootPath, $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
+            using FileStream stream = System.IO.File.OpenWrite(Path.Combine(BestsDrawer.PlateRootPath,
+                $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
             http.GetStreamAsync(user.PlateUrl).Result.CopyTo(stream);
         }
 
-        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.FrameRootPath, $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png")))
+        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.FrameRootPath,
+                $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png")))
         {
             user.FrameId = 200502;
         }
@@ -84,7 +88,7 @@ public partial class ListController : ControllerBase
                     SyncFlags.FullSync => 11,
                     SyncFlags.FullSyncPlus => 12,
                     SyncFlags.FullSyncDX => 13,
-                    SyncFlags.FullSyncDXPlus  => 14,
+                    SyncFlags.FullSyncDXPlus => 14,
                     _ => 15
                 }];
             }
@@ -95,7 +99,8 @@ public partial class ListController : ControllerBase
             }
 
             using HttpClient http = new();
-            using FileStream stream = System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
+            using FileStream stream =
+                System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
             http.GetStreamAsync(record.JacketUrl).Result.CopyTo(stream);
         }
 
@@ -103,12 +108,13 @@ public partial class ListController : ControllerBase
     }
 
     [HttpGet("lxns")]
-    public async Task<IActionResult> GetLxnsList([FromQuery(Name = "personal-token")] string personalToken, [FromQuery] string level, [FromQuery] int page = 1)
+    public async Task<IActionResult> GetLxnsList([FromQuery(Name = "personal-token")] string personalToken,
+        [FromQuery] string level, [FromQuery] int page = 1)
     {
-        (CommonUser user, List<CommonRecord> records, int count, int[] counts) = await PrepareLxnsData(personalToken, level, page);
-
+        (CommonUser user, List<CommonRecord> records, int count, int[] counts) =
+            await PrepareLxnsData(personalToken, level, page);
         int total = (int)Math.Ceiling((double)count / 50);
-        using Image bestsImage = new ListDrawer().Draw(user, records, page, total, counts, level, ListDrawer.BackgroundPath);
+        using Image bestsImage = new ListDrawer().Draw(user, records, page, total, counts, level);
 
         MemoryStream outStream = new();
         await bestsImage.SaveAsPngAsync(outStream);

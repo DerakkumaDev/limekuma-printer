@@ -43,12 +43,14 @@ public class BestsDrawer : DrawerBase
     public const string BackgroundAnimationPath = "./Resources/Background/bests.gif";
 #endif
 
-    public Image Draw(CommonUser user, List<CommonRecord> ever, List<CommonRecord> current, int everTotal, int currentTotal, string backgroundPath = BackgroundPath)
+    public Image Draw(CommonUser user, List<CommonRecord> ever, List<CommonRecord> current, int everTotal,
+        int currentTotal, string backgroundPath = BackgroundPath)
     {
         using Image sdBests = DrawScores(ever);
         using Image dxBests = DrawScores(current, ever.Count);
         using Image image = new Image<Rgba32>(1440, 2560, new(0, 0, 0, 0));
-        using Image frameImage = Image.Load(Path.Combine(FrameRootPath, $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png"));
+        using Image frameImage =
+            Image.Load(Path.Combine(FrameRootPath, $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png"));
         using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
         using Image iconImage = Image.Load(Path.Combine(IconRootPath, $"{user.IconId}.png"));
         using Image @class = Image.Load(Path.Combine(ClassRootPath, $"{(int)user.ClassRank}.png"));
@@ -80,13 +82,14 @@ public class BestsDrawer : DrawerBase
         {
             for (int i = 0; i < ratingLE.Count; i++)
             {
-                ctx.DrawText(ratingLE[i].ToString(), notoBlackFont16, new Color(new Rgb24(249, 198, 10)), new(ratingPos[i], 0));
+                ctx.DrawText(ratingLE[i].ToString(), notoBlackFont16, new Color(new Rgb24(249, 198, 10)),
+                    new(ratingPos[i], 0));
             }
 
             ctx.Resize(ratingImage.Width * 16 / 32, ratingImage.Height * 16 / 32, KnownResamplers.Spline);
         });
 
-        string shougou = $"{user.TrophyText}";
+        string shougou = user.TrophyText;
         FontRectangle shougouSize = TextMeasurer.MeasureAdvance(shougou, new(heavyFont14)
         {
             FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
@@ -94,8 +97,10 @@ public class BestsDrawer : DrawerBase
         Point shougoubasePos = new(181, 143);
         PointF shougouPos = new(shougoubasePos.X + ((shougoubase.Width - shougouSize.Width) / 2), 151);
 
-        using Image shougouImage = HeavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)), Pens.Solid(new Rgb24(0, 0, 0), 2f), [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Spline);
-        using Image nameImage = MediumFont.DrawImage(22, user.Name, new Color(new Rgb24(0, 0, 0)), [SymbolsFont, Symbols2Font, NotoMediumFont], KnownResamplers.Lanczos3);
+        using Image shougouImage = HeavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)),
+            Pens.Solid(new Rgb24(0, 0, 0), 2f), [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Spline);
+        using Image nameImage = MediumFont.DrawImage(22, user.Name, new Color(new Rgb24(0, 0, 0)),
+            [SymbolsFont, Symbols2Font, NotoMediumFont], KnownResamplers.Lanczos3);
 
         string scorePart1 = everTotal.ToString();
         string scorePart2 = "B35";
@@ -132,7 +137,8 @@ public class BestsDrawer : DrawerBase
         {
             FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
         });
-        float scoreWidth = scorePart1Size.Width + scorePart2Size.Width + scorePart3Size.Width + scorePart4Size.Width + scorePart5Size.Width + scorePart6Size.Width + scorePart7Size.Width;
+        float scoreWidth = scorePart1Size.Width + scorePart2Size.Width + scorePart3Size.Width + scorePart4Size.Width +
+                           scorePart5Size.Width + scorePart6Size.Width + scorePart7Size.Width;
         PointF scorePart1Pos = new(285 - (scoreWidth / 2), 532);
         PointF scorePart2Pos = new(scorePart1Pos.X + scorePart1Size.Width, 543);
         PointF scorePart3Pos = new(scorePart2Pos.X + scorePart2Size.Width, 532);
@@ -142,13 +148,20 @@ public class BestsDrawer : DrawerBase
         PointF scorePart7Pos = new(scorePart6Pos.X + scorePart6Size.Width, 532);
         Rgb24 scoreColorValue = new(75, 77, 138);
         Color scoreColor = new(scoreColorValue);
-        using Image scorePart1Image = BoldFont.DrawImage(27, scorePart1, scoreColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-        using Image scorePart2Image = BoldFont.DrawImage(21, scorePart2, scoreColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-        using Image scorePart3Image = BoldFont.DrawImage(27, scorePart3, scoreColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-        using Image scorePart4Image = BoldFont.DrawImage(27, scorePart4, scoreColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-        using Image scorePart5Image = BoldFont.DrawImage(21, scorePart5, scoreColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-        using Image scorePart6Image = BoldFont.DrawImage(27, scorePart6, scoreColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-        using Image scorePart7Image = BoldFont.DrawImage(27, scorePart7, scoreColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image scorePart1Image = BoldFont.DrawImage(27, scorePart1, scoreColor,
+            [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image scorePart2Image = BoldFont.DrawImage(21, scorePart2, scoreColor,
+            [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image scorePart3Image = BoldFont.DrawImage(27, scorePart3, scoreColor,
+            [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image scorePart4Image = BoldFont.DrawImage(27, scorePart4, scoreColor,
+            [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image scorePart5Image = BoldFont.DrawImage(21, scorePart5, scoreColor,
+            [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image scorePart6Image = BoldFont.DrawImage(27, scorePart6, scoreColor,
+            [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image scorePart7Image = BoldFont.DrawImage(27, scorePart7, scoreColor,
+            [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
 
         image.Mutate(ctx =>
         {
@@ -184,27 +197,28 @@ public class BestsDrawer : DrawerBase
 
     public Image DrawScores(List<CommonRecord> scores, int start_index = 0)
     {
-        int index = 0;
         int count = scores.Count;
         int height = ((int)Math.Ceiling(((double)count + 1) / 4) * 120) - 10;
         Point point = new(350, 0);
         Image image = new Image<Rgba32>(1390, height, new(0, 0, 0, 0));
-        for (int columnIndex = 0; index < count; point.X = 0, point.Y += 120, ++columnIndex)
+        for (int index = 0; index < count;)
         {
-            int rowMaxIndex = 3;
-            if (columnIndex > 0)
-            {
-                rowMaxIndex = 4;
-            }
-
-            for (int rowIndex = 0; rowIndex < rowMaxIndex && index < count; point.X += 350, ++index, ++rowIndex)
+            for (int rowIndex = 0, rowMaxIndex = point.Y == 0 ? 3 : 4;
+                 rowIndex < rowMaxIndex && index < count;
+                 ++index, ++rowIndex)
             {
                 CommonRecord record = scores[index];
                 int realIndex = index + start_index + 1;
+
                 using Image part = DrawScore(record, realIndex);
                 part.Resize(0.34, KnownResamplers.Lanczos3);
                 image.Mutate(ctx => ctx.DrawImage(part, point, 1));
+
+                point.X += 350;
             }
+
+            point.X = 0;
+            point.Y += 120;
         }
 
         return image;
@@ -218,13 +232,14 @@ public class BestsDrawer : DrawerBase
             CommonSongTypes.Standard => song.Difficulties.Standard,
             CommonSongTypes.DX => song.Difficulties.DX,
             _ => throw new InvalidDataException()
-        })[((int)score.Difficulty) - 1];
+        })[(int)score.Difficulty - 1];
 
         Rgb24 colorValue = new(255, 255, 255);
         if (score.Difficulty is CommonDifficulties.ReMaster)
         {
             colorValue = new(88, 140, 204);
         }
+
         Color color = new(colorValue);
 
         Image bg = Image.Load(Path.Combine(PartRootPath, $"{score.Difficulty}.png"));
@@ -233,6 +248,7 @@ public class BestsDrawer : DrawerBase
         using Image rank = Image.Load(Path.Combine(RateRootPath, $"{score.Rank}.png"));
 
         #region Fonts
+
         Font boldFont24 = BoldFont.GetSizeFont(24);
         Font boldFont30 = BoldFont.GetSizeFont(30);
         Font boldFont34 = BoldFont.GetSizeFont(34);
@@ -240,23 +256,30 @@ public class BestsDrawer : DrawerBase
         Font boldFont76 = BoldFont.GetSizeFont(76);
         Font heavyFont54 = HeavyFont.GetSizeFont(54);
         Font heavyFont76 = HeavyFont.GetSizeFont(76);
+
         #endregion
 
         #region Title
+
         string title = score.Title;
         string drawName = title;
         for (FontRectangle size = TextMeasurer.MeasureSize(drawName, new(boldFont40));
              size.Width > 450;
-             title = title[0..^1],
-             drawName = $"{title}…",
-             size = TextMeasurer.MeasureSize(drawName, new(boldFont40))) { }
+             size = TextMeasurer.MeasureSize(drawName, new(boldFont40)))
+        {
+            title = title[..^1];
+            drawName = $"{title}…";
+        }
 
-        using Image titleImage = BoldFont.DrawImage(40, drawName, color, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image titleImage = BoldFont.DrawImage(40, drawName, color, [SymbolsFont, Symbols2Font, NotoBoldFont],
+            KnownResamplers.Lanczos3);
+
         #endregion
 
         #region Achievements
+
         string[] achievements = score.Achievements.ToString().Split('.');
-        string achiPart1 = achievements[0].ToString();
+        string achiPart1 = achievements[0];
         string achiPart2 = ".";
         string achiPart3 = achievements.Length > 1 ? achievements[1].PadRight(4, '0') : "0000";
         string achiPart4 = "%";
@@ -282,13 +305,19 @@ public class BestsDrawer : DrawerBase
         PointF achiPart3Pos = new(achiPart2Pos.X + achiPart2Size.Width, 108);
         PointF achiPart4Pos = new(achiPart3Pos.X + achiPart3Size.Width, 100);
 
-        using Image achiPart1Image = HeavyFont.DrawImage(76, achiPart1, color, [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Lanczos3);
-        using Image achiPart2Image = BoldFont.DrawImage(76, achiPart2, color, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-        using Image achiPart3Image = HeavyFont.DrawImage(54, achiPart3, color, [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Lanczos3);
-        using Image achiPart4Image = BoldFont.DrawImage(65, achiPart4, color, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image achiPart1Image = HeavyFont.DrawImage(76, achiPart1, color,
+            [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Lanczos3);
+        using Image achiPart2Image = BoldFont.DrawImage(76, achiPart2, color, [SymbolsFont, Symbols2Font, NotoBoldFont],
+            KnownResamplers.Lanczos3);
+        using Image achiPart3Image = HeavyFont.DrawImage(54, achiPart3, color,
+            [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Lanczos3);
+        using Image achiPart4Image = BoldFont.DrawImage(65, achiPart4, color, [SymbolsFont, Symbols2Font, NotoBoldFont],
+            KnownResamplers.Lanczos3);
+
         #endregion
 
         #region Serial Number
+
         string indexPart1 = "#";
         string indexPart2 = index.ToString();
         FontRectangle indexPart1Size = TextMeasurer.MeasureAdvance(indexPart1, new(boldFont24)
@@ -304,11 +333,15 @@ public class BestsDrawer : DrawerBase
         PointF indexPart2Pos = new(indexPart1Pos.X + indexPart1Size.Width, 245);
         Rgb24 indexColorValue = new(255, 255, 255);
         Color indexColor = new(indexColorValue);
-        using Image indexPart1Image = BoldFont.DrawImage(24, indexPart1, indexColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-        using Image indexPart2Image = BoldFont.DrawImage(30, indexPart2, indexColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image indexPart1Image = BoldFont.DrawImage(24, indexPart1, indexColor,
+            [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image indexPart2Image = BoldFont.DrawImage(30, indexPart2, indexColor,
+            [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+
         #endregion
 
         #region LevelValue
+
         double levelValue = chart.LevelValue;
 
         string[] level = levelValue.ToString().Split('.');
@@ -322,11 +355,15 @@ public class BestsDrawer : DrawerBase
 
         Point levelPart1Pos = new(375, 182);
         PointF levelPart2Pos = new(levelPart1Pos.X + levelPart1Size.Width, 187);
-        using Image levelPart1Image = BoldFont.DrawImage(34, levelPart1, color, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-        using Image levelPart2Image = BoldFont.DrawImage(28, levelPart2, color, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image levelPart1Image = BoldFont.DrawImage(34, levelPart1, color,
+            [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image levelPart2Image = BoldFont.DrawImage(28, levelPart2, color,
+            [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+
         #endregion
 
         #region Rating
+
         string rating = Math.Floor(score.DXRating).ToString();
         FontRectangle ratingSize = TextMeasurer.MeasureAdvance(rating, new(levelPart1Font)
         {
@@ -334,10 +371,13 @@ public class BestsDrawer : DrawerBase
         });
 
         PointF ratingPos = new(548 - ratingSize.Width, 182);
-        using Image ratingImage = BoldFont.DrawImage(34, rating, color, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image ratingImage = BoldFont.DrawImage(34, rating, color, [SymbolsFont, Symbols2Font, NotoBoldFont],
+            KnownResamplers.Lanczos3);
+
         #endregion
 
         #region ID
+
         string idPart1 = score.Id.ToString();
         string idPart2 = "ID";
 
@@ -351,11 +391,15 @@ public class BestsDrawer : DrawerBase
 
         Rgb24 idColorValue = new(28, 43, 120);
         Color idColor = new(idColorValue);
-        using Image idPart1Image = BoldFont.DrawImage(30, idPart1, idColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-        using Image idPart2Image = BoldFont.DrawImage(24, idPart2, idColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image idPart1Image = BoldFont.DrawImage(30, idPart1, idColor, [SymbolsFont, Symbols2Font, NotoBoldFont],
+            KnownResamplers.Lanczos3);
+        using Image idPart2Image = BoldFont.DrawImage(24, idPart2, idColor, [SymbolsFont, Symbols2Font, NotoBoldFont],
+            KnownResamplers.Lanczos3);
+
         #endregion
 
         #region DXScore
+
         int totalDXScore = chart.Notes!.Total * 3;
         string dxScorePart1 = $"{score.DXScore}/";
         string dxScorePart2 = totalDXScore.ToString();
@@ -373,11 +417,15 @@ public class BestsDrawer : DrawerBase
 
         PointF dxScorePart2Pos = new(734 - dxScorePart2Size.Width, 250);
         PointF dxScorePart1Pos = new(dxScorePart2Pos.X - dxScorePart1Size.Width, 245);
-        using Image dxScorePart1Image = BoldFont.DrawImage(30, dxScorePart1, idColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-        using Image dxScorePart2Image = BoldFont.DrawImage(24, dxScorePart2, idColor, [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image dxScorePart1Image = BoldFont.DrawImage(30, dxScorePart1, idColor,
+            [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+        using Image dxScorePart2Image = BoldFont.DrawImage(24, dxScorePart2, idColor,
+            [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+
         #endregion
 
         #region DXStar
+
         double dxScorePersent = (double)score.DXScore / totalDXScore;
         if (dxScorePersent >= 0.85)
         {
@@ -404,6 +452,7 @@ public class BestsDrawer : DrawerBase
                 }
             });
         }
+
         #endregion
 
         jacket.Resize(0.56, KnownResamplers.Lanczos3);

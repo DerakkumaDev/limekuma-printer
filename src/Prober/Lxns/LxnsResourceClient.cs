@@ -5,7 +5,8 @@ namespace Limekuma.Prober.Lxns;
 
 public class LxnsResourceClient : LxnsClient
 {
-    private async Task<T> GetListAsync<T>(string type, string includeType, int? version = null, bool? include = null, CancellationToken cancellationToken = default)
+    private async Task<T> GetListAsync<T>(string type, string includeType, int? version = null, bool? include = null,
+        CancellationToken cancellationToken = default)
     {
         string url = $"/api/v0/maimai/{type}/list";
         List<string> queryParams = [];
@@ -28,7 +29,8 @@ public class LxnsResourceClient : LxnsClient
         return response;
     }
 
-    public async Task<SongList> GetSongListAsync(int? version = null, bool? includeNotes = null, CancellationToken cancellationToken = default) =>
+    public async Task<SongList> GetSongListAsync(int? version = null, bool? includeNotes = null,
+        CancellationToken cancellationToken = default) =>
         await GetListAsync<SongList>("song", "notes", version, includeNotes, cancellationToken);
 
     public async Task<Song> GetSongAsync(int id, int? version = null, CancellationToken cancellationToken = default)
@@ -48,9 +50,11 @@ public class LxnsResourceClient : LxnsClient
         return response.Aliases;
     }
 
-    public async Task<List<Icon>> GetIconListAsync(int? version = null, bool? includeRequired = null, CancellationToken cancellationToken = default)
+    public async Task<List<Icon>> GetIconListAsync(int? version = null, bool? includeRequired = null,
+        CancellationToken cancellationToken = default)
     {
-        IconListResponse response = await GetListAsync<IconListResponse>("icon", "required", version, includeRequired, cancellationToken);
+        IconListResponse response =
+            await GetListAsync<IconListResponse>("icon", "required", version, includeRequired, cancellationToken);
         return response.Icons;
     }
 
@@ -65,13 +69,16 @@ public class LxnsResourceClient : LxnsClient
         return await GetAsync<Icon>(url, cancellationToken);
     }
 
-    public async Task<List<NamePlate>> GetPlateListAsync(int? version = null, bool? includeRequired = null, CancellationToken cancellationToken = default)
+    public async Task<List<NamePlate>> GetPlateListAsync(int? version = null, bool? includeRequired = null,
+        CancellationToken cancellationToken = default)
     {
-        PlateListResponse response = await GetListAsync<PlateListResponse>("plate", "required", version, includeRequired, cancellationToken);
+        PlateListResponse response =
+            await GetListAsync<PlateListResponse>("plate", "required", version, includeRequired, cancellationToken);
         return response.Plates;
     }
 
-    public async Task<NamePlate> GetPlateAsync(int plateId, int? version = null, CancellationToken cancellationToken = default)
+    public async Task<NamePlate> GetPlateAsync(int plateId, int? version = null,
+        CancellationToken cancellationToken = default)
     {
         string url = $"/api/v0/maimai/plate/{plateId}";
         if (version.HasValue)
@@ -82,13 +89,16 @@ public class LxnsResourceClient : LxnsClient
         return await GetAsync<NamePlate>(url, cancellationToken);
     }
 
-    public async Task<List<Frame>> GetFrameListAsync(int? version = null, bool? includeRequired = null, CancellationToken cancellationToken = default)
+    public async Task<List<Frame>> GetFrameListAsync(int? version = null, bool? includeRequired = null,
+        CancellationToken cancellationToken = default)
     {
-        FrameListResponse response = await GetListAsync<FrameListResponse>("frame", "required", version, includeRequired, cancellationToken);
+        FrameListResponse response =
+            await GetListAsync<FrameListResponse>("frame", "required", version, includeRequired, cancellationToken);
         return response.Frames;
     }
 
-    public async Task<Frame> GetFrameAsync(int frameId, int? version = null, CancellationToken cancellationToken = default)
+    public async Task<Frame> GetFrameAsync(int frameId, int? version = null,
+        CancellationToken cancellationToken = default)
     {
         string url = $"/api/v0/maimai/frame/{frameId}";
         if (version.HasValue)
@@ -99,7 +109,8 @@ public class LxnsResourceClient : LxnsClient
         return await GetAsync<Frame>(url, cancellationToken);
     }
 
-    public async Task<List<CollectionGenre>> GetCollectionGenreListAsync(int? version = null, CancellationToken cancellationToken = default)
+    public async Task<List<CollectionGenre>> GetCollectionGenreListAsync(int? version = null,
+        CancellationToken cancellationToken = default)
     {
         string url = "/api/v0/maimai/collection-genre/list";
         if (version.HasValue)
@@ -111,7 +122,8 @@ public class LxnsResourceClient : LxnsClient
         return response.CollectionGenres;
     }
 
-    public async Task<CollectionGenre> GetCollectionGenreAsync(int id, int? version = null, CancellationToken cancellationToken = default)
+    public async Task<CollectionGenre> GetCollectionGenreAsync(int id, int? version = null,
+        CancellationToken cancellationToken = default)
     {
         string url = $"/api/v0/maimai/collection-genre/{id}";
         if (version.HasValue)

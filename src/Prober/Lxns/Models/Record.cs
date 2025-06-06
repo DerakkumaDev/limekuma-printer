@@ -1,4 +1,5 @@
 using Limekuma.Prober.Common;
+using Limekuma.Prober.Lxns.Enums;
 using System.Text.Json.Serialization;
 
 namespace Limekuma.Prober.Lxns.Models;
@@ -30,11 +31,10 @@ public record Record : SimpleRecord
 
     public string JacketUrl => $"https://assets2.lxns.net/maimai/jacket/{Id}.png";
 
-    public static implicit operator CommonRecord(Record record)
-    {
-        return new()
+    public static implicit operator CommonRecord(Record record) =>
+        new()
         {
-            Id = record.Type is Enums.SongTypes.Standard ? record.Id : record.Id + 10000,
+            Id = record.Type is SongTypes.Standard ? record.Id : record.Id + 10000,
             Title = record.Title,
             Difficulty = (CommonDifficulties)(record.Difficulty + 1),
             ComboFlag = record.ComboFlag ?? ComboFlags.None,
@@ -43,7 +43,6 @@ public record Record : SimpleRecord
             Type = (CommonSongTypes)record.Type,
             Achievements = record.Achievements,
             DXRating = record.DXRating ?? 0,
-            DXScore = record.DXScore,
+            DXScore = record.DXScore
         };
-    }
 }

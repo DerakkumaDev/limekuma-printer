@@ -59,12 +59,11 @@ public class OptionalConverter : JsonConverterFactory
         Type valueBType = typeArguments[1];
 
         JsonConverter converter = (JsonConverter)Activator.CreateInstance(
-            typeof(OptionalConverterInner<,>).MakeGenericType(
-                [valueAType, valueBType]),
+            typeof(OptionalConverterInner<,>).MakeGenericType(valueAType, valueBType),
             BindingFlags.Instance | BindingFlags.Public,
-            binder: null,
-            args: [options],
-            culture: null)!;
+            null,
+            [options],
+            null)!;
 
         return converter;
     }
@@ -72,25 +71,30 @@ public class OptionalConverter : JsonConverterFactory
     private class OptionalConverterInner<TA, TB>(JsonSerializerOptions options) : JsonConverter<Optional<TA, TB>>
     {
         private readonly JsonConverter<TA> _valueAConverter = (JsonConverter<TA>)options.GetConverter(typeof(TA));
-        private readonly JsonConverter<TB> _valueBConverter = (JsonConverter<TB>)options.GetConverter(typeof(TB));
         private readonly Type _valueAType = typeof(TA);
+        private readonly JsonConverter<TB> _valueBConverter = (JsonConverter<TB>)options.GetConverter(typeof(TB));
         private readonly Type _valueBType = typeof(TB);
 
-        public override Optional<TA, TB> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override Optional<TA, TB> Read(ref Utf8JsonReader reader, Type typeToConvert,
+            JsonSerializerOptions options)
         {
             try
             {
                 TA? valueA = JsonSerializer.Deserialize<TA>(ref reader, options);
-                return new Optional<TA, TB>(valueA);
+                return new(valueA);
             }
-            catch (JsonException) { }
+            catch (JsonException)
+            {
+            }
 
             try
             {
                 TB? valueB = JsonSerializer.Deserialize<TB>(ref reader, options);
-                return new Optional<TA, TB>(valueB);
+                return new(valueB);
             }
-            catch (JsonException) { }
+            catch (JsonException)
+            {
+            }
 
             throw new JsonException($"Unable to deserialize value as either {_valueAType} or {_valueBType}");
         }

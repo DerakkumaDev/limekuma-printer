@@ -2,7 +2,6 @@ using Limekuma.Draw;
 using Limekuma.Prober.Common;
 using Limekuma.Prober.Lxns;
 using Limekuma.Prober.Lxns.Models;
-using Limekuma.Utils;
 using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
 
@@ -10,7 +9,8 @@ namespace Limekuma.Controllers;
 
 public partial class BestsController : ControllerBase
 {
-    private static async Task<(CommonUser, List<CommonRecord>, List<CommonRecord>, int, int)> PrepareLxnsData(string devToken, uint? qq, string? personalToken)
+    private static async Task<(CommonUser, List<CommonRecord>, List<CommonRecord>, int, int)> PrepareLxnsData(
+        string devToken, uint? qq, string? personalToken)
     {
         Player player;
         LxnsDeveloperClient lxnsDev = new(devToken);
@@ -40,18 +40,22 @@ public partial class BestsController : ControllerBase
         if (!System.IO.File.Exists(Path.Combine(BestsDrawer.IconRootPath, $"{user.IconId}.png")))
         {
             using HttpClient http = new();
-            using FileStream stream = System.IO.File.OpenWrite(Path.Combine(BestsDrawer.IconRootPath, $"{user.IconId}.png"));
+            using FileStream stream =
+                System.IO.File.OpenWrite(Path.Combine(BestsDrawer.IconRootPath, $"{user.IconId}.png"));
             http.GetStreamAsync(user.IconUrl).Result.CopyTo(stream);
         }
 
-        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.PlateRootPath, $"{user.PlateId.ToString().PadLeft(6, '0')}.png")))
+        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.PlateRootPath,
+                $"{user.PlateId.ToString().PadLeft(6, '0')}.png")))
         {
             using HttpClient http = new();
-            using FileStream stream = System.IO.File.OpenWrite(Path.Combine(BestsDrawer.PlateRootPath, $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
+            using FileStream stream = System.IO.File.OpenWrite(Path.Combine(BestsDrawer.PlateRootPath,
+                $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
             http.GetStreamAsync(user.PlateUrl).Result.CopyTo(stream);
         }
 
-        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.FrameRootPath, $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png")))
+        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.FrameRootPath,
+                $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png")))
         {
             user.FrameId = 200502;
         }
@@ -67,7 +71,8 @@ public partial class BestsController : ControllerBase
             }
 
             using HttpClient http = new();
-            using FileStream stream = System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
+            using FileStream stream =
+                System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
             http.GetStreamAsync(record.JacketUrl).Result.CopyTo(stream);
         }
 
@@ -82,7 +87,8 @@ public partial class BestsController : ControllerBase
             }
 
             using HttpClient http = new();
-            using FileStream stream = System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
+            using FileStream stream =
+                System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
             http.GetStreamAsync(record.JacketUrl).Result.CopyTo(stream);
         }
 
@@ -90,11 +96,12 @@ public partial class BestsController : ControllerBase
     }
 
     [HttpGet("lxns")]
-    public async Task<IActionResult> GetLxnsBests([FromQuery(Name = "dev-token")] string devToken, [FromQuery] uint? qq, [FromQuery(Name = "personal-token")] string? personalToken)
+    public async Task<IActionResult> GetLxnsBests([FromQuery(Name = "dev-token")] string devToken, [FromQuery] uint? qq,
+        [FromQuery(Name = "personal-token")] string? personalToken)
     {
-        (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal, int currentTotal) = await PrepareLxnsData(devToken, qq, personalToken);
-
-        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, BestsDrawer.BackgroundPath);
+        (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
+            int currentTotal) = await PrepareLxnsData(devToken, qq, personalToken);
+        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal);
 
         MemoryStream outStream = new();
         await bestsImage.SaveAsJpegAsync(outStream);
@@ -103,11 +110,13 @@ public partial class BestsController : ControllerBase
     }
 
     [HttpGet("anime/lxns")]
-    public async Task<IActionResult> GetLxnsBestsAnimation([FromQuery(Name = "dev-token")] string devToken, [FromQuery] uint? qq, [FromQuery(Name = "personal-token")] string? personalToken)
+    public async Task<IActionResult> GetLxnsBestsAnimation([FromQuery(Name = "dev-token")] string devToken,
+        [FromQuery] uint? qq, [FromQuery(Name = "personal-token")] string? personalToken)
     {
-        (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal, int currentTotal) = await PrepareLxnsData(devToken, qq, personalToken);
-
-        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, BestsDrawer.BackgroundAnimationPath);
+        (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
+            int currentTotal) = await PrepareLxnsData(devToken, qq, personalToken);
+        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
+            BestsDrawer.BackgroundAnimationPath);
 
         MemoryStream outStream = new();
         await bestsImage.SaveAsGifAsync(outStream);

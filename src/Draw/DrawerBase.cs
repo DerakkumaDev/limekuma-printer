@@ -37,6 +37,7 @@ public abstract class DrawerBase
     }
 
     #region Font Families
+
     // Main fonts (Rounded-X M+ 1p from 自家製フォント工房)
     protected static FontFamily MediumFont { get; }
     protected static FontFamily BoldFont { get; }
@@ -48,6 +49,7 @@ public abstract class DrawerBase
     protected static FontFamily NotoBlackFont { get; }
     protected static FontFamily SymbolsFont { get; }
     protected static FontFamily Symbols2Font { get; }
+
     #endregion
 
     protected static SongList SongList

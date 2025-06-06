@@ -4,10 +4,8 @@ namespace Limekuma.Prober.Lxns;
 
 public class LxnsPersonalClient : LxnsDataClient
 {
-    public LxnsPersonalClient(string userToken) : base()
-    {
+    public LxnsPersonalClient(string userToken) =>
         _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-User-Token", userToken);
-    }
 
     public async Task<Player> GetPlayerAsync(CancellationToken cancellationToken = default) =>
         await GetAsync<Player>("/api/v0/user/maimai/player", cancellationToken);

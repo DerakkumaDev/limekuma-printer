@@ -23,9 +23,8 @@ public record Player
     [JsonPropertyName("username")]
     public required string Account { get; set; }
 
-    public static implicit operator CommonUser(Player player)
-    {
-        return new()
+    public static implicit operator CommonUser(Player player) =>
+        new()
         {
             Name = player.Name,
             Rating = player.Rating,
@@ -35,7 +34,6 @@ public record Player
             CourseRank = player.ClassRank,
             IconId = 101,
             FrameId = 200502,
-            PlateId = 101,
+            PlateId = 101
         };
-    }
 }

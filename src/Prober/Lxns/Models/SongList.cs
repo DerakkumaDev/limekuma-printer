@@ -4,10 +4,7 @@ namespace Limekuma.Prober.Lxns.Models;
 
 public record SongList
 {
-    public SongList()
-    {
-        PullTime = DateTimeOffset.Now;
-    }
+    public SongList() => PullTime = DateTimeOffset.Now;
 
     public DateTimeOffset PullTime { get; }
 
