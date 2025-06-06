@@ -20,21 +20,12 @@ public class ListDrawer : BestsDrawer
     public const string LevelRootPath = "./Resources/Level/";
 #endif
 
-    public Image Draw(CommonUser user, List<CommonRecord> records, int page, int total, IEnumerable<int>? counts, string? level = null, string backgroundPath = BackgroundPath)
+    public Image Draw(CommonUser user, List<CommonRecord> records, int page, int total, IEnumerable<int> counts, string level, string backgroundPath = BackgroundPath)
     {
-        string framePath;
-        if (counts is not null)
-        {
-            framePath = FramePath;
-        }
-        else
-        {
-            framePath = Path.Combine(FrameRootPath, $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png");
-        }
-
         using Image recordsImage = DrawScores(records);
         using Image image = new Image<Rgba32>(1440, 2560, new(0, 0, 0, 0));
-        using Image frameImage = Image.Load(framePath);
+        using Image frameImage = Image.Load(Path.Combine(FrameRootPath, $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png"));
+        using Image levelImage = Image.Load(Path.Combine(LevelRootPath, $"{level}.png"));
         using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
         using Image iconImage = Image.Load(Path.Combine(IconRootPath, $"{user.IconId}.png"));
         using Image @class = Image.Load(Path.Combine(ClassRootPath, $"{(int)user.ClassRank}.png"));
@@ -45,6 +36,7 @@ public class ListDrawer : BestsDrawer
         using Image ratingbase = Image.Load(Path.Combine(RatingRootPath, $"{user.RatingLevel}.png"));
 
         frameImage.Resize(0.95, KnownResamplers.Lanczos3);
+        levelImage.Resize(0.7, KnownResamplers.Lanczos3);
         plate.Resize(0.95, KnownResamplers.Lanczos3);
         iconImage.Resize(0.75, KnownResamplers.Lanczos3);
         ratingbase.Resize(0.96, KnownResamplers.Lanczos3);
@@ -92,6 +84,7 @@ public class ListDrawer : BestsDrawer
         image.Mutate(ctx =>
         {
             ctx.DrawImage(frameImage, new Point(48, 45), 1);
+            ctx.DrawImage(levelImage, new Point(755 - (level.Length * 8), 45), 1);
             ctx.DrawImage(plate, new Point(77, 69), 1);
             ctx.DrawImage(namebase, new Point(183, 108), 1);
             ctx.DrawImage(nameImage, new Point(190, 116), 1);
@@ -106,12 +99,6 @@ public class ListDrawer : BestsDrawer
             ctx.DrawImage(frameLine, new Point(40, 36), 1);
             ctx.DrawImage(recordsImage, new Point(25, 795), 1);
         });
-        if (!string.IsNullOrWhiteSpace(level))
-        {
-            using Image levelImage = Image.Load(Path.Combine(LevelRootPath, $"{level}.png"));
-            levelImage.Resize(0.7, KnownResamplers.Lanczos3);
-            image.Mutate(ctx => ctx.DrawImage(levelImage, new Point(755 - (level.Length * 8), 45), 1));
-        }
 
         Image bg = Image.Load(backgroundPath);
         bg.Mutate(ctx => ctx.DrawImage(image, new Point(0, 0), 1));

@@ -10,13 +10,13 @@ namespace Limekuma.Controllers;
 
 public partial class ListController : ControllerBase
 {
-    private static async Task<(CommonUser, List<CommonRecord>, int, int[])> PrepareLxnsData(string token, string range, int page = 1)
+    private static async Task<(CommonUser, List<CommonRecord>, int, int[])> PrepareLxnsData(string token, string level, int page = 1)
     {
         LxnsPersonalClient lxns = new(token);
         List<Record> records = await lxns.GetRecordsAsync();
         CommonUser user = await lxns.GetPlayerAsync();
 
-        records = [.. records.Where(x => x.Level == range)];
+        records = [.. records.Where(x => x.Level == level)];
         int i = (page - 1) * 50;
         int count = records.Count;
         if (i >= count)
@@ -103,12 +103,12 @@ public partial class ListController : ControllerBase
     }
 
     [HttpGet("lxns")]
-    public async Task<IActionResult> GetLxnsList([FromQuery] string token, [FromQuery] string range, [FromQuery] int page = 1)
+    public async Task<IActionResult> GetLxnsList([FromQuery] string importToken, [FromQuery] string level, [FromQuery] int page = 1)
     {
-        (CommonUser user, List<CommonRecord> records, int count, int[] counts) = await PrepareLxnsData(token, range, page);
+        (CommonUser user, List<CommonRecord> records, int count, int[] counts) = await PrepareLxnsData(importToken, level, page);
 
         int total = (int)Math.Ceiling((double)count / 50);
-        using Image bestsImage = new ListDrawer().Draw(user, records, page, total, counts, range, ListDrawer.BackgroundPath);
+        using Image bestsImage = new ListDrawer().Draw(user, records, page, total, counts, level, ListDrawer.BackgroundPath);
 
         MemoryStream outStream = new();
         await bestsImage.SaveAsPngAsync(outStream);

@@ -10,7 +10,7 @@ namespace Limekuma.Controllers;
 
 public partial class ListController : ControllerBase
 {
-    private static async Task<(CommonUser, List<CommonRecord>, int, int[])> PrepareDfData(string token, uint qq, string range, int page = 1, int frame = 200502, int plate = 101)
+    private static async Task<(CommonUser, List<CommonRecord>, int, int[])> PrepareDfData(string token, uint qq, string level, int page = 1, int frame = 200502, int plate = 101)
     {
         DfDeveloperClient df = new(token);
         Player player = await df.GetAllRecordsAsync(qq);
@@ -18,7 +18,7 @@ public partial class ListController : ControllerBase
         user.FrameId = frame;
         user.PlateId = plate;
 
-        player.Records.Sort((Record x, Record y) =>
+        player.Records.Sort((x, y) =>
         {
             int compare = x.DXRating.CompareTo(y.DXRating);
             if (compare is not 0)
@@ -40,7 +40,7 @@ public partial class ListController : ControllerBase
 
             return 0;
         });
-        List<Record> records = [.. player.Records.Where(x => x.Level == range)];
+        List<Record> records = [.. player.Records.Where(x => x.Level == level)];
         int i = (page - 1) * 50;
         int count = records.Count;
         if (i >= count)
@@ -127,12 +127,12 @@ public partial class ListController : ControllerBase
     }
 
     [HttpGet("diving-fish")]
-    public async Task<IActionResult> GetDivingFishList([FromQuery] string token, [FromQuery] uint qq, [FromQuery] string range, [FromQuery] int page = 1, [FromQuery] int frame = 200502, [FromQuery] int plate = 101)
+    public async Task<IActionResult> GetDivingFishList([FromQuery] string token, [FromQuery] uint qq, [FromQuery] string level, [FromQuery] int page = 1, [FromQuery] int frame = 200502, [FromQuery] int plate = 101)
     {
-        (CommonUser user, List<CommonRecord> records, int count, int[] counts) = await PrepareDfData(token, qq, range, page, frame, plate);
+        (CommonUser user, List<CommonRecord> records, int count, int[] counts) = await PrepareDfData(token, qq, level, page, frame, plate);
 
         int total = (int)Math.Ceiling((double)count / 50);
-        using Image bestsImage = new ListDrawer().Draw(user, records, page, total, counts, range, ListDrawer.BackgroundPath);
+        using Image bestsImage = new ListDrawer().Draw(user, records, page, total, counts, level, ListDrawer.BackgroundPath);
 
         MemoryStream outStream = new();
         await bestsImage.SaveAsJpegAsync(outStream);
