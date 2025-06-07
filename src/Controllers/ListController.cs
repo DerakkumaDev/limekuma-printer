@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Limekuma.Controllers;
 
-[ApiController]
 [Route("list")]
-public partial class ListController : ControllerBase
+public partial class ListController : BaseController
 {
-    private static async Task<(int[], int, int)> PrepareData(CommonUser user, List<CommonRecord> records, int page = 1)
+    private static async Task<(int[], int, int)> PrepareDataAsync(CommonUser user, List<CommonRecord> records,
+        int page = 1)
     {
         int i = (page - 1) * 55;
         int count = records.Count;
@@ -17,30 +17,8 @@ public partial class ListController : ControllerBase
             throw new IndexOutOfRangeException();
         }
 
-        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.IconRootPath, $"{user.IconId}.png")))
-        {
-            using HttpClient http = new();
-            using FileStream stream =
-                System.IO.File.OpenWrite(Path.Combine(BestsDrawer.IconRootPath, $"{user.IconId}.png"));
-            using Stream imageStream = await http.GetStreamAsync(user.IconUrl);
-            imageStream.CopyTo(stream);
-        }
-
-        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.PlateRootPath,
-                $"{user.PlateId.ToString().PadLeft(6, '0')}.png")))
-        {
-            using HttpClient http = new();
-            using FileStream stream = System.IO.File.OpenWrite(Path.Combine(BestsDrawer.PlateRootPath,
-                $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
-            using Stream imageStream = await http.GetStreamAsync(user.PlateUrl);
-            imageStream.CopyTo(stream);
-        }
-
-        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.FrameRootPath,
-                $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png")))
-        {
-            user.FrameId = 200502;
-        }
+        await PrepareUserDataAsync(user);
+        await PrepareRecordDataAsync(records);
 
         int[] counts = new int[15];
 

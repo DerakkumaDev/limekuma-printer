@@ -8,9 +8,9 @@ using SixLabors.ImageSharp;
 
 namespace Limekuma.Controllers;
 
-public partial class BestsController : ControllerBase
+public partial class BestsController : BaseController
 {
-    private static async Task<(CommonUser, List<CommonRecord>, List<CommonRecord>, int, int)> PrepareLxnsData(
+    private static async Task<(CommonUser, List<CommonRecord>, List<CommonRecord>, int, int)> PrepareLxnsDataAsync(
         string devToken, uint? qq, string? personalToken)
     {
         Player player;
@@ -44,43 +44,32 @@ public partial class BestsController : ControllerBase
         List<CommonRecord> bestCurrent = bests.Current.ConvertAll<CommonRecord>(_ => _);
         bestCurrent.SortRecordForBests();
 
-        await PrepareData(user, bestEver, bestCurrent);
+        await PrepareDataAsync(user, bestEver, bestCurrent);
 
         return (user, bestEver, bestCurrent, bests.EverTotal, bests.CurrentTotal);
     }
 
     [HttpGet("lxns")]
-    public async Task<IActionResult> GetLxnsBests([FromQuery(Name = "dev-token")] string devToken, [FromQuery] uint? qq,
+    public async Task<IActionResult> GetLxnsBestsAsync([FromQuery(Name = "dev-token")] string devToken,
+        [FromQuery] uint? qq,
         [FromQuery(Name = "personal-token")] string? personalToken)
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
-            int currentTotal) = await PrepareLxnsData(devToken, qq, personalToken);
+            int currentTotal) = await PrepareLxnsDataAsync(devToken, qq, personalToken);
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal);
 
-        MemoryStream outStream = new();
-#if RELEASE
-        await bestsImage.SaveAsJpegAsync(outStream);
-        outStream.Seek(0, SeekOrigin.Begin);
-        return File(outStream, "image/jpeg");
-#elif DEBUG
-        await bestsImage.SaveAsPngAsync(outStream);
-        outStream.Seek(0, SeekOrigin.Begin);
-        return File(outStream, "image/png");
-#endif
+        return await ReturnImageAsync(bestsImage);
     }
 
     [HttpGet("anime/lxns")]
-    public async Task<IActionResult> GetLxnsBestsAnimation([FromQuery(Name = "dev-token")] string devToken,
+    public async Task<IActionResult> GetLxnsBestsAnimationAsync([FromQuery(Name = "dev-token")] string devToken,
         [FromQuery] uint? qq, [FromQuery(Name = "personal-token")] string? personalToken)
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
-            int currentTotal) = await PrepareLxnsData(devToken, qq, personalToken);
+            int currentTotal) = await PrepareLxnsDataAsync(devToken, qq, personalToken);
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
             BestsDrawer.BackgroundAnimationPath);
 
-        MemoryStream outStream = new();
-        await bestsImage.SaveAsGifAsync(outStream);
-        outStream.Seek(0, SeekOrigin.Begin);
-        return File(outStream, "image/gif");
+        return await ReturnImageAsync(bestsImage, true);
     }
 }

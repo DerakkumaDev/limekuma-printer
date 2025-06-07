@@ -8,10 +8,10 @@ using SixLabors.ImageSharp;
 
 namespace Limekuma.Controllers;
 
-public partial class BestsController : ControllerBase
+public partial class BestsController : BaseController
 {
-    private static async Task<(CommonUser, List<CommonRecord>, List<CommonRecord>, int, int)> PrepareDfData(uint qq,
-        int frame = 200502, int plate = 101)
+    private static async Task<(CommonUser, List<CommonRecord>, List<CommonRecord>, int, int)> PrepareDfDataAsync(
+        uint qq, int frame = 200502, int plate = 101)
     {
         DfResourceClient df = new();
         Player player = await df.GetPlayerAsync(qq);
@@ -28,43 +28,31 @@ public partial class BestsController : ControllerBase
         bestCurrent.SortRecordForBests();
         int currentTotal = bestCurrent.Sum(x => x.DXRating);
 
-        await PrepareData(user, bestEver, bestCurrent);
+        await PrepareDataAsync(user, bestEver, bestCurrent);
 
         return (user, bestEver, bestCurrent, everTotal, currentTotal);
     }
 
     [HttpGet("diving-fish")]
-    public async Task<IActionResult> GetDivingFishBests([FromQuery] uint qq, [FromQuery] int frame = 200502,
+    public async Task<IActionResult> GetDivingFishBestsAsync([FromQuery] uint qq, [FromQuery] int frame = 200502,
         [FromQuery] int plate = 101)
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
-            int currentTotal) = await PrepareDfData(qq, frame, plate);
+            int currentTotal) = await PrepareDfDataAsync(qq, frame, plate);
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal);
 
-        MemoryStream outStream = new();
-#if RELEASE
-        await bestsImage.SaveAsJpegAsync(outStream);
-        outStream.Seek(0, SeekOrigin.Begin);
-        return File(outStream, "image/jpeg");
-#elif DEBUG
-        await bestsImage.SaveAsPngAsync(outStream);
-        outStream.Seek(0, SeekOrigin.Begin);
-        return File(outStream, "image/png");
-#endif
+        return await ReturnImageAsync(bestsImage);
     }
 
     [HttpGet("anime/diving-fish")]
-    public async Task<IActionResult> GetDivingFishBestsAnimation([FromQuery] uint qq, [FromQuery] int frame = 200502,
-        [FromQuery] int plate = 101)
+    public async Task<IActionResult> GetDivingFishBestsAnimationAsync([FromQuery] uint qq,
+        [FromQuery] int frame = 200502, [FromQuery] int plate = 101)
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
-            int currentTotal) = await PrepareDfData(qq, frame, plate);
+            int currentTotal) = await PrepareDfDataAsync(qq, frame, plate);
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
             BestsDrawer.BackgroundAnimationPath);
 
-        MemoryStream outStream = new();
-        await bestsImage.SaveAsGifAsync(outStream);
-        outStream.Seek(0, SeekOrigin.Begin);
-        return File(outStream, "image/gif");
+        return await ReturnImageAsync(bestsImage, true);
     }
 }
