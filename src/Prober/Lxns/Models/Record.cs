@@ -43,7 +43,7 @@ public record Record : SimpleRecord
                     SongTypes.Standard => song.Charts.Standard,
                     SongTypes.DX => song.Charts.DX,
                     _ => throw new InvalidDataException()
-                })[(int)Difficulty - 1];
+                })[(int)Difficulty];
             }
 
             return field;

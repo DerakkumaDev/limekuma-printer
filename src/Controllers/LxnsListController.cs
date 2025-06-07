@@ -30,7 +30,7 @@ public partial class ListController : ControllerBase
             using HttpClient http = new();
             using FileStream stream =
                 System.IO.File.OpenWrite(Path.Combine(BestsDrawer.IconRootPath, $"{user.IconId}.png"));
-            http.GetStreamAsync(user.IconUrl).Result.CopyTo(stream);
+            (await http.GetStreamAsync(user.IconUrl)).CopyTo(stream);
         }
 
         if (!System.IO.File.Exists(Path.Combine(BestsDrawer.PlateRootPath,
@@ -39,7 +39,7 @@ public partial class ListController : ControllerBase
             using HttpClient http = new();
             using FileStream stream = System.IO.File.OpenWrite(Path.Combine(BestsDrawer.PlateRootPath,
                 $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
-            http.GetStreamAsync(user.PlateUrl).Result.CopyTo(stream);
+            (await http.GetStreamAsync(user.PlateUrl)).CopyTo(stream);
         }
 
         if (!System.IO.File.Exists(Path.Combine(BestsDrawer.FrameRootPath,
@@ -48,7 +48,7 @@ public partial class ListController : ControllerBase
             user.FrameId = 200502;
         }
 
-        records.SortRecord();
+        records.SortRecordForList();
 
         List<CommonRecord> cRecords = [];
         int[] counts = new int[15];
@@ -104,7 +104,7 @@ public partial class ListController : ControllerBase
             using HttpClient http = new();
             using FileStream stream =
                 System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
-            http.GetStreamAsync(record.JacketUrl).Result.CopyTo(stream);
+            (await http.GetStreamAsync(record.JacketUrl)).CopyTo(stream);
         }
 
         return (user, cRecords, count, counts);
@@ -120,8 +120,8 @@ public partial class ListController : ControllerBase
         using Image bestsImage = new ListDrawer().Draw(user, records, page, total, counts, level);
 
         MemoryStream outStream = new();
-        await bestsImage.SaveAsPngAsync(outStream);
+        await bestsImage.SaveAsJpegAsync(outStream);
         outStream.Seek(0, SeekOrigin.Begin);
-        return File(outStream, "image/png");
+        return File(outStream, "image/jpeg");
     }
 }

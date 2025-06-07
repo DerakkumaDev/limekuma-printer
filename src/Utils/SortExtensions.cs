@@ -4,63 +4,107 @@ internal static class SortExtensions
 {
     extension(List<Prober.DivingFish.Models.Record> records)
     {
-        internal void SortRecord()
+        internal void SortRecordForBests() => records.Sort((x, y) =>
         {
-            records.Sort((x, y) =>
+            int compare = y.DXRating.CompareTo(x.DXRating);
+            if (compare is not 0)
             {
-                int compare = y.DXRating.CompareTo(x.DXRating);
-                if (compare is not 0)
-                {
-                    return compare;
-                }
+                return compare;
+            }
 
-                compare = y.LevelValue.CompareTo(x.LevelValue);
-                if (compare is not 0)
-                {
-                    return compare;
-                }
+            compare = y.LevelValue.CompareTo(x.LevelValue);
+            if (compare is not 0)
+            {
+                return compare;
+            }
 
-                compare = y.Achievements.CompareTo(x.Achievements);
-                if (compare is not 0)
-                {
-                    return compare;
-                }
+            compare = y.Achievements.CompareTo(x.Achievements);
+            if (compare is not 0)
+            {
+                return compare;
+            }
 
-                return 0;
-            });
-        }
+            return 0;
+        });
+
+        internal void SortRecordForList() => records.Sort((x, y) =>
+        {
+            int compare = y.Achievements.CompareTo(x.Achievements);
+            if (compare is not 0)
+            {
+                return compare;
+            }
+
+            compare = y.DXRating.CompareTo(x.DXRating);
+            if (compare is not 0)
+            {
+                return compare;
+            }
+
+            compare = y.LevelValue.CompareTo(x.LevelValue);
+            if (compare is not 0)
+            {
+                return compare;
+            }
+
+            return 0;
+        });
     }
 
     extension(List<Prober.Lxns.Models.Record> records)
     {
-        internal void SortRecord()
+        internal void SortRecordForBests() => records.Sort((x, y) =>
         {
-            records.Sort((x, y) =>
+            int compare;
+            if (y.DXRating.HasValue && x.DXRating.HasValue)
             {
-                int compare;
-                if (y.DXRating.HasValue && x.DXRating.HasValue)
-                {
-                    compare = y.DXRating.Value.CompareTo(x.DXRating);
-                    if (compare is not 0)
-                    {
-                        return compare;
-                    }
-                }
-
-                compare = y.LevelValue.CompareTo(x.LevelValue);
+                compare = y.DXRating.Value.CompareTo(x.DXRating);
                 if (compare is not 0)
                 {
                     return compare;
                 }
+            }
 
-                compare = y.Achievements.CompareTo(x.Achievements);
+            compare = y.LevelValue.CompareTo(x.LevelValue);
+            if (compare is not 0)
+            {
+                return compare;
+            }
+
+            compare = y.Achievements.CompareTo(x.Achievements);
+            if (compare is not 0)
+            {
+                return compare;
+            }
+
+            return 0;
+        });
+
+        internal void SortRecordForList() => records.Sort((x, y) =>
+        {
+            int compare;
+            compare = y.Achievements.CompareTo(x.Achievements);
+            if (compare is not 0)
+            {
+                return compare;
+            }
+
+            if (y.DXRating.HasValue && x.DXRating.HasValue)
+            {
+                compare = y.DXRating.Value.CompareTo(x.DXRating);
                 if (compare is not 0)
                 {
                     return compare;
                 }
+            }
 
-                return 0;
-            });
-        }
+            compare = y.LevelValue.CompareTo(x.LevelValue);
+            if (compare is not 0)
+            {
+                return compare;
+            }
+
+            return 0;
+        });
     }
 }

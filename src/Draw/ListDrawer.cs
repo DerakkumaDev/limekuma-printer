@@ -24,7 +24,7 @@ public class ListDrawer : BestsDrawer
         string level, string backgroundPath = BackgroundPath)
     {
         using Image recordsImage = DrawScores(records);
-        using Image image = new Image<Rgba32>(1440, 2560, new(0, 0, 0, 0));
+        using Image<Rgba32> image = new(1440, 2560, new(0, 0, 0, 0));
         using Image frameImage = Image.Load(FramePath);
         using Image levelImage = Image.Load(Path.Combine(LevelRootPath, $"{level}.png"));
         using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
@@ -47,12 +47,10 @@ public class ListDrawer : BestsDrawer
         frameLine.Resize(0.745, KnownResamplers.Lanczos3);
 
         Font notoBlackFont16 = NotoBlackFont.GetSizeFont(32);
-        Font heavyFont14 = HeavyFont.GetSizeFont(14);
-        Font heavyFont70 = HeavyFont.GetSizeFont(70);
 
         List<char> ratingLE = [.. user.Rating.ToString().Reverse()];
         int[] ratingPos = [114, 86, 56, 28, 0];
-        using Image ratingImage = new Image<Rgba32>(512, 64);
+        using Image<Rgba32> ratingImage = new(512, 64);
         ratingImage.Mutate(ctx =>
         {
             for (int i = 0; i < ratingLE.Count; ++i)
@@ -65,19 +63,13 @@ public class ListDrawer : BestsDrawer
         });
 
         string shougou = user.TrophyText;
-        FontRectangle shougouSize = TextMeasurer.MeasureAdvance(shougou, new(heavyFont14)
-        {
-            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
-        });
+        FontRectangle shougouSize = HeavyFont.GetSize(14, shougou, [SymbolsFont, Symbols2Font, NotoBoldFont]);
         Point shougoubasePos = new(181, 143);
         PointF shougouPos = new(shougoubasePos.X + ((shougoubase.Width - shougouSize.Width) / 2), 151);
 
         string pagination = $"{page} / {total}";
-        FontRectangle paginationSize = TextMeasurer.MeasureAdvance(shougou, new(heavyFont14)
-        {
-            FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont]
-        });
-        PointF paginationPos = new(226 - (paginationSize.Width / 2), 815);
+        FontRectangle paginationSize = HeavyFont.GetSize(70, pagination, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        PointF paginationPos = new(256 - (paginationSize.Width / 2), 815);
 
         using Image shougouImage = HeavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)),
             Pens.Solid(new Rgb24(0, 0, 0), 2f), [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Spline);

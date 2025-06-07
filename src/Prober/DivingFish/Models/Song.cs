@@ -32,19 +32,16 @@ public record Song
 
 internal record Songs
 {
+    private static Songs? _shared;
+
+    private readonly DateTimeOffset _pullTime;
+    private readonly List<Song> _songs;
+
     private Songs(List<Song> songs)
     {
         _pullTime = DateTimeOffset.Now;
         _songs = songs;
     }
-
-    private readonly DateTimeOffset _pullTime;
-    private readonly List<Song> _songs;
-    private static Songs? _shared;
-
-    public static implicit operator Songs(List<Song> songs) => new(songs);
-
-    public static implicit operator List<Song>(Songs a) => a._songs;
 
     public static List<Song> Shared
     {
@@ -59,4 +56,8 @@ internal record Songs
             return _shared;
         }
     }
+
+    public static implicit operator Songs(List<Song> songs) => new(songs);
+
+    public static implicit operator List<Song>(Songs a) => a._songs;
 }

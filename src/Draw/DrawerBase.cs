@@ -1,5 +1,3 @@
-using Limekuma.Prober.Lxns;
-using Limekuma.Prober.Lxns.Models;
 using SixLabors.Fonts;
 
 namespace Limekuma.Draw;

@@ -43,7 +43,7 @@ public partial class BestsController : ControllerBase
             using HttpClient http = new();
             using FileStream stream =
                 System.IO.File.OpenWrite(Path.Combine(BestsDrawer.IconRootPath, $"{user.IconId}.png"));
-            http.GetStreamAsync(user.IconUrl).Result.CopyTo(stream);
+            (await http.GetStreamAsync(user.IconUrl)).CopyTo(stream);
         }
 
         if (!System.IO.File.Exists(Path.Combine(BestsDrawer.PlateRootPath,
@@ -52,7 +52,7 @@ public partial class BestsController : ControllerBase
             using HttpClient http = new();
             using FileStream stream = System.IO.File.OpenWrite(Path.Combine(BestsDrawer.PlateRootPath,
                 $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
-            http.GetStreamAsync(user.PlateUrl).Result.CopyTo(stream);
+            (await http.GetStreamAsync(user.PlateUrl)).CopyTo(stream);
         }
 
         if (!System.IO.File.Exists(Path.Combine(BestsDrawer.FrameRootPath,
@@ -61,8 +61,8 @@ public partial class BestsController : ControllerBase
             user.FrameId = 200502;
         }
 
-        bests.Ever.SortRecord();
-        bests.Current.SortRecord();
+        bests.Ever.SortRecordForBests();
+        bests.Current.SortRecordForBests();
 
         List<CommonRecord> bestEver = [];
 
@@ -77,7 +77,7 @@ public partial class BestsController : ControllerBase
             using HttpClient http = new();
             using FileStream stream =
                 System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
-            http.GetStreamAsync(record.JacketUrl).Result.CopyTo(stream);
+            (await http.GetStreamAsync(record.JacketUrl)).CopyTo(stream);
         }
 
         List<CommonRecord> bestCurrent = [];
@@ -93,7 +93,7 @@ public partial class BestsController : ControllerBase
             using HttpClient http = new();
             using FileStream stream =
                 System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
-            http.GetStreamAsync(record.JacketUrl).Result.CopyTo(stream);
+            (await http.GetStreamAsync(record.JacketUrl)).CopyTo(stream);
         }
 
         return (user, bestEver, bestCurrent, bests.EverTotal, bests.CurrentTotal);

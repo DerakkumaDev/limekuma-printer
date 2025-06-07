@@ -21,22 +21,24 @@ internal static class DrawExtensions
             float y = x < 5 ? 5 : MathF.Ceiling(x);
             float z = MathF.Pow(2, y);
 
-            Font f = new(font, z);
-            FontRectangle textbox = TextMeasurer.MeasureAdvance(text, new(f)
+            FontRectangle textbox = font.GetSize(size, text, fallbacks);
+            Font f = GetSizeFont(font, z);
+
+            int textImageWidth = (int)Math.Ceiling(textbox.Width + z);
+            int imageWidth = (int)Math.Ceiling(textImageWidth * size / z);
+            int textImageHeight = (int)Math.Ceiling(textbox.Height + z);
+            int imageHeight = (int)Math.Ceiling(textImageHeight * size / z);
+
+            RichTextOptions options = new(f)
             {
                 FallbackFontFamilies = fallbacks
-            });
+            };
 
-            Image textImage = new Image<Rgba32>((int)Math.Ceiling(textbox.Width + z),
-                (int)Math.Ceiling(textbox.Height + z));
+            Image<Rgba32> textImage = new(textImageWidth, textImageHeight);
             textImage.Mutate(ctx =>
             {
-                ctx.DrawText(new(f)
-                {
-                    FallbackFontFamilies = fallbacks
-                }, text, color);
-                ctx.Resize((int)Math.Ceiling(textImage.Width * size / z),
-                    (int)Math.Ceiling(textImage.Height * size / z), resampler);
+                ctx.DrawText(options, text, color);
+                ctx.Resize(imageWidth, imageHeight, resampler);
             });
 
             return textImage;
@@ -50,25 +52,36 @@ internal static class DrawExtensions
             float y = x < 5 ? 5 : MathF.Ceiling(x);
             float z = MathF.Pow(2, y);
 
-            Font f = new(font, z);
-            FontRectangle textbox = TextMeasurer.MeasureAdvance(text, new(f)
+            FontRectangle textbox = font.GetSize(size, text, fallbacks);
+            Font f = GetSizeFont(font, z);
+
+            int textImageWidth = (int)Math.Ceiling(textbox.Width + z);
+            int imageWidth = (int)Math.Ceiling(textImageWidth * size / z);
+            int textImageHeight = (int)Math.Ceiling(textbox.Height + z);
+            int imageHeight = (int)Math.Ceiling(textImageHeight * size / z);
+
+            RichTextOptions options = new(f)
             {
                 FallbackFontFamilies = fallbacks
-            });
+            };
 
-            Image textImage = new Image<Rgba32>((int)Math.Ceiling(textbox.Width + z),
-                (int)Math.Ceiling(textbox.Height + z));
+            Image<Rgba32> textImage = new(textImageWidth, textImageHeight);
             textImage.Mutate(ctx =>
             {
-                ctx.DrawText(new(f)
-                {
-                    FallbackFontFamilies = fallbacks
-                }, text, brush, pen);
-                ctx.Resize((int)Math.Ceiling(textImage.Width * size / z),
-                    (int)Math.Ceiling(textImage.Height * size / z), resampler);
+                ctx.DrawText(options, text, brush, pen);
+                ctx.Resize(imageWidth, imageHeight, resampler);
             });
 
             return textImage;
+        }
+
+        internal FontRectangle GetSize(float size, string text, IReadOnlyList<FontFamily> fallbacks)
+        {
+            Font f = GetSizeFont(font, size);
+            return TextMeasurer.MeasureAdvance(text, new(f)
+            {
+                FallbackFontFamilies = fallbacks
+            });
         }
     }
 
@@ -77,8 +90,12 @@ internal static class DrawExtensions
         internal void Resize(int width, int height, IResampler resampler) =>
             image.Mutate(ctx => ctx.Resize(width, height, resampler));
 
-        internal void Resize(double percent, IResampler resampler) =>
-            image.Mutate(ctx => ctx.Resize((int)Math.Ceiling(image.Width * percent),
-                (int)Math.Ceiling(image.Height * percent), resampler));
+        internal void Resize(double percent, IResampler resampler)
+        {
+            int imageWidth = (int)Math.Ceiling(image.Width * percent);
+            int imageHeight = (int)Math.Ceiling(image.Height * percent);
+
+            image.Mutate(ctx => ctx.Resize(imageWidth, imageHeight, resampler));
+        }
     }
 }
