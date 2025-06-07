@@ -40,17 +40,21 @@ public abstract class BaseController : ControllerBase
     {
         foreach (CommonRecord record in records)
         {
-            if (System.IO.File.Exists(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png")))
-            {
-                continue;
-            }
-
-            using HttpClient http = new();
-            using FileStream stream =
-                System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
-            using Stream imageStream = await http.GetStreamAsync(record.JacketUrl);
-            imageStream.CopyTo(stream);
+            await PrepareRecordDataAsync(record);
         }
+    }
+
+    protected static async Task PrepareRecordDataAsync(CommonRecord record)
+    {
+        if (System.IO.File.Exists(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png")))
+        {
+            return;
+        }
+
+        using HttpClient http = new();
+        using FileStream stream = System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
+        using Stream imageStream = await http.GetStreamAsync(record.JacketUrl);
+        imageStream.CopyTo(stream);
     }
 
     protected async Task<IActionResult> ReturnImageAsync(Image image, bool isAnime = false)

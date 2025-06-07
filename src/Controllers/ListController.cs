@@ -18,7 +18,6 @@ public partial class ListController : BaseController
         }
 
         await PrepareUserDataAsync(user);
-        await PrepareRecordDataAsync(records);
 
         int[] counts = new int[15];
 
@@ -65,16 +64,7 @@ public partial class ListController : BaseController
                 }];
             }
 
-            if (System.IO.File.Exists(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png")))
-            {
-                continue;
-            }
-
-            using HttpClient http = new();
-            using FileStream stream =
-                System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
-            using Stream imageStream = await http.GetStreamAsync(record.JacketUrl);
-            imageStream.CopyTo(stream);
+            await PrepareRecordDataAsync(record);
         }
 
         return (counts, i, j);
