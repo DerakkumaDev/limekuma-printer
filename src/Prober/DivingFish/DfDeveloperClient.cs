@@ -4,11 +4,11 @@ namespace Limekuma.Prober.DivingFish;
 
 public class DfDeveloperClient(string token) : DfDataClient("Developer-Token", token)
 {
-    public async Task<Player> GetAllRecordsAsync(uint qq, CancellationToken cancellationToken = default) =>
-        await GetAsync<Player>($"/api/maimaidxprober/dev/player/records?qq={qq}", cancellationToken);
+    public async Task<PlayerData> GetPlayerDataAsync(uint qq, CancellationToken cancellationToken = default) =>
+        await GetAsync<PlayerData>($"/api/maimaidxprober/dev/player/records?qq={qq}", cancellationToken);
 
-    public async Task<Player> GetAllRecordsAsync(string account, CancellationToken cancellationToken = default) =>
-        await GetAsync<Player>($"/api/maimaidxprober/dev/player/records?username={account}", cancellationToken);
+    public async Task<PlayerData> GetPlayerDataAsync(string account, CancellationToken cancellationToken = default) =>
+        await GetAsync<PlayerData>($"/api/maimaidxprober/dev/player/records?username={account}", cancellationToken);
 
     public async Task<Dictionary<string, List<Record>>> GetRecordsAsync(uint qq, int id,
         CancellationToken cancellationToken = default) =>

@@ -29,9 +29,9 @@ public class LxnsResourceClient : LxnsClient
         return response;
     }
 
-    public async Task<SongList> GetSongListAsync(int? version = null, bool? includeNotes = null,
+    public async Task<SongData> GetSongsAsync(int? version = null, bool? includeNotes = null,
         CancellationToken cancellationToken = default) =>
-        await GetListAsync<SongList>("song", "notes", version, includeNotes, cancellationToken);
+        await GetListAsync<SongData>("song", "notes", version, includeNotes, cancellationToken);
 
     public async Task<Song> GetSongAsync(int id, int? version = null, CancellationToken cancellationToken = default)
     {
@@ -50,7 +50,7 @@ public class LxnsResourceClient : LxnsClient
         return response.Aliases;
     }
 
-    public async Task<List<Icon>> GetIconListAsync(int? version = null, bool? includeRequired = null,
+    public async Task<List<Icon>> GetIconsAsync(int? version = null, bool? includeRequired = null,
         CancellationToken cancellationToken = default)
     {
         IconListResponse response =
@@ -69,7 +69,7 @@ public class LxnsResourceClient : LxnsClient
         return await GetAsync<Icon>(url, cancellationToken);
     }
 
-    public async Task<List<NamePlate>> GetPlateListAsync(int? version = null, bool? includeRequired = null,
+    public async Task<List<NamePlate>> GetPlatesAsync(int? version = null, bool? includeRequired = null,
         CancellationToken cancellationToken = default)
     {
         PlateListResponse response =
@@ -89,7 +89,7 @@ public class LxnsResourceClient : LxnsClient
         return await GetAsync<NamePlate>(url, cancellationToken);
     }
 
-    public async Task<List<Frame>> GetFrameListAsync(int? version = null, bool? includeRequired = null,
+    public async Task<List<Frame>> GetFramesAsync(int? version = null, bool? includeRequired = null,
         CancellationToken cancellationToken = default)
     {
         FrameListResponse response =
@@ -109,7 +109,7 @@ public class LxnsResourceClient : LxnsClient
         return await GetAsync<Frame>(url, cancellationToken);
     }
 
-    public async Task<List<CollectionGenre>> GetCollectionGenreListAsync(int? version = null,
+    public async Task<List<CollectionGenre>> GetCollectionGenresAsync(int? version = null,
         CancellationToken cancellationToken = default)
     {
         string url = "/api/v0/maimai/collection-genre/list";

@@ -5,6 +5,12 @@ namespace Limekuma.Prober.DivingFish.Models;
 
 public record Player
 {
+    [JsonPropertyName("username")]
+    public required string Account { get; set; }
+
+    [JsonPropertyName("rating")]
+    public required int Rating { get; set; }
+
     [JsonPropertyName("additional_rating")]
     public required CommonCourseRank ClassRank { get; set; }
 
@@ -14,14 +20,11 @@ public record Player
     [JsonPropertyName("plate")]
     public required string PlateName { get; set; }
 
-    [JsonPropertyName("rating")]
-    public required int Rating { get; set; }
+    [JsonPropertyName("charts")]
+    public required Bests Bests { get; set; }
 
-    [JsonPropertyName("records")]
-    public required List<Record> Records { get; set; }
-
-    [JsonPropertyName("username")]
-    public required string Account { get; set; }
+    [JsonPropertyName("user_general_data")]
+    public required object? UserGeneralData { get; set; }
 
     public static implicit operator CommonUser(Player player) =>
         new()

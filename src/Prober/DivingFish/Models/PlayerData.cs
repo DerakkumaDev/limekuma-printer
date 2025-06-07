@@ -3,14 +3,8 @@ using System.Text.Json.Serialization;
 
 namespace Limekuma.Prober.DivingFish.Models;
 
-public record PlayerInfo
+public record PlayerData
 {
-    [JsonPropertyName("username")]
-    public required string Account { get; set; }
-
-    [JsonPropertyName("rating")]
-    public required int Rating { get; set; }
-
     [JsonPropertyName("additional_rating")]
     public required CommonCourseRank ClassRank { get; set; }
 
@@ -20,13 +14,16 @@ public record PlayerInfo
     [JsonPropertyName("plate")]
     public required string PlateName { get; set; }
 
-    [JsonPropertyName("charts")]
-    public required Bests Bests { get; set; }
+    [JsonPropertyName("rating")]
+    public required int Rating { get; set; }
 
-    [JsonPropertyName("user_general_data")]
-    public required object? UserGeneralData { get; set; }
+    [JsonPropertyName("records")]
+    public required List<Record> Records { get; set; }
 
-    public static implicit operator CommonUser(PlayerInfo player) =>
+    [JsonPropertyName("username")]
+    public required string Account { get; set; }
+
+    public static implicit operator CommonUser(PlayerData player) =>
         new()
         {
             Name = player.Name,

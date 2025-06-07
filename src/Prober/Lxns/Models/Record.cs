@@ -31,6 +31,51 @@ public record Record : SimpleRecord
 
     public string JacketUrl => $"https://assets2.lxns.net/maimai/jacket/{Id}.png";
 
+    public Chart Chart
+    {
+        get
+        {
+            if (field is null)
+            {
+                Song song = SongData.Shared.Songs.First(x => x.Id == Id);
+                field = (Type switch
+                {
+                    SongTypes.Standard => song.Charts.Standard,
+                    SongTypes.DX => song.Charts.DX,
+                    _ => throw new InvalidDataException()
+                })[(int)Difficulty - 1];
+            }
+
+            return field;
+        }
+    }
+
+    public int TotalDXScore
+    {
+        get
+        {
+            if (field is 0)
+            {
+                field = Chart.Notes!.Total * 3;
+            }
+
+            return field;
+        }
+    }
+
+    public double LevelValue
+    {
+        get
+        {
+            if (field is 0)
+            {
+                field = Chart.LevelValue;
+            }
+
+            return field;
+        }
+    }
+
     public static implicit operator CommonRecord(Record record) =>
         new()
         {
@@ -43,6 +88,8 @@ public record Record : SimpleRecord
             Type = (CommonSongTypes)record.Type,
             Achievements = record.Achievements,
             DXRating = record.DXRating ?? 0,
-            DXScore = record.DXScore
+            DXScore = record.DXScore,
+            TotalDXScore = record.TotalDXScore,
+            LevelValue = record.LevelValue
         };
 }

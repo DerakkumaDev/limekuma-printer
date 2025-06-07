@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Limekuma.Prober.Lxns.Models;
 
-public record SongDifficulty
+public record Chart
 {
     [JsonPropertyName("type")]
     public required SongTypes Type { get; init; }

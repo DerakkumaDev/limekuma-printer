@@ -2,6 +2,7 @@ using Limekuma.Draw;
 using Limekuma.Prober.Common;
 using Limekuma.Prober.DivingFish;
 using Limekuma.Prober.DivingFish.Models;
+using Limekuma.Utils;
 using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
 
@@ -13,34 +14,12 @@ public partial class ListController : ControllerBase
         string level, int page = 1, int plate = 101)
     {
         DfDeveloperClient df = new(token);
-        Player player = await df.GetAllRecordsAsync(qq);
+        PlayerData player = await df.GetPlayerDataAsync(qq);
         CommonUser user = player;
         user.PlateId = plate;
 
-        player.Records.Sort((x, y) =>
-        {
-            int compare = x.DXRating.CompareTo(y.DXRating);
-            if (compare is not 0)
-            {
-                return compare;
-            }
-
-            compare = x.LevelValue.CompareTo(y.LevelValue);
-            if (compare is not 0)
-            {
-                return compare;
-            }
-
-            compare = x.Achievements.CompareTo(y.Achievements);
-            if (compare is not 0)
-            {
-                return compare;
-            }
-
-            return 0;
-        });
         List<Record> records = [.. player.Records.Where(x => x.Level == level)];
-        int i = (page - 1) * 50;
+        int i = (page - 1) * 55;
         int count = records.Count;
         if (i >= count)
         {
@@ -70,10 +49,12 @@ public partial class ListController : ControllerBase
             user.FrameId = 200502;
         }
 
+        records.SortRecord();
+
         List<CommonRecord> cRecords = [];
         int[] counts = new int[15];
 
-        for (int j = i, k = i + 50; j < count && j < k; ++j)
+        for (int j = i, k = i + 55; j < count && j < k; ++j)
         {
             Record record = records[j];
             cRecords.Add(record);
@@ -137,7 +118,7 @@ public partial class ListController : ControllerBase
     {
         (CommonUser user, List<CommonRecord> records, int count, int[] counts) =
             await PrepareDfData(token, qq, level, page, plate);
-        int total = (int)Math.Ceiling((double)count / 50);
+        int total = (int)Math.Ceiling((double)count / 55);
         using Image bestsImage = new ListDrawer().Draw(user, records, page, total, counts, level);
 
         MemoryStream outStream = new();

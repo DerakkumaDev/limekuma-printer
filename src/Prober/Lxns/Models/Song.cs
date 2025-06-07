@@ -32,7 +32,7 @@ public record Song
     public bool? Disabled { get; init; } = false;
 
     [JsonPropertyName("difficulties")]
-    public required SongDifficulties Difficulties { get; init; }
+    public required Charts Charts { get; init; }
 
     public string AudioUrl => $"https://assets2.lxns.net/maimai/music/{Id}.mp3";
 

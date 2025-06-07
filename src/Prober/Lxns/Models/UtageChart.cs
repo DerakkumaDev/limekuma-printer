@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Limekuma.Prober.Lxns.Models;
 
-public record SongDifficultyUtage : SongDifficulty
+public record UtageChart : Chart
 {
     [JsonPropertyName("kanji")]
     public required string Kanji { get; init; }

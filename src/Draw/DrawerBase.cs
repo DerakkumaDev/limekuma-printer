@@ -51,18 +51,4 @@ public abstract class DrawerBase
     protected static FontFamily Symbols2Font { get; }
 
     #endregion
-
-    protected static SongList SongList
-    {
-        get
-        {
-            if (field is null || DateTimeOffset.Now.AddHours(10).Date != field.PullTime.AddHours(10).Date)
-            {
-                LxnsResourceClient _resource = new();
-                field = _resource.GetSongListAsync(includeNotes: true).Result;
-            }
-
-            return field;
-        }
-    }
 }

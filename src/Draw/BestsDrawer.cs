@@ -1,5 +1,4 @@
 using Limekuma.Prober.Common;
-using Limekuma.Prober.Lxns.Models;
 using Limekuma.Utils;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
@@ -226,14 +225,6 @@ public class BestsDrawer : DrawerBase
 
     public Image DrawScore(CommonRecord score, int index)
     {
-        Song song = SongList.Songs.First(x => x.Id == score.Id % 10000);
-        SongDifficulty chart = (score.Type switch
-        {
-            CommonSongTypes.Standard => song.Difficulties.Standard,
-            CommonSongTypes.DX => song.Difficulties.DX,
-            _ => throw new InvalidDataException()
-        })[(int)score.Difficulty - 1];
-
         Rgb24 colorValue = new(255, 255, 255);
         if (score.Difficulty is CommonDifficulties.ReMaster)
         {
@@ -342,9 +333,7 @@ public class BestsDrawer : DrawerBase
 
         #region LevelValue
 
-        double levelValue = chart.LevelValue;
-
-        string[] level = levelValue.ToString().Split('.');
+        string[] level = score.LevelValue.ToString().Split('.');
         string levelPart1 = $"{level[0]}.";
         string levelPart2 = level.Length > 1 ? level[1] : "0";
         Font levelPart1Font = boldFont34;
@@ -400,9 +389,8 @@ public class BestsDrawer : DrawerBase
 
         #region DXScore
 
-        int totalDXScore = chart.Notes!.Total * 3;
         string dxScorePart1 = $"{score.DXScore}/";
-        string dxScorePart2 = totalDXScore.ToString();
+        string dxScorePart2 = score.TotalDXScore.ToString();
 
         Font dxScorePart1Font = boldFont30;
         Font dxScorePart2Font = boldFont24;
@@ -426,7 +414,7 @@ public class BestsDrawer : DrawerBase
 
         #region DXStar
 
-        double dxScorePersent = (double)score.DXScore / totalDXScore;
+        double dxScorePersent = (double)score.DXScore / score.TotalDXScore;
         if (dxScorePersent >= 0.85)
         {
             (int stars, int starIndex) = dxScorePersent switch

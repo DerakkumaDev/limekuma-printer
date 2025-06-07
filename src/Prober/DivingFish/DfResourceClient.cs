@@ -5,24 +5,24 @@ namespace Limekuma.Prober.DivingFish;
 
 public class DfResourceClient : DfClient
 {
-    public async Task<List<Song>> GetSongListAsync(CancellationToken cancellationToken = default) =>
+    public async Task<List<Song>> GetSongsAsync(CancellationToken cancellationToken = default) =>
         await GetAsync<List<Song>>("/api/maimaidxprober/music_data", cancellationToken);
 
-    public async Task<PlayerInfo> GetPlayerAsync(uint qq, CancellationToken cancellationToken = default) =>
-        await PostAsync<dynamic, PlayerInfo>("/api/maimaidxprober/query/player", new { qq = qq.ToString(), b50 = true },
+    public async Task<Player> GetPlayerAsync(uint qq, CancellationToken cancellationToken = default) =>
+        await PostAsync<dynamic, Player>("/api/maimaidxprober/query/player", new { qq = qq.ToString(), b50 = true },
             cancellationToken);
 
-    public async Task<PlayerInfo> GetPlayerAsync(uint qq, bool best50, CancellationToken cancellationToken = default) =>
-        await PostAsync<dynamic, PlayerInfo>("/api/maimaidxprober/query/player",
+    public async Task<Player> GetPlayerAsync(uint qq, bool best50, CancellationToken cancellationToken = default) =>
+        await PostAsync<dynamic, Player>("/api/maimaidxprober/query/player",
             new { qq = qq.ToString(), b50 = best50 }, cancellationToken);
 
-    public async Task<PlayerInfo> GetPlayerAsync(string name, CancellationToken cancellationToken = default) =>
-        await PostAsync<dynamic, PlayerInfo>("/api/maimaidxprober/query/player", new { username = name, b50 = true },
+    public async Task<Player> GetPlayerAsync(string name, CancellationToken cancellationToken = default) =>
+        await PostAsync<dynamic, Player>("/api/maimaidxprober/query/player", new { username = name, b50 = true },
             cancellationToken);
 
-    public async Task<PlayerInfo> GetPlayerAsync(string name, bool best50,
+    public async Task<Player> GetPlayerAsync(string name, bool best50,
         CancellationToken cancellationToken = default) =>
-        await PostAsync<dynamic, PlayerInfo>("/api/maimaidxprober/query/player", new { username = name, b50 = best50 },
+        await PostAsync<dynamic, Player>("/api/maimaidxprober/query/player", new { username = name, b50 = best50 },
             cancellationToken);
 
     public async Task<List<SimpleRecord>> GetRecordsInVersionAsync(uint qq, IEnumerable<string> versions,
@@ -41,7 +41,7 @@ public class DfResourceClient : DfClient
         return response.VerList;
     }
 
-    public async Task<Dictionary<int, double>> GetHotSongListAsync(CancellationToken cancellationToken = default) =>
+    public async Task<Dictionary<int, double>> GetHotSongsAsync(CancellationToken cancellationToken = default) =>
         await GetAsync<Dictionary<int, double>>("/api/maimaidxprober/hot_music", cancellationToken);
 
     public async Task<Dictionary<int, VoteResult>> GetVoteResultAsync(CancellationToken cancellationToken = default) =>

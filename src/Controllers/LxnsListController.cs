@@ -2,6 +2,7 @@ using Limekuma.Draw;
 using Limekuma.Prober.Common;
 using Limekuma.Prober.Lxns;
 using Limekuma.Prober.Lxns.Models;
+using Limekuma.Utils;
 using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
 
@@ -46,6 +47,8 @@ public partial class ListController : ControllerBase
         {
             user.FrameId = 200502;
         }
+
+        records.SortRecord();
 
         List<CommonRecord> cRecords = [];
         int[] counts = new int[15];

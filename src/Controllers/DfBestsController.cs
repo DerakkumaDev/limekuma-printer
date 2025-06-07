@@ -2,6 +2,7 @@ using Limekuma.Draw;
 using Limekuma.Prober.Common;
 using Limekuma.Prober.DivingFish;
 using Limekuma.Prober.DivingFish.Models;
+using Limekuma.Utils;
 using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
 
@@ -13,7 +14,7 @@ public partial class BestsController : ControllerBase
         int frame = 200502, int plate = 101)
     {
         DfResourceClient df = new();
-        PlayerInfo player = await df.GetPlayerAsync(qq);
+        Player player = await df.GetPlayerAsync(qq);
         CommonUser user = player;
         user.FrameId = frame;
         user.PlateId = plate;
@@ -40,6 +41,9 @@ public partial class BestsController : ControllerBase
         {
             user.FrameId = 200502;
         }
+
+        player.Bests.Ever.SortRecord();
+        player.Bests.Current.SortRecord();
 
         List<CommonRecord> bestEver = [];
         int everTotal = 0;

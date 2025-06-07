@@ -4,8 +4,8 @@ namespace Limekuma.Prober.DivingFish;
 
 public class DfPersonalClient(string personalToken) : DfDataClient("Import-Token", personalToken)
 {
-    public async Task<Player> GetAllRecordsAsync(CancellationToken cancellationToken = default) =>
-        await GetAsync<Player>("/api/maimaidxprober/player/records", cancellationToken);
+    public async Task<PlayerData> GetPlayerDataAsync(CancellationToken cancellationToken = default) =>
+        await GetAsync<PlayerData>("/api/maimaidxprober/player/records", cancellationToken);
 
     public async Task UploadRecordsAsync(IEnumerable<Record> records, CancellationToken cancellationToken = default) =>
         await PostAsync("/api/maimaidxprober/player/update_records", records, cancellationToken);

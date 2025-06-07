@@ -22,6 +22,10 @@ public record CommonRecord
 
     public required double DXRating { get; init; }
 
+    public required int TotalDXScore { get; init; }
+
+    public required double LevelValue { get; init; }
+
     public string AudioUrl => $"https://assets2.lxns.net/maimai/music/{Id % 10000}.mp3";
 
     public string JacketUrl => $"https://assets2.lxns.net/maimai/jacket/{Id % 10000}.png";

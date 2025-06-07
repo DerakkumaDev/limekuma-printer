@@ -53,6 +53,28 @@ public class Record
 
     public string JacketUrl => $"https://assets2.lxns.net/maimai/jacket/{Id % 10000}.png";
 
+    public Song Song
+    {
+        get
+        {
+            field ??= Songs.Shared.First(x => x.Id == Id.ToString());
+            return field;
+        }
+    }
+
+    public int TotalDXScore
+    {
+        get
+        {
+            if (field is 0)
+            {
+                field = Song.Charts[DifficultyIndex].Notes.Sum() * 3;
+            }
+
+            return field;
+        }
+    }
+
     public static implicit operator CommonRecord(Record record) =>
         new()
         {
@@ -65,6 +87,8 @@ public class Record
             Type = (CommonSongTypes)record.Type,
             Achievements = record.Achievements,
             DXRating = record.DXRating,
-            DXScore = record.DXScore
+            DXScore = record.DXScore,
+            TotalDXScore = record.TotalDXScore,
+            LevelValue = record.LevelValue
         };
 }

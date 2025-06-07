@@ -2,6 +2,7 @@ using Limekuma.Draw;
 using Limekuma.Prober.Common;
 using Limekuma.Prober.Lxns;
 using Limekuma.Prober.Lxns.Models;
+using Limekuma.Utils;
 using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
 
@@ -59,6 +60,9 @@ public partial class BestsController : ControllerBase
         {
             user.FrameId = 200502;
         }
+
+        bests.Ever.SortRecord();
+        bests.Current.SortRecord();
 
         List<CommonRecord> bestEver = [];
 
