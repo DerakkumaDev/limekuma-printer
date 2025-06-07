@@ -47,7 +47,7 @@ public class BestsDrawer : DrawerBase
     {
         using Image sdBests = DrawScores(ever);
         using Image dxBests = DrawScores(current, ever.Count);
-        using Image<Rgba32> image = new(1440, 2560, new(0, 0, 0, 0));
+        using Image<Rgba32> image = new(1440, 2560);
         using Image frameImage =
             Image.Load(Path.Combine(FrameRootPath, $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png"));
         using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
@@ -72,10 +72,10 @@ public class BestsDrawer : DrawerBase
         Font notoBlackFont16 = NotoBlackFont.GetSizeFont(32);
 
         List<char> ratingLE = [.. user.Rating.ToString().Reverse()];
-        int[] ratingPos = [114, 86, 56, 28, 0];
         using Image<Rgba32> ratingImage = new(512, 64);
         ratingImage.Mutate(ctx =>
         {
+            ReadOnlySpan<int> ratingPos = [114, 86, 56, 28, 0];
             for (int i = 0; i < ratingLE.Count; i++)
             {
                 ctx.DrawText(ratingLE[i].ToString(), notoBlackFont16, new Color(new Rgb24(249, 198, 10)),
@@ -86,7 +86,7 @@ public class BestsDrawer : DrawerBase
         });
 
         string shougou = user.TrophyText;
-        FontRectangle shougouSize = HeavyFont.GetSize(14, shougou, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        FontRectangle shougouSize = HeavyFont.GetSize(14, shougou, [SymbolsFont, Symbols2Font, NotoBlackFont]);
         Point shougoubasePos = new(181, 143);
         PointF shougouPos = new(shougoubasePos.X + ((shougoubase.Width - shougouSize.Width) / 2), 151);
 
@@ -160,7 +160,7 @@ public class BestsDrawer : DrawerBase
         int count = scores.Count;
         int height = ((int)Math.Ceiling(((double)count + 1) / 4) * 120) - 10;
         Point point = new(350, 0);
-        Image<Rgba32> image = new(1390, height, new(0, 0, 0, 0));
+        Image<Rgba32> image = new(1390, height);
         for (int index = 0; index < count;)
         {
             for (int rowIndex = 0, rowMaxIndex = point.Y == 0 ? 3 : 4;
@@ -282,7 +282,7 @@ public class BestsDrawer : DrawerBase
 
         #region Rating
 
-        string rating = Math.Floor(score.DXRating).ToString();
+        string rating = score.DXRating.ToString();
         FontRectangle ratingSize = BoldFont.GetSize(34, rating, [SymbolsFont, Symbols2Font, NotoBoldFont]);
 
         PointF ratingPos = new(548 - ratingSize.Width, 182);

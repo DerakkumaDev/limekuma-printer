@@ -38,63 +38,13 @@ public partial class BestsController : ControllerBase
         Bests bests = await player.GetBestsAsync();
         CommonUser user = player;
 
-        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.IconRootPath, $"{user.IconId}.png")))
-        {
-            using HttpClient http = new();
-            using FileStream stream =
-                System.IO.File.OpenWrite(Path.Combine(BestsDrawer.IconRootPath, $"{user.IconId}.png"));
-            (await http.GetStreamAsync(user.IconUrl)).CopyTo(stream);
-        }
+        List<CommonRecord> bestEver = bests.Ever.ConvertAll<CommonRecord>(_ => _);
+        bestEver.SortRecordForBests();
 
-        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.PlateRootPath,
-                $"{user.PlateId.ToString().PadLeft(6, '0')}.png")))
-        {
-            using HttpClient http = new();
-            using FileStream stream = System.IO.File.OpenWrite(Path.Combine(BestsDrawer.PlateRootPath,
-                $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
-            (await http.GetStreamAsync(user.PlateUrl)).CopyTo(stream);
-        }
+        List<CommonRecord> bestCurrent = bests.Current.ConvertAll<CommonRecord>(_ => _);
+        bestCurrent.SortRecordForBests();
 
-        if (!System.IO.File.Exists(Path.Combine(BestsDrawer.FrameRootPath,
-                $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png")))
-        {
-            user.FrameId = 200502;
-        }
-
-        bests.Ever.SortRecordForBests();
-        bests.Current.SortRecordForBests();
-
-        List<CommonRecord> bestEver = [];
-
-        foreach (Record record in bests.Ever)
-        {
-            bestEver.Add(record);
-            if (System.IO.File.Exists(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png")))
-            {
-                continue;
-            }
-
-            using HttpClient http = new();
-            using FileStream stream =
-                System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
-            (await http.GetStreamAsync(record.JacketUrl)).CopyTo(stream);
-        }
-
-        List<CommonRecord> bestCurrent = [];
-
-        foreach (Record record in bests.Current)
-        {
-            bestCurrent.Add(record);
-            if (System.IO.File.Exists(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png")))
-            {
-                continue;
-            }
-
-            using HttpClient http = new();
-            using FileStream stream =
-                System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
-            (await http.GetStreamAsync(record.JacketUrl)).CopyTo(stream);
-        }
+        await PrepareData(user, bestEver, bestCurrent);
 
         return (user, bestEver, bestCurrent, bests.EverTotal, bests.CurrentTotal);
     }
@@ -108,9 +58,15 @@ public partial class BestsController : ControllerBase
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal);
 
         MemoryStream outStream = new();
+#if RELEASE
         await bestsImage.SaveAsJpegAsync(outStream);
         outStream.Seek(0, SeekOrigin.Begin);
         return File(outStream, "image/jpeg");
+#elif DEBUG
+        await bestsImage.SaveAsPngAsync(outStream);
+        outStream.Seek(0, SeekOrigin.Begin);
+        return File(outStream, "image/png");
+#endif
     }
 
     [HttpGet("anime/lxns")]

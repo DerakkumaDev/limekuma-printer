@@ -24,7 +24,7 @@ public class ListDrawer : BestsDrawer
         string level, string backgroundPath = BackgroundPath)
     {
         using Image recordsImage = DrawScores(records);
-        using Image<Rgba32> image = new(1440, 2560, new(0, 0, 0, 0));
+        using Image<Rgba32> image = new(1440, 2560);
         using Image frameImage = Image.Load(FramePath);
         using Image levelImage = Image.Load(Path.Combine(LevelRootPath, $"{level}.png"));
         using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
@@ -49,10 +49,10 @@ public class ListDrawer : BestsDrawer
         Font notoBlackFont16 = NotoBlackFont.GetSizeFont(32);
 
         List<char> ratingLE = [.. user.Rating.ToString().Reverse()];
-        int[] ratingPos = [114, 86, 56, 28, 0];
         using Image<Rgba32> ratingImage = new(512, 64);
         ratingImage.Mutate(ctx =>
         {
+            ReadOnlySpan<int> ratingPos = [114, 86, 56, 28, 0];
             for (int i = 0; i < ratingLE.Count; ++i)
             {
                 ctx.DrawText(ratingLE[i].ToString(), notoBlackFont16, new Color(new Rgb24(249, 198, 10)),
@@ -63,12 +63,12 @@ public class ListDrawer : BestsDrawer
         });
 
         string shougou = user.TrophyText;
-        FontRectangle shougouSize = HeavyFont.GetSize(14, shougou, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        FontRectangle shougouSize = HeavyFont.GetSize(14, shougou, [SymbolsFont, Symbols2Font, NotoBlackFont]);
         Point shougoubasePos = new(181, 143);
         PointF shougouPos = new(shougoubasePos.X + ((shougoubase.Width - shougouSize.Width) / 2), 151);
 
         string pagination = $"{page} / {total}";
-        FontRectangle paginationSize = HeavyFont.GetSize(70, pagination, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        FontRectangle paginationSize = HeavyFont.GetSize(70, pagination, [SymbolsFont, Symbols2Font, NotoBlackFont]);
         PointF paginationPos = new(256 - (paginationSize.Width / 2), 815);
 
         using Image shougouImage = HeavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)),

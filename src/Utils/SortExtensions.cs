@@ -1,8 +1,10 @@
+using Limekuma.Prober.Common;
+
 namespace Limekuma.Utils;
 
 internal static class SortExtensions
 {
-    extension(List<Prober.DivingFish.Models.Record> records)
+    extension(List<CommonRecord> records)
     {
         internal void SortRecordForBests() => records.Sort((x, y) =>
         {
@@ -39,63 +41,6 @@ internal static class SortExtensions
             if (compare is not 0)
             {
                 return compare;
-            }
-
-            compare = y.LevelValue.CompareTo(x.LevelValue);
-            if (compare is not 0)
-            {
-                return compare;
-            }
-
-            return 0;
-        });
-    }
-
-    extension(List<Prober.Lxns.Models.Record> records)
-    {
-        internal void SortRecordForBests() => records.Sort((x, y) =>
-        {
-            int compare;
-            if (y.DXRating.HasValue && x.DXRating.HasValue)
-            {
-                compare = y.DXRating.Value.CompareTo(x.DXRating);
-                if (compare is not 0)
-                {
-                    return compare;
-                }
-            }
-
-            compare = y.LevelValue.CompareTo(x.LevelValue);
-            if (compare is not 0)
-            {
-                return compare;
-            }
-
-            compare = y.Achievements.CompareTo(x.Achievements);
-            if (compare is not 0)
-            {
-                return compare;
-            }
-
-            return 0;
-        });
-
-        internal void SortRecordForList() => records.Sort((x, y) =>
-        {
-            int compare;
-            compare = y.Achievements.CompareTo(x.Achievements);
-            if (compare is not 0)
-            {
-                return compare;
-            }
-
-            if (y.DXRating.HasValue && x.DXRating.HasValue)
-            {
-                compare = y.DXRating.Value.CompareTo(x.DXRating);
-                if (compare is not 0)
-                {
-                    return compare;
-                }
             }
 
             compare = y.LevelValue.CompareTo(x.LevelValue);

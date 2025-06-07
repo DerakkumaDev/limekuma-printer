@@ -21,14 +21,13 @@ internal static class DrawExtensions
             float y = x < 5 ? 5 : MathF.Ceiling(x);
             float z = MathF.Pow(2, y);
 
-            FontRectangle textbox = font.GetSize(size, text, fallbacks);
-            Font f = GetSizeFont(font, z);
-
+            FontRectangle textbox = font.GetSize(z, text, fallbacks);
             int textImageWidth = (int)Math.Ceiling(textbox.Width + z);
             int imageWidth = (int)Math.Ceiling(textImageWidth * size / z);
             int textImageHeight = (int)Math.Ceiling(textbox.Height + z);
             int imageHeight = (int)Math.Ceiling(textImageHeight * size / z);
 
+            Font f = GetSizeFont(font, z);
             RichTextOptions options = new(f)
             {
                 FallbackFontFamilies = fallbacks
@@ -52,14 +51,13 @@ internal static class DrawExtensions
             float y = x < 5 ? 5 : MathF.Ceiling(x);
             float z = MathF.Pow(2, y);
 
-            FontRectangle textbox = font.GetSize(size, text, fallbacks);
-            Font f = GetSizeFont(font, z);
-
+            FontRectangle textbox = font.GetSize(z, text, fallbacks);
             int textImageWidth = (int)Math.Ceiling(textbox.Width + z);
             int imageWidth = (int)Math.Ceiling(textImageWidth * size / z);
             int textImageHeight = (int)Math.Ceiling(textbox.Height + z);
             int imageHeight = (int)Math.Ceiling(textImageHeight * size / z);
 
+            Font f = GetSizeFont(font, z);
             RichTextOptions options = new(f)
             {
                 FallbackFontFamilies = fallbacks

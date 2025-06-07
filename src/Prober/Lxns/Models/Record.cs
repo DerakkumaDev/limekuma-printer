@@ -87,7 +87,7 @@ public record Record : SimpleRecord
             Rank = record.Rank ?? Ranks.D,
             Type = (CommonSongTypes)record.Type,
             Achievements = record.Achievements,
-            DXRating = record.DXRating ?? 0,
+            DXRating = (int)(record.DXRating ?? 0),
             DXScore = record.DXScore,
             TotalDXScore = record.TotalDXScore,
             LevelValue = record.LevelValue
