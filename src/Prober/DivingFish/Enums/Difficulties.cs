@@ -12,5 +12,6 @@ public enum Difficulties
     Master,
 
     [JsonStringEnumMemberName("Re:MASTER")]
-    ReMaster
+    ReMaster,
+    Utage
 }

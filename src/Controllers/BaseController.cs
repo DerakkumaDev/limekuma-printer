@@ -46,13 +46,13 @@ public abstract class BaseController : ControllerBase
 
     protected static async Task PrepareRecordDataAsync(CommonRecord record)
     {
-        if (System.IO.File.Exists(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png")))
+        if (System.IO.File.Exists(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id % 10000}.png")))
         {
             return;
         }
 
         using HttpClient http = new();
-        using FileStream stream = System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id}.png"));
+        using FileStream stream = System.IO.File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id % 10000}.png"));
         using Stream imageStream = await http.GetStreamAsync(record.JacketUrl);
         imageStream.CopyTo(stream);
     }
