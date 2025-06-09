@@ -86,6 +86,9 @@ public class OptionalConverter : JsonConverterFactory
             catch (JsonException)
             {
             }
+            catch (InvalidOperationException)
+            {
+            }
 
             try
             {
@@ -93,6 +96,9 @@ public class OptionalConverter : JsonConverterFactory
                 return new(valueB);
             }
             catch (JsonException)
+            {
+            }
+            catch (InvalidOperationException)
             {
             }
 
