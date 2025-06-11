@@ -7,7 +7,7 @@ namespace Limekuma.Controllers;
 [Route("list")]
 public partial class ListController : BaseController
 {
-    private static async Task<(int[], int, int)> PrepareDataAsync(CommonUser user, List<CommonRecord> records,
+    private static async Task<(int[], int, int)> PrepareDataAsync(CommonUser user, IList<CommonRecord> records,
         int page = 1)
     {
         int i = (page - 1) * 55;
@@ -19,13 +19,19 @@ public partial class ListController : BaseController
 
         await PrepareUserDataAsync(user);
 
-        int[] counts = new int[15];
+        int[] counts = new int[16];
+        counts[15] = count;
 
         int j = i;
         for (int k = Math.Min(i + 55, count); j < k; ++j)
         {
             CommonRecord record = records[j];
-            if (record.Rank >= Ranks.A)
+            await PrepareRecordDataAsync(record);
+        }
+
+        foreach (CommonRecord record in records)
+        {
+            if (record.Rank >= Ranks.S)
             {
                 ++counts[record.Rank switch
                 {
@@ -35,9 +41,13 @@ public partial class ListController : BaseController
                     Ranks.SS => 3,
                     Ranks.SPlus => 4,
                     Ranks.S => 5,
-                    >= Ranks.A => 6,
-                    _ => 15
+                    _ => 16
                 }];
+            }
+
+            if (record.Rank >= Ranks.A)
+            {
+                ++counts[6];
             }
 
             if (record.ComboFlag >= ComboFlags.FullCombo)
@@ -48,7 +58,7 @@ public partial class ListController : BaseController
                     ComboFlags.AllPerfect => 8,
                     ComboFlags.FullComboPlus => 9,
                     ComboFlags.FullCombo => 10,
-                    _ => 15
+                    _ => 16
                 }];
             }
 
@@ -56,15 +66,13 @@ public partial class ListController : BaseController
             {
                 ++counts[record.SyncFlag switch
                 {
-                    SyncFlags.FullSync => 11,
-                    SyncFlags.FullSyncPlus => 12,
-                    SyncFlags.FullSyncDX => 13,
-                    SyncFlags.FullSyncDXPlus => 14,
-                    _ => 15
+                    SyncFlags.FullSyncDXPlus => 11,
+                    SyncFlags.FullSyncDX => 12,
+                    SyncFlags.FullSyncPlus => 13,
+                    SyncFlags.FullSync => 14,
+                    _ => 16
                 }];
             }
-
-            await PrepareRecordDataAsync(record);
         }
 
         return (counts, i, j);

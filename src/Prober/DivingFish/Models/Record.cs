@@ -11,7 +11,7 @@ public class Record
     public required double Achievements { get; init; }
 
     [JsonPropertyName("cid")]
-    public required int ChartId { get; init; }
+    public int? ChartId { get; init; }
 
     [JsonPropertyName("ds")]
     public required double LevelValue { get; init; }

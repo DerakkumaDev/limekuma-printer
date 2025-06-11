@@ -14,11 +14,10 @@ internal static class DrawExtensions
         internal Font GetSizeFont(float size) => new(font, size);
 
         internal Image DrawImage(float size, string text, Color color, IReadOnlyList<FontFamily> fallbacks,
-            IResampler resampler)
+            IResampler resampler, int zoom = 5)
         {
             float x = MathF.Log2(size);
-            // 2^5 = 32
-            float y = x < 5 ? 5 : MathF.Ceiling(x);
+            float y = x < zoom ? zoom : MathF.Ceiling(x);
             float z = MathF.Pow(2, y);
 
             FontRectangle textbox = font.GetSize(z, text, fallbacks);
@@ -44,11 +43,10 @@ internal static class DrawExtensions
         }
 
         internal Image DrawImage(float size, string text, Brush brush, Pen pen, IReadOnlyList<FontFamily> fallbacks,
-            IResampler resampler)
+            IResampler resampler, int zoom = 5)
         {
             float x = MathF.Log2(size);
-            // 2^5 = 32
-            float y = x < 5 ? 5 : MathF.Ceiling(x);
+            float y = x < zoom ? zoom : MathF.Ceiling(x);
             float z = MathF.Pow(2, y);
 
             FontRectangle textbox = font.GetSize(z, text, fallbacks);
@@ -93,7 +91,7 @@ internal static class DrawExtensions
             int imageWidth = (int)Math.Ceiling(image.Width * percent);
             int imageHeight = (int)Math.Ceiling(image.Height * percent);
 
-            image.Mutate(ctx => ctx.Resize(imageWidth, imageHeight, resampler));
+            Resize(image, imageWidth, imageHeight, resampler);
         }
     }
 }

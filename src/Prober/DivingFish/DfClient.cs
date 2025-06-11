@@ -21,8 +21,6 @@ public abstract class DfClient
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
-
-        _jsonOptions.Converters.Add(new OptionalConverter());
     }
 
     protected async Task<T> GetAsync<T>(string path, CancellationToken cancellationToken = default)

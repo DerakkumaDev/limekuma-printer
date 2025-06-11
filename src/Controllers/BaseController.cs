@@ -36,7 +36,7 @@ public abstract class BaseController : ControllerBase
         }
     }
 
-    protected static async Task PrepareRecordDataAsync(List<CommonRecord> records)
+    protected static async Task PrepareRecordDataAsync(IList<CommonRecord> records)
     {
         foreach (CommonRecord record in records)
         {

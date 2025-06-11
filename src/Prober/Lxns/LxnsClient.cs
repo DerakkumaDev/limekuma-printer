@@ -1,4 +1,3 @@
-using Limekuma.Utils;
 using System.Text.Json;
 
 namespace Limekuma.Prober.Lxns;
@@ -19,8 +18,6 @@ public abstract class LxnsClient
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
-
-        _jsonOptions.Converters.Add(new OptionalConverter());
     }
 
     protected async Task<T> GetAsync<T>(string path, CancellationToken cancellationToken = default) =>
