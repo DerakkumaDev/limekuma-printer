@@ -20,11 +20,11 @@ public abstract class BaseController : ControllerBase
         }
 
         if (!System.IO.File.Exists(Path.Combine(BestsDrawer.PlateRootPath,
-                $"{user.PlateId.ToString().PadLeft(6, '0')}.png")))
+                $"{user.PlateId}.png")))
         {
             using HttpClient http = new();
             using FileStream stream = System.IO.File.OpenWrite(Path.Combine(BestsDrawer.PlateRootPath,
-                $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
+                $"{user.PlateId}.png"));
             using Stream imageStream = await http.GetStreamAsync(user.PlateUrl);
             imageStream.CopyTo(stream);
         }

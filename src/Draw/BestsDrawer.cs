@@ -42,7 +42,7 @@ public class BestsDrawer : DrawerBase
     public const string BackgroundAnimationPath = "./Resources/Background/bests.gif";
 #endif
 
-    public Image Draw(CommonUser user, List<CommonRecord> ever, List<CommonRecord> current, int everTotal,
+    public Image Draw(CommonUser user, IList<CommonRecord> ever, IList<CommonRecord> current, int everTotal,
         int currentTotal, string backgroundPath = BackgroundPath)
     {
         using Image sdBests = DrawScores(ever);
@@ -50,7 +50,7 @@ public class BestsDrawer : DrawerBase
         using Image<Rgba32> image = new(1440, 2560);
         using Image frameImage =
             Image.Load(Path.Combine(FrameRootPath, $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png"));
-        using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId.ToString().PadLeft(6, '0')}.png"));
+        using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId}.png"));
         using Image iconImage = Image.Load(Path.Combine(IconRootPath, $"{user.IconId}.png"));
         using Image @class = Image.Load(Path.Combine(ClassRootPath, $"{(int)user.ClassRank}.png"));
         using Image course = Image.Load(Path.Combine(DaniRootPath, $"{(int)user.CourseRank}.png"));
@@ -62,9 +62,9 @@ public class BestsDrawer : DrawerBase
 
         frameImage.Resize(0.95, KnownResamplers.Lanczos3);
         plate.Resize(0.95, KnownResamplers.Lanczos3);
-        iconImage.Resize(0.75, KnownResamplers.Lanczos3);
-        ratingbase.Resize(0.96, KnownResamplers.Lanczos3);
-        @class.Resize(0.245, KnownResamplers.Lanczos3);
+        iconImage.Resize(0.73, KnownResamplers.Lanczos3);
+        ratingbase.Resize(0.945, KnownResamplers.Lanczos3);
+        @class.Resize(0.78, KnownResamplers.Lanczos3);
         course.Resize(0.213, KnownResamplers.Lanczos3);
         shougoubase.Resize(0.94, KnownResamplers.Lanczos3);
         frameLine.Resize(0.745, KnownResamplers.Lanczos3);
@@ -89,10 +89,10 @@ public class BestsDrawer : DrawerBase
         FontRectangle shougouSize = HeavyFont.GetSize(14, shougou, [SymbolsFont, Symbols2Font, NotoBlackFont]);
         Point shougoubasePos = new(181, 143);
         PointF shougouPos = new(shougoubasePos.X + ((shougoubase.Width - shougouSize.Width) / 2), 151);
-
         using Image shougouImage = HeavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)),
-            Pens.Solid(new Rgb24(0, 0, 0), 2f), [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Spline);
-        using Image nameImage = MediumFont.DrawImage(22, user.Name, new Color(new Rgb24(0, 0, 0)),
+            Pens.Solid(new Rgb24(0, 0, 0), 4f), [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Spline, 6);
+
+        using Image nameImage = MediumFont.DrawImage(21, user.Name, new Color(new Rgb24(0, 0, 0)),
             [SymbolsFont, Symbols2Font, NotoMediumFont], KnownResamplers.Lanczos3);
 
         string scorePart1 = everTotal.ToString();
@@ -101,9 +101,9 @@ public class BestsDrawer : DrawerBase
         string scorePart4 = "B15";
         string scorePart5 = $"={everTotal + currentTotal}";
         FontRectangle scorePart1Size = BoldFont.GetSize(27, scorePart1, [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        FontRectangle scorePart2Size = BoldFont.GetSize(21, scorePart2, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        FontRectangle scorePart2Size = BoldFont.GetSize(19, scorePart2, [SymbolsFont, Symbols2Font, NotoBoldFont]);
         FontRectangle scorePart3Size = BoldFont.GetSize(27, scorePart3, [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        FontRectangle scorePart4Size = BoldFont.GetSize(21, scorePart4, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        FontRectangle scorePart4Size = BoldFont.GetSize(19, scorePart4, [SymbolsFont, Symbols2Font, NotoBoldFont]);
         FontRectangle scorePart5Size = BoldFont.GetSize(27, scorePart5, [SymbolsFont, Symbols2Font, NotoBoldFont]);
         float scoreWidth = scorePart1Size.Width + scorePart2Size.Width + scorePart3Size.Width + scorePart4Size.Width +
                            scorePart5Size.Width;
@@ -125,18 +125,24 @@ public class BestsDrawer : DrawerBase
         using Image scorePart5Image = BoldFont.DrawImage(27, scorePart5, scoreColor,
             [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
 
+        string type = "Best 50";
+        FontRectangle typeSize = BoldFont.GetSize(32, type, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        PointF typePos = new(720 - (typeSize.Width / 2), 725);
+        using Image typeImage = BoldFont.DrawImage(32, type, new Color(new Rgb24(0, 109, 103)),
+            [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+
         image.Mutate(ctx =>
         {
             ctx.DrawImage(frameImage, new Point(48, 45), 1);
             ctx.DrawImage(plate, new Point(77, 69), 1);
             ctx.DrawImage(namebase, new Point(183, 108), 1);
-            ctx.DrawImage(nameImage, new Point(190, 116), 1);
-            ctx.DrawImage(iconImage, new Point(85, 76), 1);
-            ctx.DrawImage(ratingbase, new Point(181, 73), 1);
-            ctx.DrawImage(ratingImage, new Point(266, 82), 1);
-            ctx.DrawImage(@class, new Point(344, 50), 1);
-            ctx.DrawImage(course, new Point(358, 109), 1);
+            ctx.DrawImage(ratingbase, new Point(181, 72), 1);
             ctx.DrawImage(shougoubase, shougoubasePos, 1);
+            ctx.DrawImage(iconImage, new Point(86, 76), 1);
+            ctx.DrawImage(ratingImage, new Point(264, 82), 1);
+            ctx.DrawImage(@class, new Point(343, 48), 1);
+            ctx.DrawImage(course, new Point(358, 109), 1);
+            ctx.DrawImage(nameImage, new Point(190, 117), 1);
             ctx.DrawImage(shougouImage, (Point)shougouPos, 1);
             ctx.DrawImage(frameLine, new Point(40, 36), 1);
             ctx.DrawImage(scorebase, new Point(25, 492), 1);
@@ -145,6 +151,7 @@ public class BestsDrawer : DrawerBase
             ctx.DrawImage(scorePart3Image, (Point)scorePart3Pos, 1);
             ctx.DrawImage(scorePart4Image, (Point)scorePart4Pos, 1);
             ctx.DrawImage(scorePart5Image, (Point)scorePart5Pos, 1);
+            ctx.DrawImage(typeImage, (Point)typePos, 1);
             ctx.DrawImage(sdBests, new Point(25, 795), 1);
             ctx.DrawImage(dxBests, new Point(25, 1985), 1);
         });
@@ -155,7 +162,7 @@ public class BestsDrawer : DrawerBase
         return bg;
     }
 
-    public Image DrawScores(List<CommonRecord> scores, int start_index = 0)
+    public Image DrawScores(IList<CommonRecord> scores, int start_index = 0)
     {
         int count = scores.Count;
         int height = ((int)Math.Ceiling(((double)count + 1) / 4) * 120) - 10;
