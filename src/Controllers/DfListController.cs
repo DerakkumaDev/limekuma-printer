@@ -12,12 +12,13 @@ public partial class ListController : BaseController
 {
     [HttpGet("diving-fish")]
     public async Task<IActionResult> GetDivingFishListAsync([FromQuery(Name = "dev-token")] string token,
-        [FromQuery] uint qq, [FromQuery] string level, [FromQuery] int page = 1, [FromQuery] int plate = 101)
+        [FromQuery] uint qq, [FromQuery] string level, [FromQuery] int page = 1, [FromQuery] int plate = 101, [FromQuery] int icon = 101)
     {
         DfDeveloperClient df = new(token);
         PlayerData player = await df.GetPlayerDataAsync(qq);
         CommonUser user = player;
         user.PlateId = plate;
+        user.IconId = icon;
 
         List<Record> records = [.. player.Records.Where(x => x.Level == level)];
         int count = records.Count;
