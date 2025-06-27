@@ -2,7 +2,7 @@ namespace Limekuma.Prober.Lxns.Enums;
 
 public enum CourseRank
 {
-    Shoshinsha = 1,
+    Shoshinsha,
     Shodan,
     Nidan,
     Sandan,
@@ -13,7 +13,7 @@ public enum CourseRank
     Hachidan,
     Kyudan,
     Judan,
-    Shinshodan,
+    Shinshodan = 12,
     Shinnidan,
     Shinsandan,
     Shinyondan,
