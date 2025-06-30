@@ -1,10 +1,12 @@
+using Limekuma.Services;
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddProblemDetails();
-builder.Services.AddControllers();
+builder.Services.AddGrpc();
 
 using WebApplication app = builder.Build();
 
-app.MapControllers();
+app.MapGrpcService<BestsService>();
+app.MapGrpcService<ListService>();
 
 await app.RunAsync();

@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+service BestsRpc {
+  rpc GetFromLxns (LxnsBestsRequest) returns (ImageReply);
+  rpc GetAnimeFromLxns (LxnsBestsRequest) returns (ImageReply);
+  rpc GetFromDivingFish (DivingFishBestsRequest) returns (ImageReply);
+  rpc GetAnimeFromDivingFish (DivingFishBestsRequest) returns (ImageReply);
+}
+
+service ListRpc {
+  rpc GetFromLxns (LxnsBestsRequest) returns (ImageReply);
+  rpc GetFromDivingFish (DivingFishBestsRequest) returns (ImageReply);
+}
+
+message LxnsBestsRequest {
+  string devToken = 1;
+  uint32 qq = 2;
+  string personalToken = 3;
+}
+
+message DivingFishBestsRequest {
+  uint32 qq = 1;
+  sint32 frame = 2;
+  sint32 plate = 3;
+  sint32 icon = 4;
+}
+
+message LxnsListRequest {
+  string personalToken = 1;
+  string level = 2;
+  sint32 page = 3;
+}
+
+message DivingFishListRequest {
+  string token = 1;
+  uint32 qq = 2;
+  string level = 3;
+  sint32 page = 4;
+  sint32 plate = 5;
+  sint32 icon = 6;
+}
+
+message ImageReply {
+  bytes image = 1;
+}
