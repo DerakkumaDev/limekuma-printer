@@ -1,14 +1,14 @@
+using Grpc.Core;
 using Limekuma.Draw;
 using Limekuma.Prober.Common;
 using Limekuma.Prober.DivingFish;
 using Limekuma.Prober.DivingFish.Models;
 using Limekuma.Utils;
-using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
 
-namespace Limekuma.Controllers;
+namespace Limekuma.Services;
 
-public partial class BestsController : BaseController
+public partial class BestsService
 {
     private static async Task<(CommonUser, List<CommonRecord>, List<CommonRecord>, int, int)> PrepareDfDataAsync(
         uint qq, int frame = 200502, int plate = 101, int icon = 101)
@@ -34,26 +34,28 @@ public partial class BestsController : BaseController
         return (user, bestEver, bestCurrent, everTotal, currentTotal);
     }
 
-    [HttpGet("diving-fish")]
-    public async Task<IActionResult> GetDivingFishBestsAsync([FromQuery] uint qq, [FromQuery] int frame = 200502,
-        [FromQuery] int plate = 101, [FromQuery] int icon = 101)
+    public override async Task<ImageReply> GetFromDivingFish(DivingFishBestsRequest request, ServerCallContext context)
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
-            int currentTotal) = await PrepareDfDataAsync(qq, frame, plate, icon);
+            int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal);
 
-        return await ReturnImageAsync(bestsImage);
+        return new()
+        {
+            Image = await ServiceHelper.ReturnImageAsync(bestsImage)
+        };
     }
 
-    [HttpGet("anime/diving-fish")]
-    public async Task<IActionResult> GetDivingFishBestsAnimationAsync([FromQuery] uint qq,
-        [FromQuery] int frame = 200502, [FromQuery] int plate = 101, [FromQuery] int icon = 101)
+    public override async Task<ImageReply> GetAnimeFromDivingFish(DivingFishBestsRequest request, ServerCallContext context)
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
-            int currentTotal) = await PrepareDfDataAsync(qq, frame, plate, icon);
+            int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
             BestsDrawer.BackgroundAnimationPath);
 
-        return await ReturnImageAsync(bestsImage, true);
+        return new()
+        {
+            Image = await ServiceHelper.ReturnImageAsync(bestsImage, true)
+        };
     }
 }

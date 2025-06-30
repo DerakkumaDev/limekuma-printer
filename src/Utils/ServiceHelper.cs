@@ -1,14 +1,13 @@
+using Google.Protobuf;
 using Limekuma.Draw;
 using Limekuma.Prober.Common;
-using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
 
-namespace Limekuma.Controllers;
+namespace Limekuma.Utils;
 
-[ApiController]
-public abstract class BaseController : ControllerBase
+public static class ServiceHelper
 {
-    protected static async Task PrepareUserDataAsync(CommonUser user)
+    public static async Task PrepareUserDataAsync(CommonUser user)
     {
         if (!System.IO.File.Exists(Path.Combine(BestsDrawer.IconRootPath, $"{user.IconId}.png")))
         {
@@ -36,7 +35,7 @@ public abstract class BaseController : ControllerBase
         }
     }
 
-    protected static async Task PrepareRecordDataAsync(IList<CommonRecord> records)
+    public static async Task PrepareRecordDataAsync(IList<CommonRecord> records)
     {
         foreach (CommonRecord record in records)
         {
@@ -44,7 +43,7 @@ public abstract class BaseController : ControllerBase
         }
     }
 
-    protected static async Task PrepareRecordDataAsync(CommonRecord record)
+    public static async Task PrepareRecordDataAsync(CommonRecord record)
     {
         if (System.IO.File.Exists(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id % 10000}.png")))
         {
@@ -57,27 +56,23 @@ public abstract class BaseController : ControllerBase
         imageStream.CopyTo(stream);
     }
 
-    protected async Task<IActionResult> ReturnImageAsync(Image image, bool isAnime = false)
+    public static async Task<ByteString> ReturnImageAsync(Image image, bool isAnime = false)
     {
         MemoryStream outStream = new();
-        string format;
         if (isAnime)
         {
             await image.SaveAsGifAsync(outStream);
-            format = "gif";
         }
         else
         {
 #if RELEASE
             await image.SaveAsJpegAsync(outStream);
-            format = "jpeg";
 #elif DEBUG
             await image.SaveAsPngAsync(outStream);
-            format = "png";
 #endif
         }
 
         outStream.Seek(0, SeekOrigin.Begin);
-        return File(outStream, $"image/{format}");
+        return await ByteString.FromStreamAsync(outStream);
     }
 }

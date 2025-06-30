@@ -1,13 +1,13 @@
 syntax = "proto3";
 
-service BestsRpc {
+service BestsApi {
   rpc GetFromLxns (LxnsBestsRequest) returns (ImageReply);
   rpc GetAnimeFromLxns (LxnsBestsRequest) returns (ImageReply);
   rpc GetFromDivingFish (DivingFishBestsRequest) returns (ImageReply);
   rpc GetAnimeFromDivingFish (DivingFishBestsRequest) returns (ImageReply);
 }
 
-service ListRpc {
+service ListApi {
   rpc GetFromLxns (LxnsBestsRequest) returns (ImageReply);
   rpc GetFromDivingFish (DivingFishBestsRequest) returns (ImageReply);
 }

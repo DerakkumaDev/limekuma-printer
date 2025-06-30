@@ -1,11 +1,9 @@
-using Limekuma.Draw;
 using Limekuma.Prober.Common;
-using Microsoft.AspNetCore.Mvc;
+using Limekuma.Utils;
 
-namespace Limekuma.Controllers;
+namespace Limekuma.Services;
 
-[Route("list")]
-public partial class ListController : BaseController
+public sealed partial class ListService : ListApi.ListApiBase
 {
     private static async Task<(int[], int, int)> PrepareDataAsync(CommonUser user, IList<CommonRecord> records,
         int page = 1)
@@ -17,7 +15,7 @@ public partial class ListController : BaseController
             throw new IndexOutOfRangeException();
         }
 
-        await PrepareUserDataAsync(user);
+        await ServiceHelper.PrepareUserDataAsync(user);
 
         int[] counts = new int[16];
         counts[15] = count;
@@ -26,7 +24,7 @@ public partial class ListController : BaseController
         for (int k = Math.Min(i + 55, count); j < k; ++j)
         {
             CommonRecord record = records[j];
-            await PrepareRecordDataAsync(record);
+            await ServiceHelper.PrepareRecordDataAsync(record);
         }
 
         foreach (CommonRecord record in records)
