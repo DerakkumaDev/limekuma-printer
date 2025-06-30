@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/wrappers.proto";
+
 service BestsApi {
   rpc GetFromLxns (LxnsBestsRequest) returns (ImageReply);
   rpc GetAnimeFromLxns (LxnsBestsRequest) returns (ImageReply);
@@ -14,8 +16,8 @@ service ListApi {
 
 message LxnsBestsRequest {
   string devToken = 1;
-  uint32 qq = 2;
-  string personalToken = 3;
+  google.protobuf.UInt32Value qq = 2;
+  google.protobuf.StringValue personalToken = 3;
 }
 
 message DivingFishBestsRequest {
