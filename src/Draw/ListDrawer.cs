@@ -111,7 +111,8 @@ public class ListDrawer : BestsDrawer
                 string countText = $"{count}/{totalCount}";
                 FontRectangle countSize = BoldFont.GetSize(20, countText, [SymbolsFont, Symbols2Font, NotoBoldFont]);
                 PointF countPos = new(point.X - (countSize.Width / 2), point.Y);
-                using Image countImage = BoldFont.DrawImage(20, countText, new Color(count >= totalCount ? new Rgb24(255, 255, 0) : new Rgb24(53, 74, 164)),
+                using Image countImage = BoldFont.DrawImage(20, countText,
+                    new Color(count >= totalCount ? new(255, 255, 0) : new Rgb24(53, 74, 164)),
                     [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
                 image.Mutate(ctx => ctx.DrawImage(countImage, point, 1));
 

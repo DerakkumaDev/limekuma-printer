@@ -1,5 +1,6 @@
 using Limekuma.Prober.Common;
 using Limekuma.Utils;
+using LimeKuma;
 
 namespace Limekuma.Services;
 

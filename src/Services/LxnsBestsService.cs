@@ -4,6 +4,7 @@ using Limekuma.Prober.Common;
 using Limekuma.Prober.Lxns;
 using Limekuma.Prober.Lxns.Models;
 using Limekuma.Utils;
+using LimeKuma;
 using SixLabors.ImageSharp;
 
 namespace Limekuma.Services;
@@ -49,28 +50,24 @@ public partial class BestsService
         return (user, bestEver, bestCurrent, bests.EverTotal, bests.CurrentTotal);
     }
 
-    public override async Task<ImageReply> GetFromLxns(LxnsBestsRequest request, ServerCallContext context)
+    public override async Task GetFromLxns(LxnsBestsRequest request, IServerStreamWriter<ImageResponse> responseStream,
+        ServerCallContext context)
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal);
 
-        return new()
-        {
-            Image = await ServiceHelper.ReturnImageAsync(bestsImage)
-        };
+        await bestsImage.WriteToResponseAsync(responseStream);
     }
 
-    public override async Task<ImageReply> GetAnimeFromLxns(LxnsBestsRequest request, ServerCallContext context)
+    public override async Task GetAnimeFromLxns(LxnsBestsRequest request,
+        IServerStreamWriter<ImageResponse> responseStream, ServerCallContext context)
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
             BestsDrawer.BackgroundAnimationPath);
 
-        return new()
-        {
-            Image = await ServiceHelper.ReturnImageAsync(bestsImage, true)
-        };
+        await bestsImage.WriteToResponseAsync(responseStream, true);
     }
 }

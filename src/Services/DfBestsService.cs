@@ -4,6 +4,7 @@ using Limekuma.Prober.Common;
 using Limekuma.Prober.DivingFish;
 using Limekuma.Prober.DivingFish.Models;
 using Limekuma.Utils;
+using LimeKuma;
 using SixLabors.ImageSharp;
 
 namespace Limekuma.Services;
@@ -34,28 +35,24 @@ public partial class BestsService
         return (user, bestEver, bestCurrent, everTotal, currentTotal);
     }
 
-    public override async Task<ImageReply> GetFromDivingFish(DivingFishBestsRequest request, ServerCallContext context)
+    public override async Task GetFromDivingFish(DivingFishBestsRequest request,
+        IServerStreamWriter<ImageResponse> responseStream, ServerCallContext context)
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal);
 
-        return new()
-        {
-            Image = await ServiceHelper.ReturnImageAsync(bestsImage)
-        };
+        await bestsImage.WriteToResponseAsync(responseStream);
     }
 
-    public override async Task<ImageReply> GetAnimeFromDivingFish(DivingFishBestsRequest request, ServerCallContext context)
+    public override async Task GetAnimeFromDivingFish(DivingFishBestsRequest request,
+        IServerStreamWriter<ImageResponse> responseStream, ServerCallContext context)
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
             BestsDrawer.BackgroundAnimationPath);
 
-        return new()
-        {
-            Image = await ServiceHelper.ReturnImageAsync(bestsImage, true)
-        };
+        await bestsImage.WriteToResponseAsync(responseStream, true);
     }
 }

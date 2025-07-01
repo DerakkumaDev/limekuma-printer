@@ -12,6 +12,24 @@ public class Optional<TA, TB>
     public Optional(TA? value) => _valueA = value;
     public Optional(TB? value) => _valueB = value;
 
+    public Optional(object? obj)
+    {
+        if (obj is null)
+        {
+            return;
+        }
+
+        if (obj is TA valueA)
+        {
+            _valueA = valueA;
+        }
+
+        if (obj is TB valueB)
+        {
+            _valueB = valueB;
+        }
+    }
+
     public object? Value
     {
         get
@@ -37,24 +55,6 @@ public class Optional<TA, TB>
     public static implicit operator Optional<TA, TB>(TA a) => new(a);
 
     public static implicit operator Optional<TA, TB>(TB b) => new(b);
-
-    public Optional(object? obj)
-    {
-        if (obj is null)
-        {
-            return;
-        }
-
-        if (obj is TA valueA)
-        {
-            _valueA = valueA;
-        }
-
-        if (obj is TB valueB)
-        {
-            _valueB = valueB;
-        }
-    }
 
     public new Type? GetType() => Value?.GetType();
 

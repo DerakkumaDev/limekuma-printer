@@ -1,17 +1,21 @@
 syntax = "proto3";
 
+option csharp_namespace = "LimeKuma";
+
+package kumabot;
+
 import "google/protobuf/wrappers.proto";
 
 service BestsApi {
-  rpc GetFromLxns (LxnsBestsRequest) returns (ImageReply);
-  rpc GetAnimeFromLxns (LxnsBestsRequest) returns (ImageReply);
-  rpc GetFromDivingFish (DivingFishBestsRequest) returns (ImageReply);
-  rpc GetAnimeFromDivingFish (DivingFishBestsRequest) returns (ImageReply);
+  rpc GetFromLxns (LxnsBestsRequest) returns (stream ImageResponse);
+  rpc GetAnimeFromLxns (LxnsBestsRequest) returns (stream ImageResponse);
+  rpc GetFromDivingFish (DivingFishBestsRequest) returns (stream ImageResponse);
+  rpc GetAnimeFromDivingFish (DivingFishBestsRequest) returns (stream ImageResponse);
 }
 
 service ListApi {
-  rpc GetFromLxns (LxnsListRequest) returns (ImageReply);
-  rpc GetFromDivingFish (DivingFishListRequest) returns (ImageReply);
+  rpc GetFromLxns (LxnsListRequest) returns (stream ImageResponse);
+  rpc GetFromDivingFish (DivingFishListRequest) returns (stream ImageResponse);
 }
 
 message LxnsBestsRequest {
@@ -42,6 +46,6 @@ message DivingFishListRequest {
   sint32 icon = 6;
 }
 
-message ImageReply {
-  bytes image = 1;
+message ImageResponse {
+  bytes data = 1;
 }

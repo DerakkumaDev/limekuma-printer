@@ -67,7 +67,9 @@ public record Player
             TrophyColor = player.Trophy?.Color ?? TrophyColor.Normal,
             TrophyText = player.Trophy?.Name ?? "新人出道",
             ClassRank = player.ClassRank,
-            CourseRank = (CommonCourseRank)(player.CourseRank < CourseRank.Shinshodan ? player.CourseRank : player.CourseRank - 1),
+            CourseRank = (CommonCourseRank)(player.CourseRank < CourseRank.Shinshodan
+                ? player.CourseRank
+                : player.CourseRank - 1),
             IconId = player.Icon?.Id ?? 101,
             FrameId = player.Frame?.Id ?? 200502,
             PlateId = player.NamePlate?.Id ?? 101

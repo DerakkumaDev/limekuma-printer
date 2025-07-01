@@ -4,13 +4,15 @@ using Limekuma.Prober.Common;
 using Limekuma.Prober.Lxns;
 using Limekuma.Prober.Lxns.Models;
 using Limekuma.Utils;
+using LimeKuma;
 using SixLabors.ImageSharp;
 
 namespace Limekuma.Services;
 
 public partial class ListService
 {
-    public override async Task<ImageReply> GetFromLxns(LxnsListRequest request, ServerCallContext context)
+    public override async Task GetFromLxns(LxnsListRequest request, IServerStreamWriter<ImageResponse> responseStream,
+        ServerCallContext context)
     {
         LxnsPersonalClient lxns = new(request.PersonalToken);
         List<Record> records = await lxns.GetRecordsAsync();
@@ -23,12 +25,9 @@ public partial class ListService
         (int[] counts, int startIndex, int endIndex) = await PrepareDataAsync(user, cRecords, request.Page);
         int total = (int)Math.Ceiling((double)count / 55);
 
-        using Image listImage =
-            new ListDrawer().Draw(user, cRecords[startIndex..endIndex], request.Page, total, counts, request.Level);
+        using Image listImage = new ListDrawer().Draw(user, cRecords[startIndex..endIndex], request.Page, total, counts,
+            request.Level);
 
-        return new()
-        {
-            Image = await ServiceHelper.ReturnImageAsync(listImage)
-        };
+        await listImage.WriteToResponseAsync(responseStream);
     }
 }
