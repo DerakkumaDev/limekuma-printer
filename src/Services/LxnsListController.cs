@@ -10,7 +10,7 @@ namespace Limekuma.Services;
 
 public partial class ListService
 {
-    public async Task<ImageReply> GetLxnsListAsync(LxnsListRequest request, ServerCallContext context)
+    public override async Task<ImageReply> GetFromLxns(LxnsListRequest request, ServerCallContext context)
     {
         LxnsPersonalClient lxns = new(request.PersonalToken);
         List<Record> records = await lxns.GetRecordsAsync();

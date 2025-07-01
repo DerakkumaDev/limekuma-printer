@@ -10,7 +10,7 @@ namespace Limekuma.Services;
 
 public partial class ListService
 {
-    public async Task<ImageReply> GetDivingFishListAsync(DivingFishListRequest request, ServerCallContext context)
+    public override async Task<ImageReply> GetFromDivingFish(DivingFishListRequest request, ServerCallContext context)
     {
         DfDeveloperClient df = new(request.Token);
         PlayerData player = await df.GetPlayerDataAsync(request.Qq);

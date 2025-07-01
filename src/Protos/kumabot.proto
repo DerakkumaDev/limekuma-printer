@@ -10,8 +10,8 @@ service BestsApi {
 }
 
 service ListApi {
-  rpc GetFromLxns (LxnsBestsRequest) returns (ImageReply);
-  rpc GetFromDivingFish (DivingFishBestsRequest) returns (ImageReply);
+  rpc GetFromLxns (LxnsListRequest) returns (ImageReply);
+  rpc GetFromDivingFish (DivingFishListRequest) returns (ImageReply);
 }
 
 message LxnsBestsRequest {
