@@ -17,12 +17,6 @@ public record Player
     [JsonPropertyName("friend_code")]
     public required long FriendCode { get; set; }
 
-    [JsonPropertyName("trophy")]
-    public Trophy? Trophy { get; set; }
-
-    [JsonPropertyName("trophy_name")]
-    public string? TrophyName { get; set; }
-
     [JsonPropertyName("course_rank")]
     public required CourseRank CourseRank { get; set; }
 
@@ -31,6 +25,9 @@ public record Player
 
     [JsonPropertyName("star")]
     public required int Star { get; set; }
+
+    [JsonPropertyName("trophy")]
+    public Trophy? Trophy { get; set; }
 
     [JsonPropertyName("icon")]
     public Icon? Icon { get; set; }
