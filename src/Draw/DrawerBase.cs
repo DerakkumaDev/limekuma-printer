@@ -32,6 +32,8 @@ public abstract class DrawerBase
         NotoBlackFont = fonts.Add(Path.Combine(FontRootPath, "NotoSansCJKsc-Black.otf"));
         SymbolsFont = fonts.Add(Path.Combine(FontRootPath, "NotoSansSymbols-Regular.ttf"));
         Symbols2Font = fonts.Add(Path.Combine(FontRootPath, "NotoSansSymbols2-Regular.ttf"));
+
+        RobinEbFont = fonts.Add(Path.Combine(FontRootPath, "3b02d0e2b846ab130c78c93bec66bf26.otf"));
     }
 
     #region Font Families
@@ -47,6 +49,9 @@ public abstract class DrawerBase
     protected static FontFamily NotoBlackFont { get; }
     protected static FontFamily SymbolsFont { get; }
     protected static FontFamily Symbols2Font { get; }
+
+    // Number fonts (FOT-Rodin ProN from Fontworks)
+    protected static FontFamily RobinEbFont { get; }
 
     #endregion
 }

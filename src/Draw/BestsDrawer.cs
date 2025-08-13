@@ -69,7 +69,7 @@ public class BestsDrawer : DrawerBase
         shougoubase.Resize(0.94, KnownResamplers.Lanczos3);
         frameLine.Resize(0.745, KnownResamplers.Lanczos3);
 
-        Font notoBlackFont16 = NotoBlackFont.GetSizeFont(32);
+        Font robinEbFont16 = RobinEbFont.GetSizeFont(32);
 
         List<char> ratingLE = [.. user.Rating.ToString().Reverse()];
         using Image<Rgba32> ratingImage = new(512, 64);
@@ -78,8 +78,8 @@ public class BestsDrawer : DrawerBase
             ReadOnlySpan<int> ratingPos = [114, 86, 56, 28, 0];
             for (int i = 0; i < ratingLE.Count; i++)
             {
-                ctx.DrawText(ratingLE[i].ToString(), notoBlackFont16, new Color(new Rgb24(249, 198, 10)),
-                    new(ratingPos[i], 0));
+                ctx.DrawText(ratingLE[i].ToString(), robinEbFont16, new Color(new Rgb24(249, 198, 10)),
+                    new(ratingPos[i], 20));
             }
 
             ctx.Resize(ratingImage.Width * 16 / 32, ratingImage.Height * 16 / 32, KnownResamplers.Spline);
