@@ -12,7 +12,12 @@ public abstract class DfClient
 
     protected DfClient()
     {
-        _httpClient = new()
+        HttpClientHandler handler = new()
+        {
+            CheckCertificateRevocationList = false
+        };
+
+        _httpClient = new(handler)
         {
             BaseAddress = new("https://www.diving-fish.com/")
         };
