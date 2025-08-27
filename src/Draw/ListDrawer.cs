@@ -100,7 +100,7 @@ public class ListDrawer : BestsDrawer
         int index = 0;
         int countsCount = counts.Count - 1;
         int totalCount = counts[^1];
-        Point point = new(150, 264);
+        Point point = new(200, 264);
         for (int columnIndex = 0; index < countsCount; ++columnIndex)
         {
             for (int rowIndex = 0, rowMaxIndex = columnIndex == 0 ? 7 : 8;
@@ -112,14 +112,14 @@ public class ListDrawer : BestsDrawer
                 FontRectangle countSize = BoldFont.GetSize(20, countText, [SymbolsFont, Symbols2Font, NotoBoldFont]);
                 PointF countPos = new(point.X - (countSize.Width / 2), point.Y);
                 using Image countImage = BoldFont.DrawImage(20, countText,
-                    new Color(count >= totalCount ? new(255, 255, 0) : new Rgb24(53, 74, 164)),
+                    new Color(count >= totalCount ? new(248, 179, 42) : new Rgb24(53, 74, 164)),
                     [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-                image.Mutate(ctx => ctx.DrawImage(countImage, point, 1));
+                image.Mutate(ctx => ctx.DrawImage(countImage, (Point)countPos, 1));
 
-                point.X += columnIndex == 0 ? 118 : 102;
+                point.X += columnIndex == 0 ? 120 : 102;
             }
 
-            point.X = 170;
+            point.X = 200;
             point.Y += 90;
         }
 
