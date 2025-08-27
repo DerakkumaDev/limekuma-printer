@@ -28,6 +28,9 @@ public record Song
     [JsonPropertyName("rights")]
     public string? Rights { get; init; }
 
+    [JsonPropertyName("locked")]
+    public bool? Locked { get; init; } = false;
+
     [JsonPropertyName("disabled")]
     public bool? Disabled { get; init; } = false;
 

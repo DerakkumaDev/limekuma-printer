@@ -12,6 +12,9 @@ public record Record : SimpleRecord
     [JsonPropertyName("dx_score")]
     public required int DXScore { get; init; }
 
+    [JsonPropertyName("dx_star")]
+    public required int DXStar { get; init; }
+
     [JsonPropertyName("dx_rating")]
     public double? DXRating { get; init; }
 
@@ -88,6 +91,7 @@ public record Record : SimpleRecord
             Type = (CommonSongTypes)record.Type,
             Achievements = record.Achievements,
             DXRating = (int)(record.DXRating ?? 0),
+            DXStar = record.DXStar,
             DXScore = record.DXScore,
             TotalDXScore = record.TotalDXScore,
             LevelValue = record.LevelValue

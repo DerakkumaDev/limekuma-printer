@@ -20,6 +20,8 @@ public record CommonRecord
 
     public required int DXScore { get; init; }
 
+    public required int DXStar { get; init; }
+
     public required int DXRating { get; init; }
 
     public required int TotalDXScore { get; init; }

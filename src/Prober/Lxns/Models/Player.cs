@@ -103,6 +103,9 @@ public record Player
     public async Task<List<SimpleRecord>> GetAllRecordsAsync(CancellationToken cancellationToken = default) =>
         await Client!.GetAllRecordsAsync(FriendCode, cancellationToken);
 
+    public async Task<Dictionary<string, int>> GetHeatmapAsync(CancellationToken cancellationToken = default) =>
+        await Client!.GetHeatmapAsync(FriendCode, cancellationToken);
+
     public async Task<List<RatingTrend>> GetDXRatingTrendAsync(int? version = null,
         CancellationToken cancellationToken = default) =>
         await Client!.GetDXRatingTrendAsync(FriendCode, version, cancellationToken);

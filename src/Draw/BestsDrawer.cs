@@ -336,17 +336,13 @@ public class BestsDrawer : DrawerBase
 
         #region DXStar
 
-        double dxScorePersent = (double)score.DXScore / score.TotalDXScore;
-        if (dxScorePersent >= 0.85)
+        if (score.DXStar > 0)
         {
-            (int stars, int starIndex) = dxScorePersent switch
+            int starIndex = score.DXStar switch
             {
-                < 0.90 => (1, 1),
-                < 0.93 => (2, 1),
-                < 0.95 => (3, 2),
-                < 0.97 => (4, 2),
-                <= 1 => (5, 3),
-                _ => throw new InvalidDataException()
+                < 3 => 1,
+                < 5 => 2,
+                >= 5 => 3
             };
 
             PointF dxStarPos = new(570, 177);
@@ -355,7 +351,7 @@ public class BestsDrawer : DrawerBase
 
             bg.Mutate(ctx =>
             {
-                for (int i = 0; i < stars; ++i)
+                for (int i = 0; i < score.DXStar; ++i)
                 {
                     ctx.DrawImage(dxStar, (Point)dxStarPos, 1);
                     dxStarPos.X += 31.2f;

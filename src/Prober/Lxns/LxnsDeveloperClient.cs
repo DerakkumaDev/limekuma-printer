@@ -66,6 +66,10 @@ public class LxnsDeveloperClient : LxnsDataClient
         CancellationToken cancellationToken = default) =>
         await GetAsync<List<SimpleRecord>>($"/api/v0/maimai/player/{friendCode}/scores", cancellationToken);
 
+    public async Task<Dictionary<string, int>> GetHeatmapAsync(long friendCode,
+        CancellationToken cancellationToken = default) =>
+        await GetAsync<Dictionary<string, int>>($"/api/v0/maimai/player/{friendCode}/heatmap", cancellationToken);
+
     public async Task<List<RatingTrend>> GetDXRatingTrendAsync(long friendCode, int? version = null,
         CancellationToken cancellationToken = default)
     {

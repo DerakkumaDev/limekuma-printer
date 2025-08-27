@@ -75,6 +75,29 @@ public class Record
         }
     }
 
+    public int DXStar
+    {
+        get
+        {
+            if (field is not 0)
+            {
+                return field;
+            }
+
+            double dxScorePersent = (double)DXScore / TotalDXScore;
+            field = dxScorePersent switch
+            {
+              < 0.9 => 1,
+              < 0.93 => 2,
+              < 0.95 => 3,
+              < 0.97 => 4,
+              <= 1 => 5,
+              _ => throw new InvalidDataException()
+            };
+            return field;
+        }
+    }
+
     public static implicit operator CommonRecord(Record record) =>
         new()
         {
@@ -87,6 +110,7 @@ public class Record
             Type = (CommonSongTypes)record.Type,
             Achievements = record.Achievements,
             DXRating = record.DXRating,
+            DXStar = record.DXStar,
             DXScore = record.DXScore,
             TotalDXScore = record.TotalDXScore,
             LevelValue = record.LevelValue
