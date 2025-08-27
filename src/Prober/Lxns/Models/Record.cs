@@ -40,7 +40,30 @@ public record Record : SimpleRecord
         {
             if (field is null)
             {
-                Song song = SongData.Shared.Songs.First(x => x.Id == Id);
+                Song? song = SongData.Shared.Songs.FirstOrDefault(x => x.Id == Id);
+                if (song is null)
+                {
+                    field = new()
+                    {
+                        Type = Type,
+                        Difficulty = Difficulty,
+                        Level = Level,
+                        LevelValue = 0.4,
+                        Charter = string.Empty,
+                        Version = 0,
+                        Notes = new()
+                        {
+                            Break = 0,
+                            Hold = 0,
+                            Slide = 0,
+                            Tap = 0,
+                            Total = 0,
+                            Touch = 0
+                        }
+                    };
+                    return field;
+                }
+
                 field = (Type switch
                 {
                     SongTypes.Standard => song.Charts.Standard,
