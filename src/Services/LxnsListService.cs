@@ -6,6 +6,7 @@ using Limekuma.Prober.Lxns.Models;
 using Limekuma.Utils;
 using LimeKuma;
 using SixLabors.ImageSharp;
+using System.Net;
 
 namespace Limekuma.Services;
 
@@ -15,8 +16,25 @@ public partial class ListService
         ServerCallContext context)
     {
         LxnsPersonalClient lxns = new(request.PersonalToken);
-        List<Record> records = await lxns.GetRecordsAsync();
-        CommonUser user = await lxns.GetPlayerAsync();
+        CommonUser user;
+        try
+        {
+            user = await lxns.GetPlayerAsync();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized)
+        {
+            throw new RpcException(new Status(StatusCode.Unauthenticated, ex.Message, ex));
+        }
+
+        List<Record> records;
+        try
+        {
+            records = await lxns.GetRecordsAsync();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized)
+        {
+            throw new RpcException(new Status(StatusCode.Unauthenticated, ex.Message, ex));
+        }
 
         records = [.. records.Where(x => x.Level == request.Level)];
         int count = records.Count;

@@ -6,6 +6,7 @@ using Limekuma.Prober.DivingFish.Models;
 using Limekuma.Utils;
 using LimeKuma;
 using SixLabors.ImageSharp;
+using System.Net;
 
 namespace Limekuma.Services;
 
@@ -15,7 +16,19 @@ public partial class BestsService
         uint qq, int frame = 200502, int plate = 101, int icon = 101)
     {
         DfResourceClient df = new();
-        Player player = await df.GetPlayerAsync(qq);
+        Player player;
+        try
+        {
+            player = await df.GetPlayerAsync(qq);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.BadRequest)
+        {
+            throw new RpcException(new Grpc.Core.Status(StatusCode.NotFound, ex.Message, ex));
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Forbidden)
+        {
+            throw new RpcException(new Grpc.Core.Status(StatusCode.PermissionDenied, ex.Message, ex));
+        }
 
         CommonUser user = player;
         user.FrameId = frame;

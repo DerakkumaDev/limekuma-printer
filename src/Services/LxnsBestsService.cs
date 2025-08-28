@@ -6,6 +6,7 @@ using Limekuma.Prober.Lxns.Models;
 using Limekuma.Utils;
 using LimeKuma;
 using SixLabors.ImageSharp;
+using System.Net;
 
 namespace Limekuma.Services;
 
@@ -18,25 +19,52 @@ public partial class BestsService
         LxnsDeveloperClient lxnsDev = new(devToken);
         if (qq.HasValue)
         {
-            player = await lxnsDev.GetPlayerByQQAsync(qq.Value);
+            try
+            {
+                player = await lxnsDev.GetPlayerByQQAsync(qq.Value);
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.NotFound)
+            {
+                throw new RpcException(new Status(StatusCode.NotFound, ex.Message, ex));
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Forbidden)
+            {
+                throw new RpcException(new Status(StatusCode.PermissionDenied, ex.Message, ex));
+            }
         }
         else if (!string.IsNullOrEmpty(personalToken))
         {
             LxnsPersonalClient lxns = new(personalToken);
-            player = await lxns.GetPlayerAsync();
+            try
+            {
+                player = await lxns.GetPlayerAsync();
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized)
+            {
+                throw new RpcException(new Status(StatusCode.Unauthenticated, ex.Message, ex));
+            }
+
             player.Client = lxnsDev;
         }
         else
         {
-            throw new InvalidOperationException();
+            throw new RpcException(new Status(StatusCode.InvalidArgument, "QQ or token is required."));
         }
 
-        if (player is null || player.FriendCode == default)
+        Bests bests;
+        try
         {
-            throw new KeyNotFoundException();
+            bests = await player.GetBestsAsync();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.BadRequest)
+        {
+            throw new RpcException(new Status(StatusCode.NotFound, ex.Message, ex));
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Forbidden)
+        {
+            throw new RpcException(new Status(StatusCode.PermissionDenied, ex.Message, ex));
         }
 
-        Bests bests = await player.GetBestsAsync();
         CommonUser user = player;
 
         List<CommonRecord> bestEver = bests.Ever.ConvertAll<CommonRecord>(_ => _);

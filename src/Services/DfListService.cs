@@ -6,6 +6,7 @@ using Limekuma.Prober.DivingFish.Models;
 using Limekuma.Utils;
 using LimeKuma;
 using SixLabors.ImageSharp;
+using System.Net;
 
 namespace Limekuma.Services;
 
@@ -15,7 +16,20 @@ public partial class ListService
         IServerStreamWriter<ImageResponse> responseStream, ServerCallContext context)
     {
         DfDeveloperClient df = new(request.Token);
-        PlayerData player = await df.GetPlayerDataAsync(request.Qq);
+        PlayerData player;
+        try
+        {
+            player = await df.GetPlayerDataAsync(request.Qq);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.BadRequest)
+        {
+            throw new RpcException(new Grpc.Core.Status(StatusCode.NotFound, ex.Message, ex));
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Forbidden)
+        {
+            throw new RpcException(new Grpc.Core.Status(StatusCode.PermissionDenied, ex.Message, ex));
+        }
+
         CommonUser user = player;
         user.PlateId = request.Plate;
         user.IconId = request.Icon;
