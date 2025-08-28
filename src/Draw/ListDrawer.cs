@@ -94,7 +94,7 @@ public class ListDrawer : BestsDrawer
             ctx.DrawImage(shougouImage, (Point)shougouPos, 1);
             ctx.DrawImage(paginationImage, (Point)paginationPos, 1);
             ctx.DrawImage(frameLine, new Point(40, 36), 1);
-            ctx.DrawImage(recordsImage, new Point(25, 795), 1);
+            ctx.DrawImage(recordsImage, new Point(25, 800), 1);
         });
 
         int index = 0;

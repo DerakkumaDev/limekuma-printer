@@ -152,8 +152,8 @@ public class BestsDrawer : DrawerBase
             ctx.DrawImage(scorePart4Image, (Point)scorePart4Pos, 1);
             ctx.DrawImage(scorePart5Image, (Point)scorePart5Pos, 1);
             ctx.DrawImage(typeImage, (Point)typePos, 1);
-            ctx.DrawImage(sdBests, new Point(25, 795), 1);
-            ctx.DrawImage(dxBests, new Point(25, 1985), 1);
+            ctx.DrawImage(sdBests, new Point(25, 796), 1);
+            ctx.DrawImage(dxBests, new Point(25, 1986), 1);
         });
 
         Image bg = Image.Load(backgroundPath);
