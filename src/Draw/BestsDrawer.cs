@@ -43,7 +43,7 @@ public class BestsDrawer : DrawerBase
 #endif
 
     public Image Draw(CommonUser user, IList<CommonRecord> ever, IList<CommonRecord> current, int everTotal,
-        int currentTotal, string backgroundPath = BackgroundPath)
+        int currentTotal, string typename, string backgroundPath = BackgroundPath)
     {
         using Image sdBests = DrawScores(ever);
         using Image dxBests = DrawScores(current, ever.Count);
@@ -125,10 +125,9 @@ public class BestsDrawer : DrawerBase
         using Image scorePart5Image = BoldFont.DrawImage(27, scorePart5, scoreColor,
             [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
 
-        string type = "Best 50";
-        FontRectangle typeSize = BoldFont.GetSize(32, type, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        FontRectangle typeSize = BoldFont.GetSize(32, typename, [SymbolsFont, Symbols2Font, NotoBoldFont]);
         PointF typePos = new(720 - (typeSize.Width / 2), 725);
-        using Image typeImage = BoldFont.DrawImage(32, type, new Color(new Rgb24(0, 109, 103)),
+        using Image typeImage = BoldFont.DrawImage(32, typename, new Color(new Rgb24(0, 109, 103)),
             [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
 
         image.Mutate(ctx =>
@@ -298,21 +297,23 @@ public class BestsDrawer : DrawerBase
 
         #endregion
 
-        #region ID
+        #region Numero
 
-        string idPart1 = score.Id.ToString();
-        string idPart2 = "ID";
+        string numeroPart1 = "No.";
+        string numeroPart2 = score.Id.ToString();
 
-        FontRectangle idPart1Size = BoldFont.GetSize(30, idPart1, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        FontRectangle numeroPart1Size = BoldFont.GetSize(24, numeroPart1, [SymbolsFont, Symbols2Font, NotoBoldFont]);
 
-        Point idPart1Pos = new(386, 245);
-        PointF idPart2Pos = new(idPart1Pos.X + idPart1Size.Width, 253);
+        Point numeroPart1Pos = new(386, 253);
+        PointF numeroPart2Pos = new(numeroPart1Pos.X + numeroPart1Size.Width, 245);
 
-        Rgb24 idColorValue = new(28, 43, 120);
-        Color idColor = new(idColorValue);
-        using Image idPart1Image = BoldFont.DrawImage(30, idPart1, idColor, [SymbolsFont, Symbols2Font, NotoBoldFont],
+        Rgb24 numeroColorValue = new(28, 43, 120);
+        Color numeroColor = new(numeroColorValue);
+        using Image numeroPart1Image = BoldFont.DrawImage(24, numeroPart1, numeroColor,
+            [SymbolsFont, Symbols2Font, NotoBoldFont],
             KnownResamplers.Lanczos3);
-        using Image idPart2Image = BoldFont.DrawImage(24, idPart2, idColor, [SymbolsFont, Symbols2Font, NotoBoldFont],
+        using Image numeroPart2Image = BoldFont.DrawImage(30, numeroPart2, numeroColor,
+            [SymbolsFont, Symbols2Font, NotoBoldFont],
             KnownResamplers.Lanczos3);
 
         #endregion
@@ -327,9 +328,9 @@ public class BestsDrawer : DrawerBase
 
         PointF dxScorePart2Pos = new(734 - dxScorePart2Size.Width, 250);
         PointF dxScorePart1Pos = new(dxScorePart2Pos.X - dxScorePart1Size.Width, 245);
-        using Image dxScorePart1Image = BoldFont.DrawImage(30, dxScorePart1, idColor,
+        using Image dxScorePart1Image = BoldFont.DrawImage(30, dxScorePart1, numeroColor,
             [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-        using Image dxScorePart2Image = BoldFont.DrawImage(24, dxScorePart2, idColor,
+        using Image dxScorePart2Image = BoldFont.DrawImage(24, dxScorePart2, numeroColor,
             [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
 
         #endregion
@@ -385,8 +386,8 @@ public class BestsDrawer : DrawerBase
 
             ctx.DrawImage(ratingImage, (Point)ratingPos, 1);
 
-            ctx.DrawImage(idPart1Image, idPart1Pos, 1);
-            ctx.DrawImage(idPart2Image, (Point)idPart2Pos, 1);
+            ctx.DrawImage(numeroPart1Image, numeroPart1Pos, 1);
+            ctx.DrawImage(numeroPart2Image, (Point)numeroPart2Pos, 1);
 
             ctx.DrawImage(dxScorePart1Image, (Point)dxScorePart1Pos, 1);
             ctx.DrawImage(dxScorePart2Image, (Point)dxScorePart2Pos, 1);

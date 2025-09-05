@@ -23,11 +23,11 @@ public partial class BestsService
         }
         catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.BadRequest)
         {
-            throw new RpcException(new Grpc.Core.Status(StatusCode.NotFound, ex.Message, ex));
+            throw new RpcException(new(StatusCode.NotFound, ex.Message, ex));
         }
         catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Forbidden)
         {
-            throw new RpcException(new Grpc.Core.Status(StatusCode.PermissionDenied, ex.Message, ex));
+            throw new RpcException(new(StatusCode.PermissionDenied, ex.Message, ex));
         }
 
         CommonUser user = player;
@@ -53,7 +53,8 @@ public partial class BestsService
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
-        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal);
+        using Image bestsImage =
+            new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, "Best 50");
 
         await bestsImage.WriteToResponseAsync(responseStream);
     }
@@ -63,7 +64,7 @@ public partial class BestsService
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
-        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
+        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, "Best 50",
             BestsDrawer.BackgroundAnimationPath);
 
         await bestsImage.WriteToResponseAsync(responseStream, true);

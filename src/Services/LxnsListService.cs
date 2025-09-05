@@ -23,7 +23,7 @@ public partial class ListService
         }
         catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized)
         {
-            throw new RpcException(new Status(StatusCode.Unauthenticated, ex.Message, ex));
+            throw new RpcException(new(StatusCode.Unauthenticated, ex.Message, ex));
         }
 
         List<Record> records;
@@ -33,7 +33,7 @@ public partial class ListService
         }
         catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized)
         {
-            throw new RpcException(new Status(StatusCode.Unauthenticated, ex.Message, ex));
+            throw new RpcException(new(StatusCode.Unauthenticated, ex.Message, ex));
         }
 
         records = [.. records.Where(x => x.Level == request.Level)];

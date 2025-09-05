@@ -25,11 +25,11 @@ public partial class BestsService
             }
             catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.NotFound)
             {
-                throw new RpcException(new Status(StatusCode.NotFound, ex.Message, ex));
+                throw new RpcException(new(StatusCode.NotFound, ex.Message, ex));
             }
             catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Forbidden)
             {
-                throw new RpcException(new Status(StatusCode.PermissionDenied, ex.Message, ex));
+                throw new RpcException(new(StatusCode.PermissionDenied, ex.Message, ex));
             }
         }
         else if (!string.IsNullOrEmpty(personalToken))
@@ -41,14 +41,14 @@ public partial class BestsService
             }
             catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized)
             {
-                throw new RpcException(new Status(StatusCode.Unauthenticated, ex.Message, ex));
+                throw new RpcException(new(StatusCode.Unauthenticated, ex.Message, ex));
             }
 
             player.Client = lxnsDev;
         }
         else
         {
-            throw new RpcException(new Status(StatusCode.InvalidArgument, "QQ or token is required."));
+            throw new RpcException(new(StatusCode.InvalidArgument, "QQ or token is required."));
         }
 
         Bests bests;
@@ -58,11 +58,11 @@ public partial class BestsService
         }
         catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.BadRequest)
         {
-            throw new RpcException(new Status(StatusCode.NotFound, ex.Message, ex));
+            throw new RpcException(new(StatusCode.NotFound, ex.Message, ex));
         }
         catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Forbidden)
         {
-            throw new RpcException(new Status(StatusCode.PermissionDenied, ex.Message, ex));
+            throw new RpcException(new(StatusCode.PermissionDenied, ex.Message, ex));
         }
 
         CommonUser user = player;
@@ -83,7 +83,8 @@ public partial class BestsService
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
-        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal);
+        using Image bestsImage =
+            new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, "Best 50");
 
         await bestsImage.WriteToResponseAsync(responseStream);
     }
@@ -93,7 +94,7 @@ public partial class BestsService
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
-        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
+        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, "Best 50",
             BestsDrawer.BackgroundAnimationPath);
 
         await bestsImage.WriteToResponseAsync(responseStream, true);

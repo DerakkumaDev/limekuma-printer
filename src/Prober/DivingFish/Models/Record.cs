@@ -87,12 +87,12 @@ public class Record
             double dxScorePersent = (double)DXScore / TotalDXScore;
             field = dxScorePersent switch
             {
-              < 0.9 => 1,
-              < 0.93 => 2,
-              < 0.95 => 3,
-              < 0.97 => 4,
-              <= 1 => 5,
-              _ => throw new InvalidDataException()
+                < 0.9 => 1,
+                < 0.93 => 2,
+                < 0.95 => 3,
+                < 0.97 => 4,
+                <= 1 => 5,
+                _ => throw new InvalidDataException()
             };
             return field;
         }

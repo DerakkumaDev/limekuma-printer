@@ -23,11 +23,11 @@ public partial class ListService
         }
         catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.BadRequest)
         {
-            throw new RpcException(new Grpc.Core.Status(StatusCode.NotFound, ex.Message, ex));
+            throw new RpcException(new(StatusCode.NotFound, ex.Message, ex));
         }
         catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Forbidden)
         {
-            throw new RpcException(new Grpc.Core.Status(StatusCode.PermissionDenied, ex.Message, ex));
+            throw new RpcException(new(StatusCode.PermissionDenied, ex.Message, ex));
         }
 
         CommonUser user = player;
