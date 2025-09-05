@@ -304,7 +304,7 @@ public class BestsDrawer : DrawerBase
 
         FontRectangle numeroPart1Size = BoldFont.GetSize(24, numeroPart1, [SymbolsFont, Symbols2Font, NotoBoldFont]);
 
-        Point numeroPart1Pos = new(386, 253);
+        Point numeroPart1Pos = new(386, 250);
         PointF numeroPart2Pos = new(numeroPart1Pos.X + numeroPart1Size.Width, 245);
 
         Rgb24 numeroColorValue = new(28, 43, 120);
@@ -367,7 +367,7 @@ public class BestsDrawer : DrawerBase
 
         bg.Mutate(ctx =>
         {
-            ctx.DrawImage(jacket, new Point(36, 41), 1);
+            ctx.DrawImage(jacket, new Point(36, 40), 1);
             ctx.DrawImage(songType, new Point(775, 12), 1);
             ctx.DrawImage(rank, new Point(762, 78), 1);
 
