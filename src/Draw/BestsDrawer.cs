@@ -45,9 +45,9 @@ public class BestsDrawer : DrawerBase
     public Image Draw(CommonUser user, IList<CommonRecord> ever, IList<CommonRecord> current, int everTotal,
         int currentTotal, string typename, string backgroundPath = BackgroundPath)
     {
+        Image bg = Image.Load(backgroundPath);
         using Image sdBests = DrawScores(ever);
         using Image dxBests = DrawScores(current, ever.Count);
-        using Image<Rgba32> image = new(1440, 2560);
         using Image frameImage =
             Image.Load(Path.Combine(FrameRootPath, $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png"));
         using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId}.png"));
@@ -130,7 +130,7 @@ public class BestsDrawer : DrawerBase
         using Image typeImage = BoldFont.DrawImage(32, typename, new Color(new Rgb24(0, 109, 103)),
             [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
 
-        image.Mutate(ctx =>
+        bg.Mutate(ctx =>
         {
             ctx.DrawImage(frameImage, new Point(48, 45), 1);
             ctx.DrawImage(plate, new Point(77, 69), 1);
@@ -154,9 +154,6 @@ public class BestsDrawer : DrawerBase
             ctx.DrawImage(sdBests, new Point(25, 796), 1);
             ctx.DrawImage(dxBests, new Point(25, 1986), 1);
         });
-
-        Image bg = Image.Load(backgroundPath);
-        bg.Mutate(ctx => ctx.DrawImage(image, new Point(0, 0), 1));
 
         return bg;
     }

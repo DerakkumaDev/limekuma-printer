@@ -23,8 +23,8 @@ public class ListDrawer : BestsDrawer
     public Image Draw(CommonUser user, IList<CommonRecord> records, int page, int total, IList<int> counts,
         string level, string backgroundPath = BackgroundPath)
     {
+        Image bg = Image.Load(backgroundPath);
         using Image recordsImage = DrawScores(records);
-        using Image<Rgba32> image = new(1440, 2560);
         using Image frameImage = Image.Load(FramePath);
         using Image levelImage = Image.Load(Path.Combine(LevelRootPath, $"{level}.png"));
         using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId}.png"));
@@ -78,7 +78,7 @@ public class ListDrawer : BestsDrawer
         using Image nameImage = MediumFont.DrawImage(21, user.Name, new Color(new Rgb24(0, 0, 0)),
             [SymbolsFont, Symbols2Font, NotoMediumFont], KnownResamplers.Lanczos3);
 
-        image.Mutate(ctx =>
+        bg.Mutate(ctx =>
         {
             ctx.DrawImage(frameImage, new Point(48, 45), 1);
             ctx.DrawImage(levelImage, new Point(755 - (level.Length * 8), 45), 1);
@@ -114,7 +114,7 @@ public class ListDrawer : BestsDrawer
                 using Image countImage = BoldFont.DrawImage(20, countText,
                     new Color(count >= totalCount ? new(248, 179, 42) : new Rgb24(53, 74, 164)),
                     [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-                image.Mutate(ctx => ctx.DrawImage(countImage, (Point)countPos, 1));
+                bg.Mutate(ctx => ctx.DrawImage(countImage, (Point)countPos, 1));
 
                 point.X += columnIndex == 0 ? 120 : 102;
             }
@@ -122,9 +122,6 @@ public class ListDrawer : BestsDrawer
             point.X = 200;
             point.Y += 90;
         }
-
-        Image bg = Image.Load(backgroundPath);
-        bg.Mutate(ctx => ctx.DrawImage(image, new Point(0, 0), 1));
 
         return bg;
     }

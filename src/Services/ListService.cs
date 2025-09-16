@@ -1,3 +1,4 @@
+using Grpc.Core;
 using Limekuma.Prober.Common;
 using Limekuma.Utils;
 using LimeKuma;
@@ -13,7 +14,7 @@ public sealed partial class ListService : ListApi.ListApiBase
         int count = records.Count;
         if (i >= count)
         {
-            throw new IndexOutOfRangeException();
+            throw new RpcException(new(StatusCode.OutOfRange, "The page number is out of the range boundary."));
         }
 
         await ServiceHelper.PrepareUserDataAsync(user);
