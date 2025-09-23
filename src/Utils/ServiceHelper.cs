@@ -23,8 +23,7 @@ internal static class ServiceHelper
             imageStream.CopyTo(stream);
         }
 
-        if (!File.Exists(Path.Combine(BestsDrawer.FrameRootPath,
-                $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png")))
+        if (!File.Exists(Path.Combine(BestsDrawer.FrameRootPath, $"{user.FrameId}.png")))
         {
             user.FrameId = 200502;
         }

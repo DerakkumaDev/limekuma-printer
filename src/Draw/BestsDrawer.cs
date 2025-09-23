@@ -11,9 +11,9 @@ namespace Limekuma.Draw;
 public class BestsDrawer : DrawerBase
 {
 #if RELEASE
-    public const string IconRootPath = "./Static/maimai/Icon/";
+    public const string IconRootPath = "./Cache/Icon/";
     public const string PlateRootPath = "./Cache/Plate/";
-    public const string FrameRootPath = "./Static/maimai/Frame/";
+    public const string FrameRootPath = "./Cache/Frame/";
     public const string PartRootPath = "./Static/Maimai/Bests/Part/";
     public const string DxStarRootPath = "./Static/maimai/DXScoreStar/";
     public const string ClassRootPath = "./Static/maimai/Class/";
@@ -48,8 +48,7 @@ public class BestsDrawer : DrawerBase
         Image bg = Image.Load(backgroundPath);
         using Image sdBests = DrawScores(ever);
         using Image dxBests = DrawScores(current, ever.Count);
-        using Image frameImage =
-            Image.Load(Path.Combine(FrameRootPath, $"UI_Frame_{user.FrameId.ToString().PadLeft(6, '0')}.png"));
+        using Image frameImage = Image.Load(Path.Combine(FrameRootPath, $"{user.FrameId}.png"));
         using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId}.png"));
         using Image iconImage = Image.Load(Path.Combine(IconRootPath, $"{user.IconId}.png"));
         using Image @class = Image.Load(Path.Combine(ClassRootPath, $"{(int)user.ClassRank}.png"));
