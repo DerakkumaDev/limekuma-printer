@@ -60,28 +60,28 @@ public class BestsDrawer : DrawerBase
         using Image ratingbase = Image.Load(Path.Combine(RatingRootPath, $"{user.RatingLevel}.png"));
 
         frameImage.Resize(0.95, KnownResamplers.Lanczos3);
-        plate.Resize(0.95, KnownResamplers.Lanczos3);
-        iconImage.Resize(0.73, KnownResamplers.Lanczos3);
-        ratingbase.Resize(0.945, KnownResamplers.Lanczos3);
-        @class.Resize(0.78, KnownResamplers.Lanczos3);
-        course.Resize(0.213, KnownResamplers.Lanczos3);
+        plate.Resize(0.951, KnownResamplers.Lanczos3);
+        iconImage.Resize(0.737, KnownResamplers.Lanczos3);
+        ratingbase.Resize(0.948, KnownResamplers.Lanczos3);
+        @class.Resize(0.775, KnownResamplers.Lanczos3);
+        course.Resize(0.215, KnownResamplers.Lanczos3);
         shougoubase.Resize(0.94, KnownResamplers.Lanczos3);
         frameLine.Resize(0.745, KnownResamplers.Lanczos3);
 
-        Font robinEbFont16 = RobinEbFont.GetSizeFont(32);
+        Font robinEbFont16 = RobinEbFont.GetSizeFont(33);
 
         List<char> ratingLE = [.. user.Rating.ToString().Reverse()];
         using Image<Rgba32> ratingImage = new(512, 64);
         ratingImage.Mutate(ctx =>
         {
-            ReadOnlySpan<int> ratingPos = [114, 86, 56, 28, 0];
-            for (int i = 0; i < ratingLE.Count; i++)
+            ReadOnlySpan<int> ratingPos = [111, 82, 55, 26, 0];
+            for (int i = 0; i < ratingLE.Count; ++i)
             {
-                ctx.DrawText(ratingLE[i].ToString(), robinEbFont16, new Color(new Rgb24(249, 198, 10)),
-                    new(ratingPos[i], 20));
+                ctx.DrawText(ratingLE[i].ToString(), robinEbFont16, Brushes.Solid(new Rgb24(249, 198, 10)),
+                    Pens.Solid(new Rgba32(0, 0, 0, 150), 1f), new(ratingPos[i], 20));
             }
 
-            ctx.Resize(ratingImage.Width * 16 / 32, ratingImage.Height * 16 / 32, KnownResamplers.Spline);
+            ctx.Resize(ratingImage.Width / 2, ratingImage.Height / 2, KnownResamplers.Spline);
         });
 
         string shougou = user.TrophyText;
@@ -89,7 +89,7 @@ public class BestsDrawer : DrawerBase
         Point shougoubasePos = new(181, 143);
         PointF shougouPos = new(shougoubasePos.X + ((shougoubase.Width - shougouSize.Width) / 2), 151);
         using Image shougouImage = HeavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)),
-            Pens.Solid(new Rgb24(0, 0, 0), 4f), [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Spline, 6);
+            Pens.Solid(new Rgb24(0, 0, 0), 5f), [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Spline, 6);
 
         using Image nameImage = MediumFont.DrawImage(21, user.Name, new Color(new Rgb24(0, 0, 0)),
             [SymbolsFont, Symbols2Font, NotoMediumFont], KnownResamplers.Lanczos3);
@@ -132,15 +132,15 @@ public class BestsDrawer : DrawerBase
         bg.Mutate(ctx =>
         {
             ctx.DrawImage(frameImage, new Point(48, 45), 1);
-            ctx.DrawImage(plate, new Point(77, 69), 1);
+            ctx.DrawImage(plate, new Point(76, 69), 1);
             ctx.DrawImage(namebase, new Point(183, 108), 1);
-            ctx.DrawImage(ratingbase, new Point(181, 72), 1);
+            ctx.DrawImage(ratingbase, new Point(180, 72), 1);
             ctx.DrawImage(shougoubase, shougoubasePos, 1);
-            ctx.DrawImage(iconImage, new Point(86, 76), 1);
-            ctx.DrawImage(ratingImage, new Point(264, 82), 1);
-            ctx.DrawImage(@class, new Point(343, 48), 1);
-            ctx.DrawImage(course, new Point(358, 109), 1);
-            ctx.DrawImage(nameImage, new Point(190, 117), 1);
+            ctx.DrawImage(iconImage, new Point(85, 76), 1);
+            ctx.DrawImage(ratingImage, new Point(264, 81), 1);
+            ctx.DrawImage(nameImage, new Point(190, 118), 1);
+            ctx.DrawImage(course, new Point(357, 109), 1);
+            ctx.DrawImage(@class, new Point(342, 49), 1);
             ctx.DrawImage(shougouImage, (Point)shougouPos, 1);
             ctx.DrawImage(frameLine, new Point(40, 36), 1);
             ctx.DrawImage(scorebase, new Point(25, 492), 1);
