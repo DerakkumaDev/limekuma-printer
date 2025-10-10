@@ -32,11 +32,11 @@ public record Player
             Name = player.Name,
             Rating = player.Rating,
             TrophyColor = TrophyColor.Normal,
-            TrophyText = "新人出道",
+            TrophyText = "なかよしmai友～！",
             ClassRank = Common.ClassRank.B5,
             CourseRank = player.ClassRank,
-            IconId = 101,
-            FrameId = 200502,
-            PlateId = 101
+            IconId = 458001,
+            FrameId = 558001,
+            PlateId = 458001
         };
 }

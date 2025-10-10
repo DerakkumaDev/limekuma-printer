@@ -62,14 +62,14 @@ public record Player
             Name = player.Name,
             Rating = player.Rating,
             TrophyColor = player.Trophy?.Color ?? TrophyColor.Normal,
-            TrophyText = player.Trophy?.Name ?? "新人出道",
+            TrophyText = player.Trophy?.Name ?? "なかよしmai友～！",
             ClassRank = player.ClassRank,
             CourseRank = (CommonCourseRank)(player.CourseRank < CourseRank.Shinshodan
                 ? player.CourseRank
                 : player.CourseRank - 1),
-            IconId = player.Icon?.Id ?? 101,
-            FrameId = player.Frame?.Id ?? 200502,
-            PlateId = player.NamePlate?.Id ?? 101
+            IconId = player.Icon?.Id ?? 458001,
+            FrameId = player.Frame?.Id ?? 558001,
+            PlateId = player.NamePlate?.Id ?? 458001
         };
 
     public async Task<Record> GetBestAsync(int id, Difficulties difficulty, SongTypes type,

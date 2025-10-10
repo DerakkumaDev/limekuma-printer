@@ -13,7 +13,7 @@ namespace Limekuma.Services;
 public partial class BestsService
 {
     private static async Task<(CommonUser, List<CommonRecord>, List<CommonRecord>, int, int)> PrepareDfDataAsync(
-        uint qq, int frame = 200502, int plate = 101, int icon = 101)
+        uint qq, int frame = 558001, int plate = 458001, int icon = 458001)
     {
         DfResourceClient df = new();
         Player player;
