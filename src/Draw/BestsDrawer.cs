@@ -5,6 +5,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Processing.Processors;
 
 namespace Limekuma.Draw;
 
@@ -24,7 +25,7 @@ public class BestsDrawer : DrawerBase
     public const string NamebasePath = "./Static/Maimai/Bests/namebase.png";
     public const string ScorebasePath = "./Static/Maimai/Bests/scorebase.png";
     public const string BackgroundPath = "./Static/Maimai/Bests/background.png";
-    public const string BackgroundAnimationPath = "./Static/Maimai/Bests/background_animation.gif";
+    public const string BackgroundAnimationPath = "./Static/Maimai/Bests/background_animation.png";
 #elif DEBUG
     public const string IconRootPath = "./Resources/Icon/";
     public const string PlateRootPath = "./Resources/Plate/";
@@ -39,15 +40,15 @@ public class BestsDrawer : DrawerBase
     public const string NamebasePath = "./Resources/Background/namebase.png";
     public const string ScorebasePath = "./Resources/Background/scorebase.png";
     public const string BackgroundPath = "./Resources/Background/bests.png";
-    public const string BackgroundAnimationPath = "./Resources/Background/bests.gif";
+    public const string BackgroundAnimationPath = "./Resources/Background/bests_animation.png";
 #endif
 
     public Image Draw(CommonUser user, IList<CommonRecord> ever, IList<CommonRecord> current, int everTotal,
-        int currentTotal, string typename, string backgroundPath = BackgroundPath)
+        int currentTotal, string typename, bool isAnime = false)
     {
-        Image bg = Image.Load(backgroundPath);
-        using Image sdBests = DrawScores(ever);
-        using Image dxBests = DrawScores(current, ever.Count);
+        Image bg = Image.Load(isAnime ? BackgroundAnimationPath : BackgroundPath);
+        List<(Point, Image)> sdBests = DrawScores(ever, isAnime: isAnime);
+        List<(Point, Image)> dxBests = DrawScores(current, ever.Count, isAnime);
         using Image frameImage = Image.Load(Path.Combine(FrameRootPath, $"{user.FrameId}.png"));
         using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId}.png"));
         using Image iconImage = Image.Load(Path.Combine(IconRootPath, $"{user.IconId}.png"));
@@ -56,7 +57,6 @@ public class BestsDrawer : DrawerBase
         using Image shougoubase = Image.Load(Path.Combine(ShougouRootPath, $"{user.TrophyColor}.png"));
         using Image frameLine = Image.Load(FrameLinePath);
         using Image namebase = Image.Load(NamebasePath);
-        using Image scorebase = Image.Load(ScorebasePath);
         using Image ratingbase = Image.Load(Path.Combine(RatingRootPath, $"{user.RatingLevel}.png"));
 
         frameImage.Resize(0.95, KnownResamplers.Lanczos3);
@@ -129,6 +129,12 @@ public class BestsDrawer : DrawerBase
         using Image typeImage = BoldFont.DrawImage(32, typename, new Color(new Rgb24(0, 109, 103)),
             [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
 
+        if (isAnime)
+        {
+            using Image scorebase = Image.Load(ScorebasePath);
+            bg.Mutate(ctx => ctx.DrawImage(scorebase, new Point(25, 492), 1));
+        }
+
         bg.Mutate(ctx =>
         {
             ctx.DrawImage(frameImage, new Point(48, 45), 1);
@@ -143,26 +149,43 @@ public class BestsDrawer : DrawerBase
             ctx.DrawImage(@class, new Point(342, 49), 1);
             ctx.DrawImage(shougouImage, (Point)shougouPos, 1);
             ctx.DrawImage(frameLine, new Point(40, 36), 1);
-            ctx.DrawImage(scorebase, new Point(25, 492), 1);
             ctx.DrawImage(scorePart1Image, (Point)scorePart1Pos, 1);
             ctx.DrawImage(scorePart2Image, (Point)scorePart2Pos, 1);
             ctx.DrawImage(scorePart3Image, (Point)scorePart3Pos, 1);
             ctx.DrawImage(scorePart4Image, (Point)scorePart4Pos, 1);
             ctx.DrawImage(scorePart5Image, (Point)scorePart5Pos, 1);
             ctx.DrawImage(typeImage, (Point)typePos, 1);
-            ctx.DrawImage(sdBests, new Point(25, 796), 1);
-            ctx.DrawImage(dxBests, new Point(25, 1986), 1);
+            foreach ((Point point, Image scoreImage) in sdBests)
+            {
+                using (scoreImage)
+                {
+                    Point realPoint = point;
+                    realPoint.X += 25;
+                    realPoint.Y += 796;
+                    ctx.DrawImage(scoreImage, realPoint, 1);
+                }
+            }
+
+            foreach ((Point point, Image scoreImage) in dxBests)
+            {
+                using (scoreImage)
+                {
+                    Point realPoint = point;
+                    realPoint.X += 25;
+                    realPoint.Y += 1986;
+                    ctx.DrawImage(scoreImage, realPoint, 1);
+                }
+            }
         });
 
         return bg;
     }
 
-    public Image DrawScores(IList<CommonRecord> scores, int start_index = 0)
+    public List<(Point, Image)> DrawScores(IList<CommonRecord> scores, int start_index = 0, bool isAnime = false)
     {
+        List<(Point, Image)> scoreImages = [];
         int count = scores.Count;
-        int height = ((int)Math.Ceiling(((double)count + 1) / 4) * 120) - 10;
         Point point = new(350, 0);
-        Image<Rgba32> image = new(1390, height);
         for (int index = 0; index < count;)
         {
             for (int rowIndex = 0, rowMaxIndex = point.Y == 0 ? 3 : 4;
@@ -172,10 +195,9 @@ public class BestsDrawer : DrawerBase
                 CommonRecord record = scores[index];
                 int realIndex = index + start_index + 1;
 
-                using Image part = DrawScore(record, realIndex);
+                Image part = DrawScore(record, realIndex, isAnime);
                 part.Resize(0.34, KnownResamplers.Lanczos3);
-                image.Mutate(ctx => ctx.DrawImage(part, point, 1));
-
+                scoreImages.Add((point, part));
                 point.X += 350;
             }
 
@@ -183,10 +205,10 @@ public class BestsDrawer : DrawerBase
             point.Y += 120;
         }
 
-        return image;
+        return scoreImages;
     }
 
-    public Image DrawScore(CommonRecord score, int index)
+    public Image DrawScore(CommonRecord score, int index, bool isAnime = false)
     {
         Rgb24 colorValue = new(255, 255, 255);
         if (score.Difficulty is CommonDifficulties.ReMaster)
@@ -195,8 +217,13 @@ public class BestsDrawer : DrawerBase
         }
 
         Color color = new(colorValue);
+        string bg_filename = $"{score.Difficulty}.png";
+        if (isAnime && score.Rank is Ranks.SSSPlus && score.Difficulty is CommonDifficulties.Master or CommonDifficulties.ReMaster)
+        {
+            bg_filename = $"{score.Difficulty}_max.png";
+        }
 
-        Image bg = Image.Load(Path.Combine(PartRootPath, $"{score.Difficulty}.png"));
+        Image bg = Image.Load(Path.Combine(PartRootPath, bg_filename));
         using Image jacket = Image.Load(Path.Combine(JacketRootPath, $"{score.Id % 10000}.png"));
         using Image songType = Image.Load(Path.Combine(SongTypeRootPath, $"{score.Type}.png"));
         using Image rank = Image.Load(Path.Combine(RateRootPath, $"{score.Rank}.png"));

@@ -64,8 +64,7 @@ public partial class BestsService
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
-        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, "Best 50",
-            BestsDrawer.BackgroundAnimationPath);
+        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, "Best 50", true);
 
         await bestsImage.WriteToResponseAsync(responseStream, true);
     }

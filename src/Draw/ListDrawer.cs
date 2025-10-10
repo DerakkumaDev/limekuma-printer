@@ -24,7 +24,7 @@ public class ListDrawer : BestsDrawer
         string level, string backgroundPath = BackgroundPath)
     {
         Image bg = Image.Load(backgroundPath);
-        using Image recordsImage = DrawScores(records);
+        List<(Point, Image)> recordImages = DrawScores(records);
         using Image frameImage = Image.Load(FramePath);
         using Image levelImage = Image.Load(Path.Combine(LevelRootPath, $"{level}.png"));
         using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId}.png"));
@@ -94,7 +94,16 @@ public class ListDrawer : BestsDrawer
             ctx.DrawImage(shougouImage, (Point)shougouPos, 1);
             ctx.DrawImage(paginationImage, (Point)paginationPos, 1);
             ctx.DrawImage(frameLine, new Point(40, 36), 1);
-            ctx.DrawImage(recordsImage, new Point(25, 800), 1);
+            foreach ((Point point, Image recordImage) in recordImages)
+            {
+                using (recordImage)
+                {
+                    Point realPoint = point;
+                    realPoint.X += 25;
+                    realPoint.Y += 800;
+                    ctx.DrawImage(recordImage, realPoint, 1);
+                }
+            }
         });
 
         int index = 0;

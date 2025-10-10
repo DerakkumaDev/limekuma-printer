@@ -4,8 +4,11 @@ using LimeKuma;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.Formats.Gif;
+using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Processing.Processors.Quantization;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
 
 namespace Limekuma.Utils;
@@ -103,19 +106,24 @@ internal static class DrawExtensions
             bool isAnime = false)
         {
             MemoryStream outStream = new();
+#if RELEASE
             if (isAnime)
             {
-                await image.SaveAsGifAsync(outStream);
+                GifEncoder encoder = new()
+                {
+                    Quantizer = new WuQuantizer(),
+                    ColorTableMode = GifColorTableMode.Local
+                };
+                await image.SaveAsGifAsync(outStream, encoder);
             }
             else
             {
-#if RELEASE
                 await image.SaveAsJpegAsync(outStream);
-#elif DEBUG
-                await image.SaveAsPngAsync(outStream);
-#endif
             }
 
+#elif DEBUG
+            await image.SaveAsPngAsync(outStream);
+#endif
             outStream.Seek(0, SeekOrigin.Begin);
             byte[] buffer = new byte[ChunkSize];
 
