@@ -38,4 +38,6 @@ public record CommonUser
     public string IconUrl => $"https://assets2.lxns.net/maimai/icon/{IconId}.png";
 
     public string PlateUrl => $"https://assets2.lxns.net/maimai/plate/{PlateId}.png";
+
+    public string FrameUrl => $"https://assets2.lxns.net/maimai/frame/{FrameId}.png";
 }

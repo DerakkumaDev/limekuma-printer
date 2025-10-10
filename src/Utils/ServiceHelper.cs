@@ -25,7 +25,10 @@ internal static class ServiceHelper
 
         if (!File.Exists(Path.Combine(BestsDrawer.FrameRootPath, $"{user.FrameId}.png")))
         {
-            user.FrameId = 200502;
+            using HttpClient http = new();
+            using FileStream stream = File.OpenWrite(Path.Combine(BestsDrawer.FrameRootPath, $"{user.FrameId}.png"));
+            using Stream imageStream = await http.GetStreamAsync(user.FrameUrl);
+            imageStream.CopyTo(stream);
         }
     }
 

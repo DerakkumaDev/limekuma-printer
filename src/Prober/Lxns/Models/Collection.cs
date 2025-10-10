@@ -42,6 +42,8 @@ public record NamePlate : Collection
 
 public record Frame : Collection
 {
+    public string Url => $"https://assets2.lxns.net/maimai/frame/{Id}.png";
+
     [JsonPropertyName("genre")]
     public required string Genre { get; init; }
 }
