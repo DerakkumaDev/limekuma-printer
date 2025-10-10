@@ -207,7 +207,7 @@ public class BestsDrawer : DrawerBase
                 CommonRecord record = scores[index];
                 int realIndex = index + start_index + 1;
 
-                Image part = DrawScore(record, realIndex, isAnime);
+                Image part = DrawScore(record, realIndex, isAnime && record.Rank is Ranks.SSSPlus && record.Difficulty is CommonDifficulties.Master or CommonDifficulties.ReMaster);
                 part.Resize(0.34, KnownResamplers.Lanczos3);
                 scoreImages.Add((point, part));
                 point.X += 350;
@@ -220,7 +220,7 @@ public class BestsDrawer : DrawerBase
         return scoreImages;
     }
 
-    public Image DrawScore(CommonRecord score, int index, bool isAnime = false)
+    public Image DrawScore(CommonRecord score, int index, bool isMax = false)
     {
         Rgb24 colorValue = new(255, 255, 255);
         if (score.Difficulty is CommonDifficulties.ReMaster)
@@ -230,7 +230,7 @@ public class BestsDrawer : DrawerBase
 
         Color color = new(colorValue);
         string bg_filename = $"{score.Difficulty}.png";
-        if (isAnime && score.Rank is Ranks.SSSPlus && score.Difficulty is CommonDifficulties.Master or CommonDifficulties.ReMaster)
+        if (isMax)
         {
             bg_filename = $"{score.Difficulty}_max.png";
         }
@@ -440,6 +440,61 @@ public class BestsDrawer : DrawerBase
             using Image sync = Image.Load(Path.Combine(SyncRootPath, $"{score.SyncFlag}_S.png"));
             sync.Resize(1.2623, KnownResamplers.Lanczos3);
             bg.Mutate(ctx => ctx.DrawImage(sync, new Point(873, 188), 1));
+        }
+
+        if (!isMax)
+        {
+            return bg;
+        }
+
+        using Image jacketMask = Image.Load(Path.Combine(JacketRootPath, "mask.png"));
+        using Image rankMask = Image.Load(Path.Combine(RateRootPath, "mask.png"));
+        bg.Mutate(ctx =>
+        {
+            GraphicsOptions options = ctx.GetGraphicsOptions();
+            DrawImageProcessor jacketMaskProcessor = new(jacketMask, new Point(13, 17), jacketMask.Bounds, options.ColorBlendingMode, options.AlphaCompositionMode, 1);
+            using (IImageProcessor<Rgba32> jacketMaskspecificProcessor = jacketMaskProcessor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
+            {
+                jacketMaskspecificProcessor.Execute();
+            }
+            ctx.ApplyProcessor(jacketMaskProcessor);
+            DrawImageProcessor rankMaskProcessor = new(rankMask, new Point(790, 78), rankMask.Bounds, options.ColorBlendingMode, options.AlphaCompositionMode, 1);
+            using (IImageProcessor<Rgba32> rankMaskspecificProcessor = rankMaskProcessor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
+            {
+                rankMaskspecificProcessor.Execute();
+            }
+            ctx.ApplyProcessor(rankMaskProcessor);
+        });
+        if (score.ComboFlag > ComboFlags.None || score.SyncFlag > SyncFlags.None)
+        {
+            using Image comboMask = Image.Load(Path.Combine(ComboRootPath, "mask.png"));
+            if (score.ComboFlag > ComboFlags.None)
+            {
+                bg.Mutate(ctx =>
+                {
+                    GraphicsOptions options = ctx.GetGraphicsOptions();
+                    DrawImageProcessor processor = new(comboMask, new Point(774, 189), comboMask.Bounds, PixelColorBlendingMode.Screen, options.AlphaCompositionMode, 1);
+                    using (IImageProcessor<Rgba32> specificProcessor = processor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
+                    {
+                        specificProcessor.Execute();
+                    }
+                    ctx.ApplyProcessor(processor);
+                });
+            }
+
+            if (score.SyncFlag > SyncFlags.None)
+            {
+                bg.Mutate(ctx =>
+                {
+                    GraphicsOptions options = ctx.GetGraphicsOptions();
+                    DrawImageProcessor processor = new(comboMask, new Point(868, 189), comboMask.Bounds, PixelColorBlendingMode.Screen, options.AlphaCompositionMode, 1);
+                    using (IImageProcessor<Rgba32> specificProcessor = processor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
+                    {
+                        specificProcessor.Execute();
+                    }
+                    ctx.ApplyProcessor(processor);
+                });
+            }
         }
 
         return bg;
