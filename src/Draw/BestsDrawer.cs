@@ -162,7 +162,13 @@ public class BestsDrawer : DrawerBase
                     Point realPoint = point;
                     realPoint.X += 25;
                     realPoint.Y += 796;
-                    ctx.DrawImage(scoreImage, realPoint, 1);
+                    GraphicsOptions options = ctx.GetGraphicsOptions();
+                    DrawImageProcessor processor = new(scoreImage, realPoint, scoreImage.Bounds, options.ColorBlendingMode, options.AlphaCompositionMode, 1);
+                    using (IImageProcessor<Rgba32> specificProcessor = processor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
+                    {
+                        specificProcessor.Execute();
+                    }
+                    ctx.ApplyProcessor(processor);
                 }
             }
 
@@ -173,7 +179,13 @@ public class BestsDrawer : DrawerBase
                     Point realPoint = point;
                     realPoint.X += 25;
                     realPoint.Y += 1986;
-                    ctx.DrawImage(scoreImage, realPoint, 1);
+                    GraphicsOptions options = ctx.GetGraphicsOptions();
+                    DrawImageProcessor processor = new(scoreImage, realPoint, scoreImage.Bounds, options.ColorBlendingMode, options.AlphaCompositionMode, 1);
+                    using (IImageProcessor<Rgba32> specificProcessor = processor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
+                    {
+                        specificProcessor.Execute();
+                    }
+                    ctx.ApplyProcessor(processor);
                 }
             }
         });
