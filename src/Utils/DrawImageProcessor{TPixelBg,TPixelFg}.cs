@@ -1,4 +1,4 @@
-﻿// Copyright (c) Six Labors.
+// Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
 using SixLabors.ImageSharp;
@@ -18,6 +18,8 @@ internal class DrawImageProcessor<TPixelBg, TPixelFg> : ImageProcessor<TPixelBg>
     where TPixelBg : unmanaged, IPixel<TPixelBg>
     where TPixelFg : unmanaged, IPixel<TPixelFg>
 {
+    private int currentFrameLoop;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="DrawImageProcessor{TPixelBg, TPixelFg}"/> class.
     /// </summary>
@@ -74,8 +76,6 @@ internal class DrawImageProcessor<TPixelBg, TPixelFg> : ImageProcessor<TPixelBg>
     /// </summary>
     public Point BackgroundLocation { get; }
 
-    private int currentFrameIndex;
-
     /// <inheritdoc/>
     protected override void OnFrameApply(ImageFrame<TPixelBg> source)
     {
@@ -117,16 +117,11 @@ internal class DrawImageProcessor<TPixelBg, TPixelFg> : ImageProcessor<TPixelBg>
         // Sanitize the dimensions so that we don't try and sample outside the image.
         Rectangle backgroundRectangle = Rectangle.Intersect(new Rectangle(left, top, width, height), this.SourceRectangle);
         Configuration configuration = this.Configuration;
-        if (this.currentFrameIndex >= this.ForegroundImage.Frames.Count)
-        {
-            this.currentFrameIndex = 0;
-        }
-
         DrawImageProcessor<TPixelBg, TPixelFg>.RowOperation operation =
             new(
                 configuration,
                 source.PixelBuffer,
-                this.ForegroundImage.Frames[this.currentFrameIndex++].PixelBuffer,
+                this.ForegroundImage.Frames[this.currentFrameLoop % this.ForegroundImage.Frames.Count].PixelBuffer,
                 backgroundRectangle,
                 foregroundRectangle,
                 this.Blender,
@@ -136,6 +131,8 @@ internal class DrawImageProcessor<TPixelBg, TPixelFg> : ImageProcessor<TPixelBg>
             configuration,
             new Rectangle(0, 0, foregroundRectangle.Width, foregroundRectangle.Height),
             in operation);
+
+        this.currentFrameLoop++;
     }
 
     /// <summary>

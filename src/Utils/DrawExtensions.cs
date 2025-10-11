@@ -107,11 +107,12 @@ internal static class DrawExtensions
         {
             MemoryStream outStream = new();
 #if RELEASE
+            image.Resize(1080, 1920, KnownResamplers.Lanczos3);
             if (isAnime)
             {
                 GifEncoder encoder = new()
                 {
-                    Quantizer = new WuQuantizer(),
+                    Quantizer = KnownQuantizers.Wu,
                     ColorTableMode = GifColorTableMode.Local
                 };
                 await image.SaveAsGifAsync(outStream, encoder);
