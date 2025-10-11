@@ -44,7 +44,7 @@ public class BestsDrawer : DrawerBase
 #endif
 
     public Image Draw(CommonUser user, IList<CommonRecord> ever, IList<CommonRecord> current, int everTotal,
-        int currentTotal, string typename, bool isAnime = false)
+        int currentTotal, string typename, string prober, bool isAnime = false)
     {
         Image bg = Image.Load(isAnime ? BackgroundAnimationPath : BackgroundPath);
         List<(Point, Image)> sdBests = DrawScores(ever, isAnime: isAnime);
@@ -58,6 +58,7 @@ public class BestsDrawer : DrawerBase
         using Image frameLine = Image.Load(FrameLinePath);
         using Image namebase = Image.Load(NamebasePath);
         using Image ratingbase = Image.Load(Path.Combine(RatingRootPath, $"{user.RatingLevel}.png"));
+        using Image proberLogo = Image.Load(Path.Combine(ProberLogoRootPath, $"{prober}.png"));
 
         frameImage.Resize(0.95, KnownResamplers.Lanczos3);
         plate.Resize(0.951, KnownResamplers.Lanczos3);
@@ -144,7 +145,7 @@ public class BestsDrawer : DrawerBase
             ctx.DrawImage(shougoubase, shougoubasePos, 1);
             ctx.DrawImage(iconImage, new Point(85, 76), 1);
             ctx.DrawImage(ratingImage, new Point(264, 81), 1);
-            ctx.DrawImage(nameImage, new Point(190, 118), 1);
+            ctx.DrawImage(nameImage, new Point(190, 116), 1);
             ctx.DrawImage(course, new Point(357, 109), 1);
             ctx.DrawImage(@class, new Point(342, 49), 1);
             ctx.DrawImage(shougouImage, (Point)shougouPos, 1);
@@ -155,6 +156,7 @@ public class BestsDrawer : DrawerBase
             ctx.DrawImage(scorePart4Image, (Point)scorePart4Pos, 1);
             ctx.DrawImage(scorePart5Image, (Point)scorePart5Pos, 1);
             ctx.DrawImage(typeImage, (Point)typePos, 1);
+            ctx.DrawImage(proberLogo, new Point(1011, 67), 1);
             foreach ((Point point, Image scoreImage) in sdBests)
             {
                 using (scoreImage)
@@ -207,7 +209,7 @@ public class BestsDrawer : DrawerBase
                 CommonRecord record = scores[index];
                 int realIndex = index + start_index + 1;
 
-                Image part = DrawScore(record, realIndex, isAnime && record.Rank is Ranks.SSSPlus && record.Difficulty is CommonDifficulties.Master or CommonDifficulties.ReMaster);
+                Image part = DrawScore(record, realIndex, isAnime && record.Rank is Ranks.SSSPlus && record.Difficulty is CommonDifficulties.Master or CommonDifficulties.ReMaster && record.DXRating >= 315);
                 part.Resize(0.34, KnownResamplers.Lanczos3);
                 scoreImages.Add((point, part));
                 point.X += 350;
@@ -223,7 +225,7 @@ public class BestsDrawer : DrawerBase
     public Image DrawScore(CommonRecord score, int index, bool isMax = false)
     {
         Rgb24 colorValue = new(255, 255, 255);
-        if (score.Difficulty is CommonDifficulties.ReMaster)
+        if (score.Difficulty is CommonDifficulties.ReMaster && !isMax)
         {
             colorValue = new(88, 140, 204);
         }

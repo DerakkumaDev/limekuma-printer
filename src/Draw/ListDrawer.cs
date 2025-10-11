@@ -21,7 +21,7 @@ public class ListDrawer : BestsDrawer
 #endif
 
     public Image Draw(CommonUser user, IList<CommonRecord> records, int page, int total, IList<int> counts,
-        string level, string backgroundPath = BackgroundPath)
+        string level, string prober, string backgroundPath = BackgroundPath)
     {
         Image bg = Image.Load(backgroundPath);
         List<(Point, Image)> recordImages = DrawScores(records);
@@ -35,6 +35,7 @@ public class ListDrawer : BestsDrawer
         using Image frameLine = Image.Load(FrameLinePath);
         using Image namebase = Image.Load(NamebasePath);
         using Image ratingbase = Image.Load(Path.Combine(RatingRootPath, $"{user.RatingLevel}.png"));
+        using Image proberLogo = Image.Load(Path.Combine(ProberLogoRootPath, $"{prober}.png"));
 
         frameImage.Resize(0.95, KnownResamplers.Lanczos3);
         levelImage.Resize(0.7, KnownResamplers.Lanczos3);
@@ -88,12 +89,13 @@ public class ListDrawer : BestsDrawer
             ctx.DrawImage(shougoubase, shougoubasePos, 1);
             ctx.DrawImage(iconImage, new Point(85, 76), 1);
             ctx.DrawImage(ratingImage, new Point(264, 81), 1);
-            ctx.DrawImage(nameImage, new Point(190, 118), 1);
+            ctx.DrawImage(nameImage, new Point(190, 116), 1);
             ctx.DrawImage(course, new Point(357, 109), 1);
             ctx.DrawImage(@class, new Point(342, 49), 1);
             ctx.DrawImage(shougouImage, (Point)shougouPos, 1);
             ctx.DrawImage(paginationImage, (Point)paginationPos, 1);
             ctx.DrawImage(frameLine, new Point(40, 36), 1);
+            ctx.DrawImage(proberLogo, new Point(1011, 407), 1);
             foreach ((Point point, Image recordImage) in recordImages)
             {
                 using (recordImage)

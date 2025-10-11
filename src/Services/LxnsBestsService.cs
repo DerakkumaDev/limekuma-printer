@@ -84,7 +84,7 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
         using Image bestsImage =
-            new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, "Best 50");
+            new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, "落雪 Best 50", "lxns");
 
         await bestsImage.WriteToResponseAsync(responseStream);
     }
@@ -94,7 +94,7 @@ public partial class BestsService
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
-        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, "Best 50", true);
+        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, "落雪 Best 50", "lxns", true);
 
         await bestsImage.WriteToResponseAsync(responseStream, true);
     }

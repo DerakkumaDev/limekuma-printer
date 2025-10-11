@@ -11,6 +11,7 @@ public abstract class DrawerBase
     public const string ComboRootPath = "./Static/Maimai/Bests/Combo/";
     public const string SyncRootPath = "./Static/Maimai/Bests/Sync/";
     public const string SongTypeRootPath = "./Static/maimai/MusicType/";
+    public const string ProberLogoRootPath = "./Static/Maimai/ProberLogo/";
 #elif DEBUG
     public const string FontRootPath = "./Resources/Font/";
     public const string JacketRootPath = "./Resources/Jacket/";
@@ -18,6 +19,7 @@ public abstract class DrawerBase
     public const string ComboRootPath = "./Resources/Combo/";
     public const string SyncRootPath = "./Resources/Sync/";
     public const string SongTypeRootPath = "./Resources/SongType/";
+    public const string ProberLogoRootPath = "./Resources/ProberLogo/";
 #endif
 
     static DrawerBase()
