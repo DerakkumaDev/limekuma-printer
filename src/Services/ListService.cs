@@ -7,7 +7,7 @@ namespace Limekuma.Services;
 
 public sealed partial class ListService : ListApi.ListApiBase
 {
-    private static async Task<(int[], int, int)> PrepareDataAsync(CommonUser user, IList<CommonRecord> records,
+    private static async Task<(int[], int, int)> PrepareDataAsync(CommonUser user, List<CommonRecord> records,
         int page = 1)
     {
         int i = (page - 1) * 55;
@@ -26,10 +26,10 @@ public sealed partial class ListService : ListApi.ListApiBase
         for (int k = Math.Min(i + 55, count); j < k; ++j)
         {
             CommonRecord record = records[j];
-            await ServiceHelper.PrepareRecordDataAsync(record);
+            await ServiceHelper.PrepareRecordDataAsync(record, CancellationToken.None);
         }
 
-        foreach (CommonRecord record in records)
+        Parallel.ForEach(records, record =>
         {
             if (record.Rank >= Ranks.S)
             {
@@ -73,7 +73,7 @@ public sealed partial class ListService : ListApi.ListApiBase
                     _ => 16
                 }];
             }
-        }
+        });
 
         return (counts, i, j);
     }

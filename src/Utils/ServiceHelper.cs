@@ -34,13 +34,13 @@ internal static class ServiceHelper
 
     internal static async Task PrepareRecordDataAsync(IList<CommonRecord> records)
     {
-        foreach (CommonRecord record in records)
+        await Parallel.ForEachAsync(records, async (record, cancellationToken) =>
         {
-            await PrepareRecordDataAsync(record);
-        }
+            await PrepareRecordDataAsync(record, cancellationToken);
+        });
     }
 
-    internal static async Task PrepareRecordDataAsync(CommonRecord record)
+    internal static async Task PrepareRecordDataAsync(CommonRecord record, CancellationToken cancellationToken)
     {
         if (File.Exists(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id % 10000}.png")))
         {
@@ -49,7 +49,7 @@ internal static class ServiceHelper
 
         using HttpClient http = new();
         using FileStream stream = File.OpenWrite(Path.Combine(DrawerBase.JacketRootPath, $"{record.Id % 10000}.png"));
-        using Stream imageStream = await http.GetStreamAsync(record.JacketUrl);
+        using Stream imageStream = await http.GetStreamAsync(record.JacketUrl, cancellationToken);
         imageStream.CopyTo(stream);
     }
 }

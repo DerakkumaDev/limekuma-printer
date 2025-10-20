@@ -23,19 +23,19 @@ public class ListDrawer : BestsDrawer
     public Image Draw(CommonUser user, IList<CommonRecord> records, int page, int total, IList<int> counts,
         string level, string prober, string backgroundPath = BackgroundPath)
     {
-        Image bg = Image.Load(backgroundPath);
+        Image bg = AssetManager.Shared.Load(backgroundPath);
         List<(Point, Image)> recordImages = DrawScores(records);
-        using Image frameImage = Image.Load(FramePath);
-        using Image levelImage = Image.Load(Path.Combine(LevelRootPath, $"{level}.png"));
-        using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId}.png"));
-        using Image iconImage = Image.Load(Path.Combine(IconRootPath, $"{user.IconId}.png"));
-        using Image @class = Image.Load(Path.Combine(ClassRootPath, $"{(int)user.ClassRank}.png"));
-        using Image course = Image.Load(Path.Combine(DaniRootPath, $"{(int)user.CourseRank}.png"));
-        using Image shougoubase = Image.Load(Path.Combine(ShougouRootPath, $"{user.TrophyColor}.png"));
-        using Image frameLine = Image.Load(FrameLinePath);
-        using Image namebase = Image.Load(NamebasePath);
-        using Image ratingbase = Image.Load(Path.Combine(RatingRootPath, $"{user.RatingLevel}.png"));
-        using Image proberLogo = Image.Load(Path.Combine(ProberLogoRootPath, $"{prober}.png"));
+        using Image frameImage = AssetManager.Shared.Load(FramePath);
+        using Image levelImage = AssetManager.Shared.Load(Path.Combine(LevelRootPath, $"{level}.png"));
+        using Image plate = AssetManager.Shared.Load(Path.Combine(PlateRootPath, $"{user.PlateId}.png"));
+        using Image iconImage = AssetManager.Shared.Load(Path.Combine(IconRootPath, $"{user.IconId}.png"));
+        using Image @class = AssetManager.Shared.Load(Path.Combine(ClassRootPath, $"{(int)user.ClassRank}.png"));
+        using Image course = AssetManager.Shared.Load(Path.Combine(DaniRootPath, $"{(int)user.CourseRank}.png"));
+        using Image shougoubase = AssetManager.Shared.Load(Path.Combine(ShougouRootPath, $"{user.TrophyColor}.png"));
+        using Image frameLine = AssetManager.Shared.Load(FrameLinePath);
+        using Image namebase = AssetManager.Shared.Load(NamebasePath);
+        using Image ratingbase = AssetManager.Shared.Load(Path.Combine(RatingRootPath, $"{user.RatingLevel}.png"));
+        using Image proberLogo = AssetManager.Shared.Load(Path.Combine(ProberLogoRootPath, $"{prober}.png"));
 
         frameImage.Resize(0.95, KnownResamplers.Lanczos3);
         levelImage.Resize(0.7, KnownResamplers.Lanczos3);

@@ -46,19 +46,19 @@ public class BestsDrawer : DrawerBase
     public Image Draw(CommonUser user, IList<CommonRecord> ever, IList<CommonRecord> current, int everTotal,
         int currentTotal, string typename, string prober, bool isAnime = false)
     {
-        Image bg = Image.Load(isAnime ? BackgroundAnimationPath : BackgroundPath);
+        Image bg = AssetManager.Shared.Load(isAnime ? BackgroundAnimationPath : BackgroundPath);
         List<(Point, Image)> sdBests = DrawScores(ever, isAnime: isAnime);
         List<(Point, Image)> dxBests = DrawScores(current, ever.Count, isAnime);
-        using Image frameImage = Image.Load(Path.Combine(FrameRootPath, $"{user.FrameId}.png"));
-        using Image plate = Image.Load(Path.Combine(PlateRootPath, $"{user.PlateId}.png"));
-        using Image iconImage = Image.Load(Path.Combine(IconRootPath, $"{user.IconId}.png"));
-        using Image @class = Image.Load(Path.Combine(ClassRootPath, $"{(int)user.ClassRank}.png"));
-        using Image course = Image.Load(Path.Combine(DaniRootPath, $"{(int)user.CourseRank}.png"));
-        using Image shougoubase = Image.Load(Path.Combine(ShougouRootPath, $"{user.TrophyColor}.png"));
-        using Image frameLine = Image.Load(FrameLinePath);
-        using Image namebase = Image.Load(NamebasePath);
-        using Image ratingbase = Image.Load(Path.Combine(RatingRootPath, $"{user.RatingLevel}.png"));
-        using Image proberLogo = Image.Load(Path.Combine(ProberLogoRootPath, $"{prober}.png"));
+        using Image frameImage = AssetManager.Shared.Load(Path.Combine(FrameRootPath, $"{user.FrameId}.png"));
+        using Image plate = AssetManager.Shared.Load(Path.Combine(PlateRootPath, $"{user.PlateId}.png"));
+        using Image iconImage = AssetManager.Shared.Load(Path.Combine(IconRootPath, $"{user.IconId}.png"));
+        using Image @class = AssetManager.Shared.Load(Path.Combine(ClassRootPath, $"{(int)user.ClassRank}.png"));
+        using Image course = AssetManager.Shared.Load(Path.Combine(DaniRootPath, $"{(int)user.CourseRank}.png"));
+        using Image shougoubase = AssetManager.Shared.Load(Path.Combine(ShougouRootPath, $"{user.TrophyColor}.png"));
+        using Image frameLine = AssetManager.Shared.Load(FrameLinePath);
+        using Image namebase = AssetManager.Shared.Load(NamebasePath);
+        using Image ratingbase = AssetManager.Shared.Load(Path.Combine(RatingRootPath, $"{user.RatingLevel}.png"));
+        using Image proberLogo = AssetManager.Shared.Load(Path.Combine(ProberLogoRootPath, $"{prober}.png"));
 
         frameImage.Resize(0.95, KnownResamplers.Lanczos3);
         plate.Resize(0.951, KnownResamplers.Lanczos3);
@@ -132,7 +132,7 @@ public class BestsDrawer : DrawerBase
 
         if (isAnime)
         {
-            using Image scorebase = Image.Load(ScorebasePath);
+            using Image scorebase = AssetManager.Shared.Load(ScorebasePath);
             bg.Mutate(ctx => ctx.DrawImage(scorebase, new Point(25, 492), 1));
         }
 
@@ -237,10 +237,10 @@ public class BestsDrawer : DrawerBase
             bg_filename = $"{score.Difficulty}_max.png";
         }
 
-        Image bg = Image.Load(Path.Combine(PartRootPath, bg_filename));
-        using Image jacket = Image.Load(Path.Combine(JacketRootPath, $"{score.Id % 10000}.png"));
-        using Image songType = Image.Load(Path.Combine(SongTypeRootPath, $"{score.Type}.png"));
-        using Image rank = Image.Load(Path.Combine(RateRootPath, $"{score.Rank}.png"));
+        Image bg = AssetManager.Shared.Load(Path.Combine(PartRootPath, bg_filename));
+        using Image jacket = AssetManager.Shared.Load(Path.Combine(JacketRootPath, $"{score.Id % 10000}.png"));
+        using Image songType = AssetManager.Shared.Load(Path.Combine(SongTypeRootPath, $"{score.Type}.png"));
+        using Image rank = AssetManager.Shared.Load(Path.Combine(RateRootPath, $"{score.Rank}.png"));
 
         #region Title
 
@@ -384,7 +384,7 @@ public class BestsDrawer : DrawerBase
             };
 
             PointF dxStarPos = new(570, 177);
-            using Image dxStar = Image.Load(Path.Combine(DxStarRootPath, $"{starIndex}.png"));
+            using Image dxStar = AssetManager.Shared.Load(Path.Combine(DxStarRootPath, $"{starIndex}.png"));
             dxStar.Resize(1.3, KnownResamplers.Lanczos3);
 
             bg.Mutate(ctx =>
@@ -432,14 +432,14 @@ public class BestsDrawer : DrawerBase
 
         if (score.ComboFlag > ComboFlags.None)
         {
-            using Image combo = Image.Load(Path.Combine(ComboRootPath, $"{score.ComboFlag}_S.png"));
+            using Image combo = AssetManager.Shared.Load(Path.Combine(ComboRootPath, $"{score.ComboFlag}_S.png"));
             combo.Resize(1.2623, KnownResamplers.Lanczos3);
             bg.Mutate(ctx => ctx.DrawImage(combo, new Point(779, 188), 1));
         }
 
         if (score.SyncFlag > SyncFlags.None)
         {
-            using Image sync = Image.Load(Path.Combine(SyncRootPath, $"{score.SyncFlag}_S.png"));
+            using Image sync = AssetManager.Shared.Load(Path.Combine(SyncRootPath, $"{score.SyncFlag}_S.png"));
             sync.Resize(1.2623, KnownResamplers.Lanczos3);
             bg.Mutate(ctx => ctx.DrawImage(sync, new Point(873, 188), 1));
         }
@@ -449,8 +449,8 @@ public class BestsDrawer : DrawerBase
             return bg;
         }
 
-        using Image jacketMask = Image.Load(Path.Combine(JacketRootPath, "mask.png"));
-        using Image rankMask = Image.Load(Path.Combine(RateRootPath, "mask.png"));
+        using Image jacketMask = AssetManager.Shared.Load(Path.Combine(JacketRootPath, "mask.png"));
+        using Image rankMask = AssetManager.Shared.Load(Path.Combine(RateRootPath, "mask.png"));
         bg.Mutate(ctx =>
         {
             GraphicsOptions options = ctx.GetGraphicsOptions();
@@ -469,7 +469,7 @@ public class BestsDrawer : DrawerBase
         });
         if (score.ComboFlag > ComboFlags.None || score.SyncFlag > SyncFlags.None)
         {
-            using Image comboMask = Image.Load(Path.Combine(ComboRootPath, "mask.png"));
+            using Image comboMask = AssetManager.Shared.Load(Path.Combine(ComboRootPath, "mask.png"));
             if (score.ComboFlag > ComboFlags.None)
             {
                 bg.Mutate(ctx =>
