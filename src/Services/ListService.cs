@@ -23,57 +23,70 @@ public sealed partial class ListService : ListApi.ListApiBase
         counts[15] = count;
 
         int j = i;
-        for (int k = Math.Min(i + 55, count); j < k; ++j)
-        {
-            CommonRecord record = records[j];
-            await ServiceHelper.PrepareRecordDataAsync(record, CancellationToken.None);
-        }
+        int end = Math.Min(i + 55, count);
+        await ServiceHelper.PrepareRecordDataAsync(records[i..end]);
+        j = end;
 
-        Parallel.ForEach(records, record =>
-        {
-            if (record.Rank >= Ranks.S)
+        Parallel.ForEach(
+            source: records,
+            localInit: () => new int[16],
+            body: (record, _, local) =>
             {
-                ++counts[record.Rank switch
+                if (record.Rank >= Ranks.S)
                 {
-                    Ranks.SSSPlus => 0,
-                    Ranks.SSS => 1,
-                    Ranks.SSPlus => 2,
-                    Ranks.SS => 3,
-                    Ranks.SPlus => 4,
-                    Ranks.S => 5,
-                    _ => 16
-                }];
-            }
+                    ++local[record.Rank switch
+                    {
+                        Ranks.SSSPlus => 0,
+                        Ranks.SSS => 1,
+                        Ranks.SSPlus => 2,
+                        Ranks.SS => 3,
+                        Ranks.SPlus => 4,
+                        Ranks.S => 5,
+                        _ => 16
+                    }];
+                }
 
-            if (record.Rank >= Ranks.A)
-            {
-                ++counts[6];
-            }
-
-            if (record.ComboFlag >= ComboFlags.FullCombo)
-            {
-                ++counts[record.ComboFlag switch
+                if (record.Rank >= Ranks.A)
                 {
-                    ComboFlags.AllPerfectPlus => 7,
-                    ComboFlags.AllPerfect => 8,
-                    ComboFlags.FullComboPlus => 9,
-                    ComboFlags.FullCombo => 10,
-                    _ => 16
-                }];
-            }
+                    ++local[6];
+                }
 
-            if (record.SyncFlag is >= SyncFlags.FullSync and <= SyncFlags.FullSyncDXPlus)
-            {
-                ++counts[record.SyncFlag switch
+                if (record.ComboFlag >= ComboFlags.FullCombo)
                 {
-                    SyncFlags.FullSyncDXPlus => 11,
-                    SyncFlags.FullSyncDX => 12,
-                    SyncFlags.FullSyncPlus => 13,
-                    SyncFlags.FullSync => 14,
-                    _ => 16
-                }];
-            }
-        });
+                    ++local[record.ComboFlag switch
+                    {
+                        ComboFlags.AllPerfectPlus => 7,
+                        ComboFlags.AllPerfect => 8,
+                        ComboFlags.FullComboPlus => 9,
+                        ComboFlags.FullCombo => 10,
+                        _ => 16
+                    }];
+                }
+
+                if (record.SyncFlag is >= SyncFlags.FullSync and <= SyncFlags.FullSyncDXPlus)
+                {
+                    ++local[record.SyncFlag switch
+                    {
+                        SyncFlags.FullSyncDXPlus => 11,
+                        SyncFlags.FullSyncDX => 12,
+                        SyncFlags.FullSyncPlus => 13,
+                        SyncFlags.FullSync => 14,
+                        _ => 16
+                    }];
+                }
+
+                return local;
+            },
+            localFinally: local =>
+            {
+                for (int idx = 0; idx < local.Length; ++idx)
+                {
+                    if (idx < counts.Length)
+                    {
+                        Interlocked.Add(ref counts[idx], local[idx]);
+                    }
+                }
+            });
 
         return (counts, i, j);
     }

@@ -197,29 +197,39 @@ public class BestsDrawer : DrawerBase
 
     public List<(Point, Image)> DrawScores(IList<CommonRecord> scores, int start_index = 0, bool isAnime = false)
     {
-        List<(Point, Image)> scoreImages = [];
         int count = scores.Count;
-        Point point = new(350, 0);
-        for (int index = 0; index < count;)
+        if (count == 0)
         {
-            for (int rowIndex = 0, rowMaxIndex = point.Y == 0 ? 3 : 4;
-                 rowIndex < rowMaxIndex && index < count;
-                 ++index, ++rowIndex)
-            {
-                CommonRecord record = scores[index];
-                int realIndex = index + start_index + 1;
-
-                Image part = DrawScore(record, realIndex, isAnime && record.Rank is Ranks.SSSPlus && record.Difficulty is CommonDifficulties.Master or CommonDifficulties.ReMaster && record.DXRating >= 315);
-                part.Resize(0.34, KnownResamplers.Lanczos3);
-                scoreImages.Add((point, part));
-                point.X += 350;
-            }
-
-            point.X = 0;
-            point.Y += 120;
+            return [];
         }
 
-        return scoreImages;
+        (Point, Image)[] results = new (Point, Image)[count];
+
+        Parallel.For(0, count, idx =>
+        {
+            CommonRecord record = scores[idx];
+            int realIndex = idx + start_index + 1;
+
+            Point p;
+            if (idx < 3)
+            {
+                p = new Point(350 + (idx * 350), 0);
+            }
+            else
+            {
+                int remain = idx - 3;
+                int row = remain / 4;
+                int col = remain % 4;
+                p = new Point(col * 350, (row + 1) * 120);
+            }
+
+            Image part = DrawScore(record, realIndex,
+                isAnime && record.Rank is Ranks.SSSPlus && record.Difficulty is CommonDifficulties.Master or CommonDifficulties.ReMaster && record.DXRating >= 315);
+            part.Resize(0.34, KnownResamplers.Lanczos3);
+            results[idx] = (p, part);
+        });
+
+        return [.. results];
     }
 
     public Image DrawScore(CommonRecord score, int index, bool isMax = false)
