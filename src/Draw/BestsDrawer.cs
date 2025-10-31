@@ -562,7 +562,7 @@ public class BestsDrawer : DrawerBase
         Parallel.For(0, diffs.Length, i =>
         {
             Point pos = new(155, posY[i % len]);
-            Image levelImage = BoldFont.DrawImage(30, $"+{diffs[i]}", new(new Rgb24(255, 255, 255)),
+            Image levelImage = BoldFont.DrawImage(30, $"{$"+{diffs[i]}",3}", new(new Rgb24(255, 255, 255)),
                 [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
             images.Add((pos, levelImage));
         });
@@ -570,12 +570,14 @@ public class BestsDrawer : DrawerBase
         Ranks[] ranks = [Ranks.SSSPlus, Ranks.SSS, Ranks.SSPlus, Ranks.SS];
         Parallel.For(0, posX.Length * posY.Length, i =>
         {
-            int index = i % len;
-            int rating = ratings[index];
-            Ranks rank = ranks[index];
+            int indexX = i % len;
+            int indexY = i / len;
+            int rating = ratings[indexY];
+            Ranks rank = ranks[indexX];
             double currentRating = RatingProc(rating, rank);
-            Point pos = new(posX[i / len], posY[index]);
-            Image levelImage = BoldFont.DrawImage(30, currentRating.ToString(), new(new Rgb24(255, 255, 255)),
+            string ratingText = currentRating > 0 ? $"{currentRating,4:F1}" : "-----";
+            Point pos = new(posX[indexX], posY[indexY]);
+            Image levelImage = BoldFont.DrawImage(30, ratingText, new(new Rgb24(255, 255, 255)),
                 [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
             images.Add((pos, levelImage));
         });
@@ -607,17 +609,12 @@ public class BestsDrawer : DrawerBase
         { Ranks.BB, (70, 0.112, 7) },
         { Ranks.B, (60, 0.096, 6) },
         { Ranks.C, (50, 0.08, 5) },
-        { Ranks.D, (0, 0.064, 4) }
+        { Ranks.D, (0.0001, 0.064, 4) }
     };
 
     private double RatingProc(int rating, Ranks rank)
     {
         if (rating < 232)
-        {
-            return 0;
-        }
-
-        if (rank is Ranks.D)
         {
             return 0;
         }
@@ -628,7 +625,12 @@ public class BestsDrawer : DrawerBase
         }
 
         (double achievements, double currentRating, _) = ratings;
-        double result = Math.Ceiling(rating / (achievements * currentRating) * 10) / 10;
+        if (achievements is 0 || currentRating is 0)
+        {
+            return 0;
+        }
+
+        double result = rating / (achievements * currentRating);
         if (result > 15)
         {
             return 0;
