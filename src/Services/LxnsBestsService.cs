@@ -94,7 +94,19 @@ public partial class BestsService
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
-        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, "落雪 Best 50", "lxns", true);
+        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
+            "落雪 Best 50", "lxns", true);
+
+        await bestsImage.WriteToResponseAsync(responseStream, true);
+    }
+
+    public override async Task GetFromLxnsWithLevelSeg(LxnsBestsRequest request,
+        IServerStreamWriter<ImageResponse> responseStream, ServerCallContext context)
+    {
+        (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
+            int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
+        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
+            "落雪 Best 50", "lxns", false, true);
 
         await bestsImage.WriteToResponseAsync(responseStream, true);
     }

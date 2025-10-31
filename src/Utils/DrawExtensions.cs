@@ -22,7 +22,10 @@ internal static class DrawExtensions
         internal Font GetSizeFont(float size) => new(font, size);
 
         internal Image DrawImage(float size, string text, Color color, IReadOnlyList<FontFamily> fallbacks,
-            IResampler resampler, int zoom = 5)
+            IResampler resampler) => font.DrawImage(size, text, color, fallbacks, resampler, 5);
+
+        internal Image DrawImage(float size, string text, Color color, IReadOnlyList<FontFamily> fallbacks,
+            IResampler resampler, int zoom)
         {
             float x = MathF.Log2(size);
             float y = x < zoom ? zoom : MathF.Ceiling(x);
@@ -51,7 +54,10 @@ internal static class DrawExtensions
         }
 
         internal Image DrawImage(float size, string text, Brush brush, Pen pen, IReadOnlyList<FontFamily> fallbacks,
-            IResampler resampler, int zoom = 5)
+            IResampler resampler) => font.DrawImage(size, text, brush, pen, fallbacks, resampler, 5);
+
+        internal Image DrawImage(float size, string text, Brush brush, Pen pen, IReadOnlyList<FontFamily> fallbacks,
+            IResampler resampler, int zoom)
         {
             float x = MathF.Log2(size);
             float y = x < zoom ? zoom : MathF.Ceiling(x);
@@ -102,8 +108,10 @@ internal static class DrawExtensions
             Resize(image, imageWidth, imageHeight, resampler);
         }
 
-        internal async Task WriteToResponseAsync(IServerStreamWriter<ImageResponse> responseStream,
-            bool isAnime = false)
+        internal async Task WriteToResponseAsync(IServerStreamWriter<ImageResponse> responseStream) =>
+            await image.WriteToResponseAsync(responseStream, false);
+
+        internal async Task WriteToResponseAsync(IServerStreamWriter<ImageResponse> responseStream, bool isAnime)
         {
             MemoryStream outStream = new();
 #if RELEASE

@@ -4,21 +4,14 @@ using System.Collections.Concurrent;
 
 namespace Limekuma.Utils;
 
-public class AssetManager
+public sealed class AssetManager
 {
-    public static AssetManager Shared { get; private set; }
-
-    static AssetManager()
-    {
-        Shared = new(); 
-    }
-
-    AssetManager()
-    {
-        _assets = [];
-    }
-
     private readonly ConcurrentDictionary<string, Image> _assets;
+
+    static AssetManager() => Shared = new();
+
+    private AssetManager() => _assets = [];
+    public static AssetManager Shared { get; private set; }
 
     public Image Load(string path)
     {

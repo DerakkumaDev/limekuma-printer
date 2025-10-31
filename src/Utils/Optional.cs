@@ -67,8 +67,9 @@ public class Optional<TA, TB>
 
 public class OptionalJsonConverter : JsonConverterFactory
 {
-    public override bool CanConvert(Type typeToConvert) =>
-        typeToConvert.IsGenericType && typeToConvert.GetGenericTypeDefinition() == typeof(Optional<,>);
+    public override bool CanConvert(Type typeToConvert) => typeToConvert.IsGenericType &&
+                                                           typeToConvert.GetGenericTypeDefinition() ==
+                                                           typeof(Optional<,>);
 
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {

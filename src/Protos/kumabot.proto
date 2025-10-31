@@ -9,8 +9,10 @@ import "google/protobuf/wrappers.proto";
 service BestsApi {
   rpc GetFromLxns (LxnsBestsRequest) returns (stream ImageResponse);
   rpc GetAnimeFromLxns (LxnsBestsRequest) returns (stream ImageResponse);
+  rpc GetFromLxnsWithLevelSeg (LxnsBestsRequest) returns (stream ImageResponse);
   rpc GetFromDivingFish (DivingFishBestsRequest) returns (stream ImageResponse);
   rpc GetAnimeFromDivingFish (DivingFishBestsRequest) returns (stream ImageResponse);
+  rpc GetFromDivingFishWithLevelSeg (DivingFishBestsRequest) returns (stream ImageResponse);
 }
 
 service ListApi {

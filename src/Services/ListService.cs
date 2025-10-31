@@ -7,8 +7,7 @@ namespace Limekuma.Services;
 
 public sealed partial class ListService : ListApi.ListApiBase
 {
-    private static async Task<(int[], int, int)> PrepareDataAsync(CommonUser user, List<CommonRecord> records,
-        int page = 1)
+    private static async Task<(int[], int, int)> PrepareDataAsync(CommonUser user, List<CommonRecord> records, int page)
     {
         int i = (page - 1) * 55;
         int count = records.Count;
@@ -27,66 +26,62 @@ public sealed partial class ListService : ListApi.ListApiBase
         await ServiceHelper.PrepareRecordDataAsync(records[i..end]);
         j = end;
 
-        Parallel.ForEach(
-            source: records,
-            localInit: () => new int[16],
-            body: (record, _, local) =>
+        Parallel.ForEach(records, () => new int[16], (record, _, local) =>
+        {
+            if (record.Rank >= Ranks.S)
             {
-                if (record.Rank >= Ranks.S)
+                ++local[record.Rank switch
                 {
-                    ++local[record.Rank switch
-                    {
-                        Ranks.SSSPlus => 0,
-                        Ranks.SSS => 1,
-                        Ranks.SSPlus => 2,
-                        Ranks.SS => 3,
-                        Ranks.SPlus => 4,
-                        Ranks.S => 5,
-                        _ => 16
-                    }];
-                }
+                    Ranks.SSSPlus => 0,
+                    Ranks.SSS => 1,
+                    Ranks.SSPlus => 2,
+                    Ranks.SS => 3,
+                    Ranks.SPlus => 4,
+                    Ranks.S => 5,
+                    _ => 16
+                }];
+            }
 
-                if (record.Rank >= Ranks.A)
-                {
-                    ++local[6];
-                }
-
-                if (record.ComboFlag >= ComboFlags.FullCombo)
-                {
-                    ++local[record.ComboFlag switch
-                    {
-                        ComboFlags.AllPerfectPlus => 7,
-                        ComboFlags.AllPerfect => 8,
-                        ComboFlags.FullComboPlus => 9,
-                        ComboFlags.FullCombo => 10,
-                        _ => 16
-                    }];
-                }
-
-                if (record.SyncFlag is >= SyncFlags.FullSync and <= SyncFlags.FullSyncDXPlus)
-                {
-                    ++local[record.SyncFlag switch
-                    {
-                        SyncFlags.FullSyncDXPlus => 11,
-                        SyncFlags.FullSyncDX => 12,
-                        SyncFlags.FullSyncPlus => 13,
-                        SyncFlags.FullSync => 14,
-                        _ => 16
-                    }];
-                }
-
-                return local;
-            },
-            localFinally: local =>
+            if (record.Rank >= Ranks.A)
             {
-                for (int idx = 0; idx < local.Length; ++idx)
+                ++local[6];
+            }
+
+            if (record.ComboFlag >= ComboFlags.FullCombo)
+            {
+                ++local[record.ComboFlag switch
                 {
-                    if (idx < counts.Length)
-                    {
-                        Interlocked.Add(ref counts[idx], local[idx]);
-                    }
+                    ComboFlags.AllPerfectPlus => 7,
+                    ComboFlags.AllPerfect => 8,
+                    ComboFlags.FullComboPlus => 9,
+                    ComboFlags.FullCombo => 10,
+                    _ => 16
+                }];
+            }
+
+            if (record.SyncFlag is >= SyncFlags.FullSync and <= SyncFlags.FullSyncDXPlus)
+            {
+                ++local[record.SyncFlag switch
+                {
+                    SyncFlags.FullSyncDXPlus => 11,
+                    SyncFlags.FullSyncDX => 12,
+                    SyncFlags.FullSyncPlus => 13,
+                    SyncFlags.FullSync => 14,
+                    _ => 16
+                }];
+            }
+
+            return local;
+        }, local =>
+        {
+            for (int idx = 0; idx < local.Length; ++idx)
+            {
+                if (idx < counts.Length)
+                {
+                    Interlocked.Add(ref counts[idx], local[idx]);
                 }
-            });
+            }
+        });
 
         return (counts, i, j);
     }

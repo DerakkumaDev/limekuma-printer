@@ -73,10 +73,10 @@ public class ListDrawer : BestsDrawer
         string pagination = $"{page} / {total}";
         FontRectangle paginationSize = HeavyFont.GetSize(70, pagination, [SymbolsFont, Symbols2Font, NotoBlackFont]);
         PointF paginationPos = new(256 - (paginationSize.Width / 2), 815);
-        using Image paginationImage = HeavyFont.DrawImage(70, pagination, new Color(new Rgb24(53, 74, 164)),
+        using Image paginationImage = HeavyFont.DrawImage(70, pagination, new(new Rgb24(53, 74, 164)),
             [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Lanczos3);
 
-        using Image nameImage = MediumFont.DrawImage(21, user.Name, new Color(new Rgb24(0, 0, 0)),
+        using Image nameImage = MediumFont.DrawImage(21, user.Name, new(new Rgb24(0, 0, 0)),
             [SymbolsFont, Symbols2Font, NotoMediumFont], KnownResamplers.Lanczos3);
 
         bg.Mutate(ctx =>
@@ -110,36 +110,36 @@ public class ListDrawer : BestsDrawer
 
         int countsCount = counts.Count - 1;
         int totalCount = counts[^1];
-        
-        var statsData = new (PointF position, Image image)[countsCount];
-        
+
+        (PointF position, Image image)[] statsData = new (PointF, Image)[countsCount];
+
         Parallel.For(0, countsCount, idx =>
         {
             int count = counts[idx];
             string countText = $"{count}/{totalCount}";
             FontRectangle countSize = BoldFont.GetSize(20, countText, [SymbolsFont, Symbols2Font, NotoBoldFont]);
-            
+
             PointF countPos;
             if (idx < 7)
             {
-                countPos = new PointF(200 - (countSize.Width / 2) + (idx * 120), 264);
+                countPos = new(200 - (countSize.Width / 2) + (idx * 120), 264);
             }
             else
             {
                 int remain = idx - 7;
                 int col = remain / 8;
                 int row = remain % 8;
-                countPos = new PointF(200 - (countSize.Width / 2) + (row * 102), 264 + (col + 1) * 90);
+                countPos = new(200 - (countSize.Width / 2) + (row * 102), 264 + ((col + 1) * 90));
             }
-            
+
             Image countImage = BoldFont.DrawImage(20, countText,
-                new Color(count >= totalCount ? new(248, 179, 42) : new Rgb24(53, 74, 164)),
+                new(count >= totalCount ? new(248, 179, 42) : new Rgb24(53, 74, 164)),
                 [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-            
+
             statsData[idx] = (countPos, countImage);
         });
-        
-        foreach (var (position, image) in statsData)
+
+        foreach ((PointF position, Image image) in statsData)
         {
             using (image)
             {

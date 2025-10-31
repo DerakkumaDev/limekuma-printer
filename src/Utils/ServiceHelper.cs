@@ -32,13 +32,8 @@ internal static class ServiceHelper
         }
     }
 
-    internal static async Task PrepareRecordDataAsync(IList<CommonRecord> records)
-    {
-        await Parallel.ForEachAsync(records, async (record, cancellationToken) =>
-        {
-            await PrepareRecordDataAsync(record, cancellationToken);
-        });
-    }
+    internal static async Task PrepareRecordDataAsync(IList<CommonRecord> records) => await Parallel.ForEachAsync(
+        records, async (record, cancellationToken) => await PrepareRecordDataAsync(record, cancellationToken));
 
     internal static async Task PrepareRecordDataAsync(CommonRecord record, CancellationToken cancellationToken)
     {

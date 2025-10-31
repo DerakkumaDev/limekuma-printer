@@ -13,7 +13,7 @@ namespace Limekuma.Services;
 public partial class BestsService
 {
     private static async Task<(CommonUser, List<CommonRecord>, List<CommonRecord>, int, int)> PrepareDfDataAsync(
-        uint qq, int frame = 558001, int plate = 458001, int icon = 458001)
+        uint qq, int frame, int plate, int icon)
     {
         DfResourceClient df = new();
         Player player;
@@ -53,8 +53,8 @@ public partial class BestsService
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
-        using Image bestsImage =
-            new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, "水鱼 Best 50", "divingfish");
+        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
+            "水鱼 Best 50", "divingfish");
 
         await bestsImage.WriteToResponseAsync(responseStream);
     }
@@ -64,7 +64,19 @@ public partial class BestsService
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
-        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, "水鱼 Best 50", "divingfish", true);
+        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
+            "水鱼 Best 50", "divingfish", true);
+
+        await bestsImage.WriteToResponseAsync(responseStream, true);
+    }
+
+    public override async Task GetFromDivingFishWithLevelSeg(DivingFishBestsRequest request,
+        IServerStreamWriter<ImageResponse> responseStream, ServerCallContext context)
+    {
+        (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
+            int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
+        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
+            "水鱼 Best 50", "divingfish", false, true);
 
         await bestsImage.WriteToResponseAsync(responseStream, true);
     }

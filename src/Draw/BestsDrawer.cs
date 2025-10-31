@@ -6,6 +6,7 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors;
+using System.Collections.Concurrent;
 
 namespace Limekuma.Draw;
 
@@ -26,6 +27,7 @@ public class BestsDrawer : DrawerBase
     public const string ScorebasePath = "./Static/Maimai/Bests/scorebase.png";
     public const string BackgroundPath = "./Static/Maimai/Bests/background.png";
     public const string BackgroundAnimationPath = "./Static/Maimai/Bests/background_animation.png";
+    public const string LevelSugBackgroundPath = "./Static/Maimai/Bests/rating_base.png";
 #elif DEBUG
     public const string IconRootPath = "./Resources/Icon/";
     public const string PlateRootPath = "./Resources/Plate/";
@@ -41,10 +43,19 @@ public class BestsDrawer : DrawerBase
     public const string ScorebasePath = "./Resources/Background/scorebase.png";
     public const string BackgroundPath = "./Resources/Background/bests.png";
     public const string BackgroundAnimationPath = "./Resources/Background/bests_animation.png";
+    public const string LevelSugBackgroundPath = "./Resources/Background/level_seg.png";
 #endif
 
     public Image Draw(CommonUser user, IList<CommonRecord> ever, IList<CommonRecord> current, int everTotal,
-        int currentTotal, string typename, string prober, bool isAnime = false)
+        int currentTotal, string typename, string prober) => Draw(user, ever, current, everTotal, currentTotal,
+        typename, prober, false, false);
+
+    public Image Draw(CommonUser user, IList<CommonRecord> ever, IList<CommonRecord> current, int everTotal,
+        int currentTotal, string typename, string prober, bool isAnime) => Draw(user, ever, current, everTotal,
+        currentTotal, typename, prober, isAnime, false);
+
+    public Image Draw(CommonUser user, IList<CommonRecord> ever, IList<CommonRecord> current, int everTotal,
+        int currentTotal, string typename, string prober, bool isAnime, bool drawLevelSeg)
     {
         Image bg = AssetManager.Shared.Load(isAnime ? BackgroundAnimationPath : BackgroundPath);
         List<(Point, Image)> sdBests = DrawScores(ever, isAnime: isAnime);
@@ -92,7 +103,7 @@ public class BestsDrawer : DrawerBase
         using Image shougouImage = HeavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)),
             Pens.Solid(new Rgb24(0, 0, 0), 5f), [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Spline, 6);
 
-        using Image nameImage = MediumFont.DrawImage(21, user.Name, new Color(new Rgb24(0, 0, 0)),
+        using Image nameImage = MediumFont.DrawImage(21, user.Name, new(new Rgb24(0, 0, 0)),
             [SymbolsFont, Symbols2Font, NotoMediumFont], KnownResamplers.Lanczos3);
 
         string scorePart1 = everTotal.ToString();
@@ -127,7 +138,7 @@ public class BestsDrawer : DrawerBase
 
         FontRectangle typeSize = BoldFont.GetSize(32, typename, [SymbolsFont, Symbols2Font, NotoBoldFont]);
         PointF typePos = new(720 - (typeSize.Width / 2), 725);
-        using Image typeImage = BoldFont.DrawImage(32, typename, new Color(new Rgb24(0, 109, 103)),
+        using Image typeImage = BoldFont.DrawImage(32, typename, new(new Rgb24(0, 109, 103)),
             [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
 
         if (isAnime)
@@ -165,11 +176,14 @@ public class BestsDrawer : DrawerBase
                     realPoint.X += 25;
                     realPoint.Y += 796;
                     GraphicsOptions options = ctx.GetGraphicsOptions();
-                    DrawImageProcessor processor = new(scoreImage, realPoint, scoreImage.Bounds, options.ColorBlendingMode, options.AlphaCompositionMode, 1);
-                    using (IImageProcessor<Rgba32> specificProcessor = processor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
+                    DrawImageProcessor processor = new(scoreImage, realPoint, scoreImage.Bounds,
+                        options.ColorBlendingMode, options.AlphaCompositionMode, 1);
+                    using (IImageProcessor<Rgba32> specificProcessor =
+                           processor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
                     {
                         specificProcessor.Execute();
                     }
+
                     ctx.ApplyProcessor(processor);
                 }
             }
@@ -182,15 +196,24 @@ public class BestsDrawer : DrawerBase
                     realPoint.X += 25;
                     realPoint.Y += 1986;
                     GraphicsOptions options = ctx.GetGraphicsOptions();
-                    DrawImageProcessor processor = new(scoreImage, realPoint, scoreImage.Bounds, options.ColorBlendingMode, options.AlphaCompositionMode, 1);
-                    using (IImageProcessor<Rgba32> specificProcessor = processor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
+                    DrawImageProcessor processor = new(scoreImage, realPoint, scoreImage.Bounds,
+                        options.ColorBlendingMode, options.AlphaCompositionMode, 1);
+                    using (IImageProcessor<Rgba32> specificProcessor =
+                           processor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
                     {
                         specificProcessor.Execute();
                     }
+
                     ctx.ApplyProcessor(processor);
                 }
             }
         });
+        if (drawLevelSeg)
+        {
+            using Image levelSegImage = DrawLevelSug(ever.First().DXRating, ever.Last().DXRating,
+                current.First().DXRating, current.Last().DXRating);
+            bg.Mutate(ctx => ctx.DrawImage(levelSegImage, new Point(60, 197), 1));
+        }
 
         return bg;
     }
@@ -213,18 +236,20 @@ public class BestsDrawer : DrawerBase
             Point p;
             if (idx < 3)
             {
-                p = new Point(350 + (idx * 350), 0);
+                p = new(350 + (idx * 350), 0);
             }
             else
             {
                 int remain = idx - 3;
                 int row = remain / 4;
                 int col = remain % 4;
-                p = new Point(col * 350, (row + 1) * 120);
+                p = new(col * 350, (row + 1) * 120);
             }
 
             Image part = DrawScore(record, realIndex,
-                isAnime && record.Rank is Ranks.SSSPlus && record.Difficulty is CommonDifficulties.Master or CommonDifficulties.ReMaster && record.DXRating >= 315);
+                isAnime && record.Rank is Ranks.SSSPlus &&
+                record.Difficulty is CommonDifficulties.Master or CommonDifficulties.ReMaster &&
+                record.DXRating >= 315);
             part.Resize(0.34, KnownResamplers.Lanczos3);
             results[idx] = (p, part);
         });
@@ -357,11 +382,9 @@ public class BestsDrawer : DrawerBase
         Rgb24 numeroColorValue = new(28, 43, 120);
         Color numeroColor = new(numeroColorValue);
         using Image numeroPart1Image = BoldFont.DrawImage(24, numeroPart1, numeroColor,
-            [SymbolsFont, Symbols2Font, NotoBoldFont],
-            KnownResamplers.Lanczos3);
+            [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
         using Image numeroPart2Image = BoldFont.DrawImage(30, numeroPart2, numeroColor,
-            [SymbolsFont, Symbols2Font, NotoBoldFont],
-            KnownResamplers.Lanczos3);
+            [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
 
         #endregion
 
@@ -464,17 +487,23 @@ public class BestsDrawer : DrawerBase
         bg.Mutate(ctx =>
         {
             GraphicsOptions options = ctx.GetGraphicsOptions();
-            DrawImageProcessor jacketMaskProcessor = new(jacketMask, new Point(13, 17), jacketMask.Bounds, options.ColorBlendingMode, options.AlphaCompositionMode, 1);
-            using (IImageProcessor<Rgba32> jacketMaskspecificProcessor = jacketMaskProcessor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
+            DrawImageProcessor jacketMaskProcessor = new(jacketMask, new(13, 17), jacketMask.Bounds,
+                options.ColorBlendingMode, options.AlphaCompositionMode, 1);
+            using (IImageProcessor<Rgba32> jacketMaskspecificProcessor =
+                   jacketMaskProcessor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
             {
                 jacketMaskspecificProcessor.Execute();
             }
+
             ctx.ApplyProcessor(jacketMaskProcessor);
-            DrawImageProcessor rankMaskProcessor = new(rankMask, new Point(790, 78), rankMask.Bounds, options.ColorBlendingMode, options.AlphaCompositionMode, 1);
-            using (IImageProcessor<Rgba32> rankMaskspecificProcessor = rankMaskProcessor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
+            DrawImageProcessor rankMaskProcessor = new(rankMask, new(790, 78), rankMask.Bounds,
+                options.ColorBlendingMode, options.AlphaCompositionMode, 1);
+            using (IImageProcessor<Rgba32> rankMaskspecificProcessor =
+                   rankMaskProcessor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
             {
                 rankMaskspecificProcessor.Execute();
             }
+
             ctx.ApplyProcessor(rankMaskProcessor);
         });
         if (score.ComboFlag > ComboFlags.None || score.SyncFlag > SyncFlags.None)
@@ -485,11 +514,14 @@ public class BestsDrawer : DrawerBase
                 bg.Mutate(ctx =>
                 {
                     GraphicsOptions options = ctx.GetGraphicsOptions();
-                    DrawImageProcessor processor = new(comboMask, new Point(774, 189), comboMask.Bounds, PixelColorBlendingMode.Screen, options.AlphaCompositionMode, 1);
-                    using (IImageProcessor<Rgba32> specificProcessor = processor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
+                    DrawImageProcessor processor = new(comboMask, new(774, 189), comboMask.Bounds,
+                        PixelColorBlendingMode.Screen, options.AlphaCompositionMode, 1);
+                    using (IImageProcessor<Rgba32> specificProcessor =
+                           processor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
                     {
                         specificProcessor.Execute();
                     }
+
                     ctx.ApplyProcessor(processor);
                 });
             }
@@ -499,16 +531,109 @@ public class BestsDrawer : DrawerBase
                 bg.Mutate(ctx =>
                 {
                     GraphicsOptions options = ctx.GetGraphicsOptions();
-                    DrawImageProcessor processor = new(comboMask, new Point(868, 189), comboMask.Bounds, PixelColorBlendingMode.Screen, options.AlphaCompositionMode, 1);
-                    using (IImageProcessor<Rgba32> specificProcessor = processor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
+                    DrawImageProcessor processor = new(comboMask, new(868, 189), comboMask.Bounds,
+                        PixelColorBlendingMode.Screen, options.AlphaCompositionMode, 1);
+                    using (IImageProcessor<Rgba32> specificProcessor =
+                           processor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
                     {
                         specificProcessor.Execute();
                     }
+
                     ctx.ApplyProcessor(processor);
                 });
             }
         }
 
         return bg;
+    }
+
+    public Image DrawLevelSug(int b35max, int b35min, int b15max, int b15min)
+    {
+        Image bg = AssetManager.Shared.Load(LevelSugBackgroundPath);
+        int[] posX = [270, 390, 510, 630];
+        int[] posY = [73, 113, 179, 219];
+        int len = Math.Min(posX.Length, posY.Length);
+        int b35maxDiff = b35max - b35min;
+        int b35minDiff = Random.Shared.Next(1, 6);
+        int b15maxDiff = b15max - b15min;
+        int b15minDiff = Random.Shared.Next(1, 6);
+        ConcurrentBag<(Point, Image)> images = [];
+        int[] diffs = [b35maxDiff, b35minDiff, b15maxDiff, b15minDiff];
+        Parallel.For(0, diffs.Length, i =>
+        {
+            Point pos = new(155, posY[i % len]);
+            Image levelImage = BoldFont.DrawImage(30, $"+{diffs[i]}", new(new Rgb24(255, 255, 255)),
+                [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+            images.Add((pos, levelImage));
+        });
+        int[] ratings = [b35max, b35min + b35minDiff, b15max, b15min + b15minDiff];
+        Ranks[] ranks = [Ranks.SSSPlus, Ranks.SSS, Ranks.SSPlus, Ranks.SS];
+        Parallel.For(0, posX.Length * posY.Length, i =>
+        {
+            int index = i % len;
+            int rating = ratings[index];
+            Ranks rank = ranks[index];
+            double currentRating = RatingProc(rating, rank);
+            Point pos = new(posX[i / len], posY[index]);
+            Image levelImage = BoldFont.DrawImage(30, currentRating.ToString(), new(new Rgb24(255, 255, 255)),
+                [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+            images.Add((pos, levelImage));
+        });
+        bg.Mutate(ctx =>
+        {
+            foreach ((Point point, Image image) in images)
+            {
+                using (image)
+                {
+                    ctx.DrawImage(image, point, 1);
+                }
+            }
+        });
+        return bg;
+    }
+
+    private readonly Dictionary<Ranks, (double achievements, double rating, double ratingOld)> _ratings = new()
+    {
+        { Ranks.SSSPlus, (100.5, 0.224, 15) },
+        { Ranks.SSS, (100, 0.216, 14) },
+        { Ranks.SSPlus, (99.5, 0.211, 13) },
+        { Ranks.SS, (99, 0.208, 12) },
+        { Ranks.SPlus, (98, 0.203, 11) },
+        { Ranks.S, (97, 0.2, 10) },
+        { Ranks.AAA, (94, 0.168, 9.4) },
+        { Ranks.AA, (90, 0.152, 9) },
+        { Ranks.A, (80, 0.136, 8) },
+        { Ranks.BBB, (75, 0.12, 7.5) },
+        { Ranks.BB, (70, 0.112, 7) },
+        { Ranks.B, (60, 0.096, 6) },
+        { Ranks.C, (50, 0.08, 5) },
+        { Ranks.D, (0, 0.064, 4) }
+    };
+
+    private double RatingProc(int rating, Ranks rank)
+    {
+        if (rating < 232)
+        {
+            return 0;
+        }
+
+        if (rank is Ranks.D)
+        {
+            return 0;
+        }
+
+        if (!_ratings.TryGetValue(rank, out (double, double, double) ratings))
+        {
+            return 0;
+        }
+
+        (double achievements, double currentRating, _) = ratings;
+        double result = Math.Ceiling(rating / (achievements * currentRating) * 10) / 10;
+        if (result > 15)
+        {
+            return 0;
+        }
+
+        return result;
     }
 }
