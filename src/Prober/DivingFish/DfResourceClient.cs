@@ -9,26 +9,26 @@ public class DfResourceClient : DfClient
         await GetAsync<List<Song>>("/api/maimaidxprober/music_data", cancellationToken);
 
     public async Task<Player> GetPlayerAsync(uint qq, CancellationToken cancellationToken = default) =>
-        await PostAsync<dynamic, Player>("/api/maimaidxprober/query/player", new { qq = qq.ToString(), b50 = true },
+        await PostAsync<object, Player>("/api/maimaidxprober/query/player", new { qq = qq.ToString(), b50 = true },
             cancellationToken);
 
     public async Task<Player> GetPlayerAsync(uint qq, bool best50, CancellationToken cancellationToken = default) =>
-        await PostAsync<dynamic, Player>("/api/maimaidxprober/query/player",
+        await PostAsync<object, Player>("/api/maimaidxprober/query/player",
             new { qq = qq.ToString(), b50 = best50 }, cancellationToken);
 
     public async Task<Player> GetPlayerAsync(string name, CancellationToken cancellationToken = default) =>
-        await PostAsync<dynamic, Player>("/api/maimaidxprober/query/player", new { username = name, b50 = true },
+        await PostAsync<object, Player>("/api/maimaidxprober/query/player", new { username = name, b50 = true },
             cancellationToken);
 
     public async Task<Player> GetPlayerAsync(string name, bool best50,
         CancellationToken cancellationToken = default) =>
-        await PostAsync<dynamic, Player>("/api/maimaidxprober/query/player", new { username = name, b50 = best50 },
+        await PostAsync<object, Player>("/api/maimaidxprober/query/player", new { username = name, b50 = best50 },
             cancellationToken);
 
     public async Task<List<SimpleRecord>> GetRecordsInVersionAsync(uint qq, IEnumerable<string> versions,
         CancellationToken cancellationToken = default)
     {
-        RecordsInVersionResponse response = await PostAsync<dynamic, RecordsInVersionResponse>(
+        RecordsInVersionResponse response = await PostAsync<object, RecordsInVersionResponse>(
             "/api/maimaidxprober/query/plate", new { qq = qq.ToString(), version = versions }, cancellationToken);
         return response.VerList;
     }
@@ -36,7 +36,7 @@ public class DfResourceClient : DfClient
     public async Task<List<SimpleRecord>> GetRecordsInVersionAsync(string name, IEnumerable<string> versions,
         CancellationToken cancellationToken = default)
     {
-        RecordsInVersionResponse response = await PostAsync<dynamic, RecordsInVersionResponse>(
+        RecordsInVersionResponse response = await PostAsync<object, RecordsInVersionResponse>(
             "/api/maimaidxprober/query/plate", new { username = name, version = versions }, cancellationToken);
         return response.VerList;
     }
