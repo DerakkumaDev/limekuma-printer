@@ -1,8 +1,8 @@
 using Grpc.Core;
-using Limekuma.Draw;
 using Limekuma.Prober.Common;
 using Limekuma.Prober.DivingFish;
 using Limekuma.Prober.DivingFish.Models;
+using Limekuma.Render;
 using Limekuma.Utils;
 using LimeKuma;
 using SixLabors.ImageSharp;
@@ -53,7 +53,7 @@ public partial class BestsService
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
-        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
+        using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
             "水鱼 Best 50", "divingfish");
 
         await bestsImage.WriteToResponseAsync(responseStream);
@@ -64,7 +64,7 @@ public partial class BestsService
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
-        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
+        using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
             "水鱼 Best 50", "divingfish", true);
 
         await bestsImage.WriteToResponseAsync(responseStream, true);
@@ -75,7 +75,7 @@ public partial class BestsService
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
-        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
+        using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
             "水鱼 Best 50", "divingfish", false, true);
 
         await bestsImage.WriteToResponseAsync(responseStream, true);

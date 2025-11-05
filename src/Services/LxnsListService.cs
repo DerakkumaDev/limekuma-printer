@@ -1,8 +1,8 @@
 using Grpc.Core;
-using Limekuma.Draw;
 using Limekuma.Prober.Common;
 using Limekuma.Prober.Lxns;
 using Limekuma.Prober.Lxns.Models;
+using Limekuma.Render;
 using Limekuma.Utils;
 using LimeKuma;
 using SixLabors.ImageSharp;
@@ -43,8 +43,8 @@ public partial class ListService
         (int[] counts, int startIndex, int endIndex) = await PrepareDataAsync(user, cRecords, request.Page);
         int total = (int)Math.Ceiling((double)count / 55);
 
-        using Image listImage = new ListDrawer().Draw(user, cRecords[startIndex..endIndex], request.Page, total, counts,
-            request.Level, "lxns");
+        using Image listImage = await new Drawer().DrawListAsync(user, cRecords[startIndex..endIndex], request.Page,
+            total, counts, request.Level, "lxns");
 
         await listImage.WriteToResponseAsync(responseStream);
     }

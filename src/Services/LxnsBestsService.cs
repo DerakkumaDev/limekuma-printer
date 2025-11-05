@@ -1,8 +1,8 @@
 using Grpc.Core;
-using Limekuma.Draw;
 using Limekuma.Prober.Common;
 using Limekuma.Prober.Lxns;
 using Limekuma.Prober.Lxns.Models;
+using Limekuma.Render;
 using Limekuma.Utils;
 using LimeKuma;
 using SixLabors.ImageSharp;
@@ -84,7 +84,8 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
         using Image bestsImage =
-            new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, "落雪 Best 50", "lxns");
+            await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal, "落雪 Best 50",
+                "lxns");
 
         await bestsImage.WriteToResponseAsync(responseStream);
     }
@@ -94,7 +95,7 @@ public partial class BestsService
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
-        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
+        using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
             "落雪 Best 50", "lxns", true);
 
         await bestsImage.WriteToResponseAsync(responseStream, true);
@@ -105,7 +106,7 @@ public partial class BestsService
     {
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
-        using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
+        using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
             "落雪 Best 50", "lxns", false, true);
 
         await bestsImage.WriteToResponseAsync(responseStream, true);
