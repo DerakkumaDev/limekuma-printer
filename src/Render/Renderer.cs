@@ -29,7 +29,7 @@ public static class Renderer
             canvas.Mutate(ctx => ctx.Fill(bg));
         }
 
-        RenderChildren(canvas, root.Children, assets, measurer, new(0, 0), 1f, null, 1f, ResamplerType.Lanczos3);
+        RenderChildren(canvas, root.Children, assets, measurer, new(0, 0), 1, null, 1, ResamplerType.Lanczos3);
         return canvas;
     }
 
@@ -92,7 +92,7 @@ public static class Renderer
                 break;
 
             case TextNode text:
-                RenderTextNode(canvas, text, assets, origin, resampler);
+                RenderTextNode(canvas, text, assets, origin);
                 break;
 
             case CanvasNode subCanvas:
@@ -124,7 +124,7 @@ public static class Renderer
             Node child = stack.Children[i];
             RenderNode(canvas, child, assets, measurer, offset, inheritedOpacity, desiredSize, scale, resampler);
             Size sz = Measure(child, assets, measurer);
-            offset = stack.Direction == StackDirection.Row
+            offset = stack.Direction is StackDirection.Row
                 ? new(offset.X + sz.Width + (i > 0 ? stack.Spacing : 0), offset.Y)
                 : new(offset.X, offset.Y + sz.Height + (i > 0 ? stack.Spacing : 0));
         }
@@ -140,7 +140,7 @@ public static class Renderer
             img.Mutate(c => c.Resize(desired.Width, desired.Height, resamplerInstance));
         }
 
-        if (Math.Abs(scale - 1f) > 0.0001f)
+        if (Math.Abs(scale - 1) > 0.0001)
         {
             img.Mutate(c => c.Resize((int)Math.Round(img.Width * scale), (int)Math.Round(img.Height * scale),
                 resamplerInstance));
@@ -149,16 +149,23 @@ public static class Renderer
         canvas.Mutate(c => c.DrawImage(img, origin, inheritedOpacity));
     }
 
-    private static void RenderTextNode(Image canvas, TextNode text, IAssetProvider assets, Point origin,
-        ResamplerType resampler)
+    private static void RenderTextNode(Image canvas, TextNode text, IAssetProvider assets, PointF origin)
     {
         (FontFamily mainFont, List<FontFamily> fallbacks) = assets.ResolveFont(text.FontFamily);
-        Image textImage = text is { StrokeColor: { } sc, StrokeWidth: { } sw }
-            ? mainFont.DrawImage(text.FontSize, text.Text, Brushes.Solid(text.Color), Pens.Solid(sc, sw), fallbacks,
-                GetResampler(resampler))
-            : mainFont.DrawImage(text.FontSize, text.Text, text.Color, fallbacks, GetResampler(resampler));
-
-        canvas.Mutate(c => c.DrawImage(textImage, origin, 1));
+        Font font = new(mainFont, text.FontSize * 460 / 72);
+        RichTextOptions options = new(font)
+        {
+            Font = font,
+            FallbackFontFamilies = fallbacks,
+            HintingMode = HintingMode.Standard,
+            Dpi = 460,
+            Origin = origin,
+            TextAlignment = text.TextAlignment,
+            VerticalAlignment = text.VerticalAlignment,
+            HorizontalAlignment = text.HorizontalAlignment
+        };
+        canvas.Mutate(ctx => ctx.DrawText(options, text.Text, Brushes.Solid(text.Color),
+            text is { StrokeColor: { } sc, StrokeWidth: { } sw } ? Pens.Solid(sc, sw) : null));
     }
 
     private static void RenderCanvasNode(Image canvasImage, CanvasNode canvas, IAssetProvider assets,
@@ -166,7 +173,7 @@ public static class Renderer
         Point origin)
     {
         using Image subCanvas = Render(canvas, assets, measurer);
-        canvasImage.Mutate(c => c.DrawImage(subCanvas, origin, 1f));
+        canvasImage.Mutate(c => c.DrawImage(subCanvas, origin, 1));
     }
 
     private static Size Measure(Node node, IAssetProvider assets, IMeasureService measurer) => node switch
@@ -194,7 +201,7 @@ public static class Renderer
         for (int i = 0; i < stack.Children.Count; ++i)
         {
             Size child = Measure(stack.Children[i], assets, measurer);
-            if (stack.Direction == StackDirection.Row)
+            if (stack.Direction is StackDirection.Row)
             {
                 width += child.Width + (i > 0 ? stack.Spacing : 0);
                 height = Math.Max(height, child.Height);

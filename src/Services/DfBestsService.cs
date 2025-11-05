@@ -56,7 +56,7 @@ public partial class BestsService
         using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
             "水鱼 Best 50", "divingfish");
 
-        await bestsImage.WriteToResponseAsync(responseStream);
+        await responseStream.WriteToResponseAsync(bestsImage);
     }
 
     public override async Task GetAnimeFromDivingFish(DivingFishBestsRequest request,
@@ -67,7 +67,7 @@ public partial class BestsService
         using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
             "水鱼 Best 50", "divingfish", true);
 
-        await bestsImage.WriteToResponseAsync(responseStream, true);
+        await responseStream.WriteToResponseAsync(bestsImage, true);
     }
 
     public override async Task GetFromDivingFishWithLevelSeg(DivingFishBestsRequest request,
@@ -78,6 +78,6 @@ public partial class BestsService
         using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
             "水鱼 Best 50", "divingfish", false, true);
 
-        await bestsImage.WriteToResponseAsync(responseStream, true);
+        await responseStream.WriteToResponseAsync(bestsImage, true);
     }
 }

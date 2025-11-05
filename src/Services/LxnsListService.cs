@@ -46,6 +46,6 @@ public partial class ListService
         using Image listImage = await new Drawer().DrawListAsync(user, cRecords[startIndex..endIndex], request.Page,
             total, counts, request.Level, "lxns");
 
-        await listImage.WriteToResponseAsync(responseStream);
+        await responseStream.WriteToResponseAsync(listImage);
     }
 }

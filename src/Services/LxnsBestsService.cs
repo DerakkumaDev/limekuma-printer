@@ -87,7 +87,7 @@ public partial class BestsService
             await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal, "落雪 Best 50",
                 "lxns");
 
-        await bestsImage.WriteToResponseAsync(responseStream);
+        await responseStream.WriteToResponseAsync(bestsImage);
     }
 
     public override async Task GetAnimeFromLxns(LxnsBestsRequest request,
@@ -98,7 +98,7 @@ public partial class BestsService
         using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
             "落雪 Best 50", "lxns", true);
 
-        await bestsImage.WriteToResponseAsync(responseStream, true);
+        await responseStream.WriteToResponseAsync(bestsImage, true);
     }
 
     public override async Task GetFromLxnsWithLevelSeg(LxnsBestsRequest request,
@@ -109,6 +109,6 @@ public partial class BestsService
         using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
             "落雪 Best 50", "lxns", false, true);
 
-        await bestsImage.WriteToResponseAsync(responseStream, true);
+        await responseStream.WriteToResponseAsync(bestsImage, true);
     }
 }

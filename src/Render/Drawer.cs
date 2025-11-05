@@ -23,7 +23,7 @@ public class Drawer
         IEnumerable<CommonRecord> current, int everTotal, int currentTotal, string typename, string prober,
         bool isAnime, bool drawLevelSeg, string xmlPath)
     {
-        Dictionary<string, dynamic> scope = new()
+        Dictionary<string, object> scope = new()
         {
             ["user"] = user,
             ["ever"] = ever,
@@ -46,7 +46,7 @@ public class Drawer
     public async Task<Image> DrawListAsync(CommonUser user, IEnumerable<CommonRecord> records, int page, int total,
         IEnumerable<int> counts, string level, string prober, string xmlPath)
     {
-        Dictionary<string, dynamic> scope = new()
+        Dictionary<string, object> scope = new()
         {
             ["user"] = user,
             ["records"] = records,
@@ -59,7 +59,7 @@ public class Drawer
         return await DrawAsync(scope, xmlPath);
     }
 
-    private async Task<Image> DrawAsync(Dictionary<string, dynamic> scope, string xmlPath)
+    private async Task<Image> DrawAsync(Dictionary<string, object> scope, string xmlPath)
     {
         IAsyncExpressionEngine expr = new NCalcExpressionEngine();
         XmlSceneLoader loader = new(expr);

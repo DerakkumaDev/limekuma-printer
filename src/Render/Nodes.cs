@@ -1,3 +1,4 @@
+using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 
 namespace Limekuma.Render;
@@ -39,7 +40,7 @@ public sealed record CanvasNode(
 
 public sealed record LayerNode(
     List<Node> Children,
-    float Opacity = 1f,
+    float Opacity = 1,
     string? Key = null
 ) : Node(Key);
 
@@ -52,7 +53,7 @@ public sealed record PositionedNode(
 public sealed record ResizedNode(
     Node Child,
     Size? DesiredSize = null,
-    float Scale = 1f,
+    float Scale = 1,
     ResamplerType Resampler = ResamplerType.Lanczos3,
     string? Key = null
 ) : Node(Key);
@@ -76,6 +77,9 @@ public sealed record TextNode(
     float FontSize,
     Color Color,
     Color? StrokeColor = null,
-    float? StrokeWidth = null,
+    float StrokeWidth = 0,
+    TextAlignment TextAlignment = TextAlignment.Start,
+    VerticalAlignment VerticalAlignment = VerticalAlignment.Top,
+    HorizontalAlignment HorizontalAlignment = HorizontalAlignment.Left,
     string? Key = null
 ) : Node(Key);
