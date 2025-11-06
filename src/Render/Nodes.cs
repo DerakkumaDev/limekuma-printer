@@ -3,7 +3,7 @@ using SixLabors.ImageSharp;
 
 namespace Limekuma.Render;
 
-public abstract record Node(string? Key = null);
+public abstract record Node(string? Key);
 
 public enum StackDirection
 {
@@ -33,42 +33,42 @@ public enum ResamplerType
 public sealed record CanvasNode(
     int Width,
     int Height,
+    Color? Background,
     List<Node> Children,
-    Color? Background = null,
-    string? Key = null
+    string? Key
 ) : Node(Key);
 
 public sealed record LayerNode(
+    float Opacity,
     List<Node> Children,
-    float Opacity = 1,
-    string? Key = null
+    string? Key
 ) : Node(Key);
 
 public sealed record PositionedNode(
     Point Position,
     Node Child,
-    string? Key = null
+    string? Key
 ) : Node(Key);
 
 public sealed record ResizedNode(
+    float Scale,
+    Size? DesiredSize,
+    ResamplerType Resampler,
     Node Child,
-    Size? DesiredSize = null,
-    float Scale = 1,
-    ResamplerType Resampler = ResamplerType.Lanczos3,
-    string? Key = null
+    string? Key
 ) : Node(Key);
 
 public sealed record StackNode(
     StackDirection Direction,
     int Spacing,
     List<Node> Children,
-    string? Key = null
+    string? Key
 ) : Node(Key);
 
 public sealed record ImageNode(
     string Namespace,
     string ResourceKey,
-    string? Key = null
+    string? Key
 ) : Node(Key);
 
 public sealed record TextNode(
@@ -76,10 +76,10 @@ public sealed record TextNode(
     string FontFamily,
     float FontSize,
     Color Color,
-    Color? StrokeColor = null,
-    float StrokeWidth = 0,
-    TextAlignment TextAlignment = TextAlignment.Start,
-    VerticalAlignment VerticalAlignment = VerticalAlignment.Top,
-    HorizontalAlignment HorizontalAlignment = HorizontalAlignment.Left,
-    string? Key = null
+    TextAlignment TextAlignment,
+    VerticalAlignment VerticalAlignment,
+    HorizontalAlignment HorizontalAlignment,
+    Color? StrokeColor,
+    float StrokeWidth,
+    string? Key
 ) : Node(Key);

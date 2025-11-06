@@ -133,14 +133,14 @@ public static class Renderer
     private static void RenderImageNode(Image canvas, ImageNode image, IAssetProvider assets, Point origin,
         float inheritedOpacity, Size? desiredSize, float scale, ResamplerType resampler)
     {
-        using Image img = assets.LoadImage(image.Namespace, image.ResourceKey);
+        Image img = assets.LoadImage(image.Namespace, image.ResourceKey);
         IResampler resamplerInstance = GetResampler(resampler);
         if (desiredSize is { } desired)
         {
             img.Mutate(c => c.Resize(desired.Width, desired.Height, resamplerInstance));
         }
 
-        if (Math.Abs(scale - 1) > 0.0001)
+        if (Math.Abs(scale - 1) > 0.0000001)
         {
             img.Mutate(c => c.Resize((int)Math.Round(img.Width * scale), (int)Math.Round(img.Height * scale),
                 resamplerInstance));
@@ -152,17 +152,17 @@ public static class Renderer
     private static void RenderTextNode(Image canvas, TextNode text, IAssetProvider assets, PointF origin)
     {
         (FontFamily mainFont, List<FontFamily> fallbacks) = assets.ResolveFont(text.FontFamily);
-        Font font = new(mainFont, text.FontSize * 460 / 72);
+        Font font = new(mainFont, text.FontSize * (115 / 18));
         RichTextOptions options = new(font)
         {
             Font = font,
             FallbackFontFamilies = fallbacks,
-            HintingMode = HintingMode.Standard,
-            Dpi = 460,
             Origin = origin,
             TextAlignment = text.TextAlignment,
             VerticalAlignment = text.VerticalAlignment,
-            HorizontalAlignment = text.HorizontalAlignment
+            HorizontalAlignment = text.HorizontalAlignment,
+            HintingMode = HintingMode.Standard,
+            Dpi = 460
         };
         canvas.Mutate(ctx => ctx.DrawText(options, text.Text, Brushes.Solid(text.Color),
             text is { StrokeColor: { } sc, StrokeWidth: { } sw } ? Pens.Solid(sc, sw) : null));
@@ -188,7 +188,7 @@ public static class Renderer
 
     private static Size MeasureImageNode(ImageNode image, IAssetProvider assets)
     {
-        using Image img = assets.LoadImage(image.Namespace, image.ResourceKey);
+        Image img = assets.LoadImage(image.Namespace, image.ResourceKey);
         return new(img.Width, img.Height);
     }
 

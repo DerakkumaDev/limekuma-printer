@@ -1,6 +1,5 @@
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
 using System.Collections.Concurrent;
 using System.Xml.Linq;
 
@@ -16,7 +15,9 @@ public sealed class AssetProvider : IAssetProvider, IMeasureService
 
     static AssetProvider() => Shared = new();
 
-    public AssetProvider(string resourcePath = "./Resources/Resources.xml")
+    public AssetProvider() : this("./Resources/Resources.xml") { }
+
+    public AssetProvider(string resourcePath)
     {
         _fontRules = [];
         _pathRules = [];
@@ -157,7 +158,7 @@ public sealed class AssetProvider : IAssetProvider, IMeasureService
             _assets.TryAdd(path, image);
         }
 
-        return image.Clone(_ => { });
+        return image;
     }
 
     private FontFamily LoadFont(string path)

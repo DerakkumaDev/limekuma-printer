@@ -221,14 +221,14 @@ public sealed class XmlSceneLoader(IAsyncExpressionEngine expr)
     private async Task<CanvasNode> ParseCanvasNodeAsync(XElement el, object? scope) => new(
         await EvaluateAttributeAsync<int>(el, "width", scope),
         await EvaluateAttributeAsync<int>(el, "height", scope),
-        await ParseChildrenAsync(el, scope),
         await TryParseColorAsync(el.Attribute("background")?.Value, scope),
+        await ParseChildrenAsync(el, scope),
         await GetAttributeValueAsync(el, "key", scope)
     );
 
     private async Task<LayerNode> ParseLayerNodeAsync(XElement el, object? scope) => new(
-        await ParseChildrenAsync(el, scope),
         await EvaluateAttributeOrAsync(el, "opacity", 1, scope),
+        await ParseChildrenAsync(el, scope),
         await GetAttributeValueAsync(el, "key", scope)
     );
 
@@ -239,10 +239,10 @@ public sealed class XmlSceneLoader(IAsyncExpressionEngine expr)
     );
 
     private async Task<ResizedNode> ParseResizedNodeAsync(XElement el, object? scope) => new(
-        (await ParseChildrenAsync(el, scope)).Single(),
-        await ParseSizeAsync(el, scope),
         await EvaluateAttributeOrAsync(el, "scale", 1, scope),
+        await ParseSizeAsync(el, scope),
         await ParseResamplerTypeAsync(el, scope),
+        (await ParseChildrenAsync(el, scope)).Single(),
         await GetAttributeValueAsync(el, "key", scope)
     );
 
@@ -264,11 +264,11 @@ public sealed class XmlSceneLoader(IAsyncExpressionEngine expr)
         await GetAttributeValueAsync(el, "fontFamily", scope),
         await EvaluateAttributeAsync<float>(el, "fontSize", scope),
         Color.Parse(await GetAttributeValueAsync(el, "color", scope)),
-        await TryParseColorAsync(el.Attribute("strokeColor")?.Value, scope),
-        await EvaluateAttributeOrAsync<float>(el, "strokeWidth", 0, scope),
         await EvaluateAttributeOrAsync(el, "align", TextAlignment.Start, scope),
         await EvaluateAttributeOrAsync(el, "align-v", VerticalAlignment.Top, scope),
         await EvaluateAttributeOrAsync(el, "align-h", HorizontalAlignment.Left, scope),
+        await TryParseColorAsync(el.Attribute("strokeColor")?.Value, scope),
+        await EvaluateAttributeOrAsync<float>(el, "strokeWidth", 0, scope),
         await GetAttributeValueAsync(el, "key", scope)
     );
 
@@ -276,10 +276,10 @@ public sealed class XmlSceneLoader(IAsyncExpressionEngine expr)
     {
         if (await EvaluateAttributeAsync<bool>(el, "test", scope))
         {
-            return new(await ParseChildrenAsync(el, scope));
+            return new(1, await ParseChildrenAsync(el, scope), null);
         }
 
-        return new([]);
+        return new(1, [], null);
     }
 
     private async Task<List<Node>> ParseChildrenAsync(XElement el, object? scope)
@@ -299,7 +299,7 @@ public sealed class XmlSceneLoader(IAsyncExpressionEngine expr)
         IEnumerable<object>? items = await expr.EvalAsync<IEnumerable<object>>(itemsExpr, scope);
         if (items is null)
         {
-            return new([]);
+            return new(1, [], null);
         }
 
         string varName = el.Attribute("var")?.Value ?? "item";
@@ -308,7 +308,12 @@ public sealed class XmlSceneLoader(IAsyncExpressionEngine expr)
         int i = 0;
         foreach (object item in items)
         {
-            Dictionary<string, object?> childScope = new() { [varName] = item, [idxName] = i, ["$parent"] = scope };
+            Dictionary<string, object?> childScope = new()
+            {
+                [varName] = item,
+                [idxName] = i,
+                ["$parent"] = scope
+            };
             foreach (XElement child in el.Elements())
             {
                 list.Add(await ParseElementAsync(child, childScope));
@@ -317,7 +322,7 @@ public sealed class XmlSceneLoader(IAsyncExpressionEngine expr)
             ++i;
         }
 
-        return new(list);
+        return new(1, list, null);
     }
 
     private async Task<Node> ParseIncludeAsync(XElement el, object? scope)

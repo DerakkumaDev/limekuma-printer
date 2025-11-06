@@ -2,6 +2,10 @@ using Google.Protobuf;
 using Grpc.Core;
 using LimeKuma;
 using SixLabors.ImageSharp;
+#if RELEASE
+using SixLabors.ImageSharp.Formats.Gif;
+using SixLabors.ImageSharp.Processing;
+#endif
 
 namespace Limekuma.Utils;
 
@@ -18,7 +22,6 @@ internal static class ServerStreamWriterExtensions
         {
             MemoryStream outStream = new();
 #if RELEASE
-            image.Resize(1080, 1920, KnownResamplers.Lanczos3);
             if (isAnime)
             {
                 GifEncoder encoder = new()
