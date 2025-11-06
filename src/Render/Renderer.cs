@@ -108,7 +108,7 @@ public static class Renderer
 
     private static void RenderPositionedNode(Image canvas, PositionedNode pos, IAssetProvider assets,
         IMeasureService measurer, Point origin, float inheritedOpacity, Size? desiredSize, float scale,
-        ResamplerType resampler) => RenderNode(canvas, pos.Child, assets, measurer,
+        ResamplerType resampler) => RenderChildren(canvas, pos.Children, assets, measurer,
         new(origin.X + pos.Position.X, origin.Y + pos.Position.Y), inheritedOpacity, desiredSize, scale, resampler);
 
     private static void RenderResizedNode(Image canvas, ResizedNode resize, IAssetProvider assets,
@@ -149,23 +149,36 @@ public static class Renderer
         canvas.Mutate(c => c.DrawImage(img, origin, inheritedOpacity));
     }
 
-    private static void RenderTextNode(Image canvas, TextNode text, IAssetProvider assets, PointF origin)
+    private static void RenderTextNode(Image canvas, TextNode textNode, IAssetProvider assets, PointF origin)
     {
-        (FontFamily mainFont, List<FontFamily> fallbacks) = assets.ResolveFont(text.FontFamily);
-        Font font = new(mainFont, text.FontSize * (115 / 18));
+        (FontFamily mainFont, List<FontFamily> fallbacks) = assets.ResolveFont(textNode.FontFamily);
+        Font font = new(mainFont, (float)(textNode.FontSize * 115 / 18d));
         RichTextOptions options = new(font)
         {
             Font = font,
             FallbackFontFamilies = fallbacks,
             Origin = origin,
-            TextAlignment = text.TextAlignment,
-            VerticalAlignment = text.VerticalAlignment,
-            HorizontalAlignment = text.HorizontalAlignment,
+            TextAlignment = textNode.TextAlignment,
+            VerticalAlignment = textNode.VerticalAlignment,
+            HorizontalAlignment = textNode.HorizontalAlignment,
             HintingMode = HintingMode.Standard,
             Dpi = 460
         };
-        canvas.Mutate(ctx => ctx.DrawText(options, text.Text, Brushes.Solid(text.Color),
-            text is { StrokeColor: { } sc, StrokeWidth: { } sw } ? Pens.Solid(sc, sw) : null));
+
+        string text = textNode.Text;
+        string drawText = text;
+        if (textNode is { TruncateWidth: { } tw, TruncateSubfix: { } ts })
+        {
+            for (FontRectangle size = TextMeasurer.MeasureSize(drawText, options);
+                 size.Width > tw;
+                 size = TextMeasurer.MeasureSize(drawText, options))
+            {
+                text = text[..^1];
+                drawText = $"{text}{ts}";
+            }
+        }
+        canvas.Mutate(ctx => ctx.DrawText(options, drawText, Brushes.Solid(textNode.Color),
+            textNode is { StrokeColor: { } sc, StrokeWidth: { } sw } ? Pens.Solid(sc, sw) : null));
     }
 
     private static void RenderCanvasNode(Image canvasImage, CanvasNode canvas, IAssetProvider assets,
@@ -182,7 +195,7 @@ public static class Renderer
         TextNode text => MeasureTextNode(text, measurer),
         StackNode stack => MeasureStackNode(stack, assets, measurer),
         LayerNode layer => MeasureLayerNode(layer, assets, measurer),
-        PositionedNode pos => Measure(pos.Child, assets, measurer),
+        PositionedNode pos => MeasurePositionedNode(pos, assets, measurer),
         _ => Size.Empty
     };
 
@@ -211,6 +224,19 @@ public static class Renderer
                 height += child.Height + (i > 0 ? stack.Spacing : 0);
                 width = Math.Max(width, child.Width);
             }
+        }
+
+        return new(width, height);
+    }
+
+    private static Size MeasurePositionedNode(PositionedNode pos, IAssetProvider assets, IMeasureService measurer)
+    {
+        int width = 0, height = 0;
+        foreach (Node child in pos.Children)
+        {
+            Size size = Measure(child, assets, measurer);
+            width += size.Width;
+            height += size.Height;
         }
 
         return new(width, height);

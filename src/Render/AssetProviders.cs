@@ -1,5 +1,6 @@
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
+using SmartFormat;
 using System.Collections.Concurrent;
 using System.Xml.Linq;
 
@@ -147,7 +148,7 @@ public sealed class AssetProvider : IAssetProvider, IMeasureService
             return Path.Combine(pathRule.Path, key);
         }
 
-        return Path.Combine(pathRule.Path, string.Format(pathRule.Rule, key));
+        return Path.Combine(pathRule.Path, Smart.Format(pathRule.Rule, new { key }));
     }
 
     private Image LoadImage(string path)

@@ -72,6 +72,11 @@ public sealed class NCalcExpressionEngine : IAsyncExpressionEngine
         expression.EvaluateParameterAsync += (name, args) =>
         {
             object? value = ResolveVariable(name, scope);
+            if (value is Enum e)
+            {
+                value = Convert.ToInt32(e);
+            }
+
             args.Result = value;
             return ValueTask.CompletedTask;
         };
@@ -86,24 +91,24 @@ public sealed class NCalcExpressionEngine : IAsyncExpressionEngine
         {
             if (current is null)
             {
-                return null;
+                return current;
             }
 
             if (current is IDictionary<string, object> dict)
             {
-                if (!dict.TryGetValue(seg, out object? v))
+                if (dict.TryGetValue(seg, out current))
                 {
-                    return null;
+                    continue;
                 }
 
-                return v;
+                return dict;
             }
 
             Type t = current.GetType();
             PropertyInfo? prop = t.GetProperty(seg);
             if (prop is null)
             {
-                continue;
+                return current;
             }
 
             current = prop.GetValue(current);
@@ -227,19 +232,19 @@ public sealed class XmlSceneLoader(IAsyncExpressionEngine expr)
     );
 
     private async Task<LayerNode> ParseLayerNodeAsync(XElement el, object? scope) => new(
-        await EvaluateAttributeOrAsync(el, "opacity", 1, scope),
+        await EvaluateAttributeOrAsync<float>(el, "opacity", 1, scope),
         await ParseChildrenAsync(el, scope),
         await GetAttributeValueAsync(el, "key", scope)
     );
 
     private async Task<PositionedNode> ParsePositionedNodeAsync(XElement el, object? scope) => new(
         new Point(await EvaluateAttributeAsync<int>(el, "x", scope), await EvaluateAttributeAsync<int>(el, "y", scope)),
-        (await ParseChildrenAsync(el, scope)).Single(),
+        await ParseChildrenAsync(el, scope),
         await GetAttributeValueAsync(el, "key", scope)
     );
 
     private async Task<ResizedNode> ParseResizedNodeAsync(XElement el, object? scope) => new(
-        await EvaluateAttributeOrAsync(el, "scale", 1, scope),
+        await EvaluateAttributeOrAsync<float>(el, "scale", 1, scope),
         await ParseSizeAsync(el, scope),
         await ParseResamplerTypeAsync(el, scope),
         (await ParseChildrenAsync(el, scope)).Single(),
@@ -262,13 +267,15 @@ public sealed class XmlSceneLoader(IAsyncExpressionEngine expr)
     private async Task<TextNode> ParseTextNodeAsync(XElement el, object? scope) => new(
         await GetAttributeValueAsync(el, "value", scope),
         await GetAttributeValueAsync(el, "fontFamily", scope),
-        await EvaluateAttributeAsync<float>(el, "fontSize", scope),
+        await EvaluateAttributeAsync<int>(el, "fontSize", scope),
         Color.Parse(await GetAttributeValueAsync(el, "color", scope)),
         await EvaluateAttributeOrAsync(el, "align", TextAlignment.Start, scope),
-        await EvaluateAttributeOrAsync(el, "align-v", VerticalAlignment.Top, scope),
-        await EvaluateAttributeOrAsync(el, "align-h", HorizontalAlignment.Left, scope),
+        await EvaluateAttributeOrAsync(el, "alignV", VerticalAlignment.Top, scope),
+        await EvaluateAttributeOrAsync(el, "alignH", HorizontalAlignment.Left, scope),
         await TryParseColorAsync(el.Attribute("strokeColor")?.Value, scope),
         await EvaluateAttributeOrAsync<float>(el, "strokeWidth", 0, scope),
+        await EvaluateAttributeOrAsync<float?>(el, "truncateWidth", null, scope),
+        await EvaluateAttributeOrAsync(el, "truncateSubfix", "", scope),
         await GetAttributeValueAsync(el, "key", scope)
     );
 

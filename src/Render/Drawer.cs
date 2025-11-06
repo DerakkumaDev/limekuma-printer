@@ -1,5 +1,6 @@
 using Limekuma.Prober.Common;
 using SixLabors.ImageSharp;
+using System.Collections;
 
 namespace Limekuma.Render;
 
@@ -34,7 +35,6 @@ public class Drawer
             ["prober"] = prober,
             ["isAnime"] = isAnime,
             ["drawLevelSeg"] = drawLevelSeg,
-            ["type"] = isAnime ? "animation" : "static"
         };
         return await DrawAsync(scope, xmlPath);
     }
@@ -62,6 +62,15 @@ public class Drawer
     private async Task<Image> DrawAsync(Dictionary<string, object> scope, string xmlPath)
     {
         IAsyncExpressionEngine expr = new NCalcExpressionEngine();
+        expr.RegisterFunction("Reverse", (object l) =>
+        {
+            if (l is IEnumerable<object> e)
+            {
+                return e.Reverse();
+            }
+
+            return (IEnumerable)(l.ToString() ?? "[NIL]").Reverse();
+        });
         XmlSceneLoader loader = new(expr);
         Node tree = await loader.LoadAsync(xmlPath, scope);
         AssetProvider assets = AssetProvider.Shared;

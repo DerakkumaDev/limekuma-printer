@@ -22,6 +22,15 @@ internal static class ServerStreamWriterExtensions
         {
             MemoryStream outStream = new();
 #if RELEASE
+            if (image.Height > image.Width)
+            {
+                image.Mutate(ctx => ctx.Resize(1080, image.Height / image.Width * 1080));
+            }
+            else
+            {
+                image.Mutate(ctx => ctx.Resize(image.Width / image.Height * 1080, 1080));
+            }
+
             if (isAnime)
             {
                 GifEncoder encoder = new()

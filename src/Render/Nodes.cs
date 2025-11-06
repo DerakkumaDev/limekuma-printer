@@ -46,7 +46,7 @@ public sealed record LayerNode(
 
 public sealed record PositionedNode(
     Point Position,
-    Node Child,
+    List<Node> Children,
     string? Key
 ) : Node(Key);
 
@@ -74,12 +74,14 @@ public sealed record ImageNode(
 public sealed record TextNode(
     string Text,
     string FontFamily,
-    float FontSize,
+    int FontSize,
     Color Color,
     TextAlignment TextAlignment,
     VerticalAlignment VerticalAlignment,
     HorizontalAlignment HorizontalAlignment,
     Color? StrokeColor,
     float StrokeWidth,
+    float? TruncateWidth,
+    string TruncateSubfix,
     string? Key
 ) : Node(Key);
