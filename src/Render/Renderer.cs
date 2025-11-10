@@ -1,3 +1,4 @@
+using Limekuma.Render.Nodes;
 using Limekuma.Utils;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
@@ -7,17 +8,6 @@ using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
 
 namespace Limekuma.Render;
-
-public interface IAssetProvider
-{
-    Image LoadImage(string resourceNamespace, string resourceKey);
-    (FontFamily, List<FontFamily>) ResolveFont(string family);
-}
-
-public interface IMeasureService
-{
-    Size Measure(string text, string family, float size);
-}
 
 public static class Renderer
 {
