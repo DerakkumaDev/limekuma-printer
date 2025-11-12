@@ -4,12 +4,13 @@ using LimeKuma;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
-using SixLabors.ImageSharp.Formats.Gif;
-using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Processing.Processors.Quantization;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
+#if RELEASE
+using SixLabors.ImageSharp.Formats.Gif;
+using SixLabors.ImageSharp.Formats.Jpeg;
+#endif
 
 namespace Limekuma.Utils;
 
@@ -105,7 +106,7 @@ internal static class DrawExtensions
             int imageWidth = (int)Math.Ceiling(image.Width * percent);
             int imageHeight = (int)Math.Ceiling(image.Height * percent);
 
-            Resize(image, imageWidth, imageHeight, resampler);
+            image.Resize(imageWidth, imageHeight, resampler);
         }
 
         internal async Task WriteToResponseAsync(IServerStreamWriter<ImageResponse> responseStream) =>
@@ -115,7 +116,16 @@ internal static class DrawExtensions
         {
             MemoryStream outStream = new();
 #if RELEASE
-            image.Resize(1080, 1920, KnownResamplers.Lanczos3);
+            if (image.Height > image.Width && image.Height > 1080)
+            {
+                image.Resize(1080, image.Width / image.Height * 1080, KnownResamplers.Lanczos3);
+            }
+
+            if (image.Width > image.Height && image.Width > 1080)
+            {
+                image.Resize(image.Height / image.Width * 1080, 1080, KnownResamplers.Lanczos3);
+            }
+
             if (isAnime)
             {
                 GifEncoder encoder = new()
@@ -127,7 +137,11 @@ internal static class DrawExtensions
             }
             else
             {
-                await image.SaveAsJpegAsync(outStream);
+                JpegEncoder encoder = new()
+                {
+                    Quality = 85
+                };
+                await image.SaveAsJpegAsync(outStream, encoder);
             }
 
 #elif DEBUG

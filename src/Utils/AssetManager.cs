@@ -18,7 +18,7 @@ public sealed class AssetManager
         if (!_assets.TryGetValue(path, out Image? image))
         {
             image = Image.Load(path);
-            _assets.GetOrAdd(path, image);
+            _assets.TryAdd(path, image);
         }
 
         return image.Clone(x => { });

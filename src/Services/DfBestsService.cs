@@ -78,6 +78,6 @@ public partial class BestsService
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
             "水鱼 Best 50", "divingfish", false, true);
 
-        await bestsImage.WriteToResponseAsync(responseStream, true);
+        await bestsImage.WriteToResponseAsync(responseStream);
     }
 }

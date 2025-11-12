@@ -20,7 +20,7 @@ public class ListDrawer : BestsDrawer
     public const string LevelRootPath = "./Resources/Level/";
 #endif
 
-    public Image Draw(CommonUser user, IList<CommonRecord> records, int page, int total, IList<int> counts,
+    public Image Draw(CommonUser user, IReadOnlyList<CommonRecord> records, int page, int total, IReadOnlyList<int> counts,
         string level, string prober, string backgroundPath = BackgroundPath)
     {
         Image bg = AssetManager.Shared.Load(backgroundPath);
