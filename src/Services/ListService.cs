@@ -26,20 +26,36 @@ public sealed partial class ListService : ListApi.ListApiBase
         await ServiceHelper.PrepareRecordDataAsync(records[i..end]);
         j = end;
 
-        Parallel.ForEach(records, () => new int[16], (record, _, local) =>
+        Parallel.ForEach(records, () => new int[15], (record, _, local) =>
         {
+            if (record.Rank >= Ranks.SSSPlus)
+            {
+                ++local[0];
+            }
+
+            if (record.Rank >= Ranks.SSS)
+            {
+                ++local[1];
+            }
+
+            if (record.Rank >= Ranks.SSPlus)
+            {
+                ++local[2];
+            }
+
+            if (record.Rank >= Ranks.SS)
+            {
+                ++local[3];
+            }
+
+            if (record.Rank >= Ranks.SPlus)
+            {
+                ++local[4];
+            }
+
             if (record.Rank >= Ranks.S)
             {
-                ++local[record.Rank switch
-                {
-                    Ranks.SSSPlus => 0,
-                    Ranks.SSS => 1,
-                    Ranks.SSPlus => 2,
-                    Ranks.SS => 3,
-                    Ranks.SPlus => 4,
-                    Ranks.S => 5,
-                    _ => 16
-                }];
+                ++local[5];
             }
 
             if (record.Rank >= Ranks.A)
@@ -47,28 +63,49 @@ public sealed partial class ListService : ListApi.ListApiBase
                 ++local[6];
             }
 
-            if (record.ComboFlag >= ComboFlags.FullCombo)
+            if (record.ComboFlag >= ComboFlags.AllPerfectPlus)
             {
-                ++local[record.ComboFlag switch
-                {
-                    ComboFlags.AllPerfectPlus => 7,
-                    ComboFlags.AllPerfect => 8,
-                    ComboFlags.FullComboPlus => 9,
-                    ComboFlags.FullCombo => 10,
-                    _ => 16
-                }];
+                ++local[7];
             }
 
-            if (record.SyncFlag is >= SyncFlags.FullSync and <= SyncFlags.FullSyncDXPlus)
+            if (record.ComboFlag >= ComboFlags.AllPerfect)
             {
-                ++local[record.SyncFlag switch
-                {
-                    SyncFlags.FullSyncDXPlus => 11,
-                    SyncFlags.FullSyncDX => 12,
-                    SyncFlags.FullSyncPlus => 13,
-                    SyncFlags.FullSync => 14,
-                    _ => 16
-                }];
+                ++local[8];
+            }
+
+            if (record.ComboFlag >= ComboFlags.FullComboPlus)
+            {
+                ++local[9];
+            }
+
+            if (record.ComboFlag >= ComboFlags.FullCombo)
+            {
+                ++local[10];
+            }
+
+            if (record.SyncFlag is SyncFlags.SyncPlay)
+            {
+                return local;
+            }
+
+            if (record.SyncFlag >= SyncFlags.FullSyncDXPlus)
+            {
+                ++local[11];
+            }
+
+            if (record.SyncFlag >= SyncFlags.FullSyncDX)
+            {
+                ++local[12];
+            }
+
+            if (record.SyncFlag >= SyncFlags.FullSyncPlus)
+            {
+                ++local[13];
+            }
+
+            if (record.SyncFlag >= SyncFlags.FullSync)
+            {
+                ++local[14];
             }
 
             return local;
