@@ -45,16 +45,16 @@ public class BestsDrawer : DrawerBase
     public const string LevelSugBackgroundPath = "./Resources/Background/level_seg.png";
 #endif
 
-    public Image Draw(CommonUser user, IReadOnlyList<CommonRecord> ever, IReadOnlyList<CommonRecord> current, int everTotal,
-        int currentTotal, string typename, string prober) => Draw(user, ever, current, everTotal, currentTotal,
-        typename, prober, false, false);
+    public Image Draw(CommonUser user, IReadOnlyList<CommonRecord> ever, IReadOnlyList<CommonRecord> current,
+        int everTotal, int currentTotal, string typename, string prober) => Draw(user, ever, current, everTotal,
+        currentTotal, typename, prober, false, false);
 
-    public Image Draw(CommonUser user, IReadOnlyList<CommonRecord> ever, IReadOnlyList<CommonRecord> current, int everTotal,
-        int currentTotal, string typename, string prober, bool isAnime) => Draw(user, ever, current, everTotal,
-        currentTotal, typename, prober, isAnime, false);
+    public Image Draw(CommonUser user, IReadOnlyList<CommonRecord> ever, IReadOnlyList<CommonRecord> current,
+        int everTotal, int currentTotal, string typename, string prober, bool isAnime) => Draw(user, ever, current,
+        everTotal, currentTotal, typename, prober, isAnime, false);
 
-    public Image Draw(CommonUser user, IReadOnlyList<CommonRecord> ever, IReadOnlyList<CommonRecord> current, int everTotal,
-        int currentTotal, string typename, string prober, bool isAnime, bool drawLevelSeg)
+    public Image Draw(CommonUser user, IReadOnlyList<CommonRecord> ever, IReadOnlyList<CommonRecord> current,
+        int everTotal, int currentTotal, string typename, string prober, bool isAnime, bool drawLevelSeg)
     {
         Image bg = AssetManager.Shared.Load(isAnime ? BackgroundAnimationPath : BackgroundPath);
         List<(Point, Image)> sdBests = DrawScores(ever, isAnime: isAnime);
@@ -216,7 +216,8 @@ public class BestsDrawer : DrawerBase
         return bg;
     }
 
-    public List<(Point, Image)> DrawScores(IReadOnlyList<CommonRecord> scores, int start_index = 0, bool isAnime = false)
+    public List<(Point, Image)> DrawScores(IReadOnlyList<CommonRecord> scores, int start_index = 0,
+        bool isAnime = false)
     {
         int count = scores.Count;
         if (count is 0)

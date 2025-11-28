@@ -4,7 +4,6 @@ using Limekuma.Prober.Common;
 using Limekuma.Prober.DivingFish;
 using Limekuma.Prober.DivingFish.Models;
 using Limekuma.Utils;
-using LimeKuma;
 using SixLabors.ImageSharp;
 using System.Net;
 

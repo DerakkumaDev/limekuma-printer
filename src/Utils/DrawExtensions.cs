@@ -1,6 +1,5 @@
 using Google.Protobuf;
 using Grpc.Core;
-using LimeKuma;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
