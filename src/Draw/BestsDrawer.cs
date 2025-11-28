@@ -598,7 +598,7 @@ public class BestsDrawer : DrawerBase
             int indexY = i / 4;
             int rating = ratings[indexY];
             Ranks rank = ranks[indexX];
-            double currentRating = RatingProc(rating, rank);
+            double currentRating = RatingProc(rating, rank, indexY % 2 > 0);
             string ratingText = currentRating > 0 ? $"{currentRating,4:F1}" : "-----";
             Point pos = new(posX[indexX], posY[indexY]);
             Image levelImage = BoldFont.DrawImage(30, ratingText, new(new Rgb24(255, 255, 255)),
@@ -636,13 +636,8 @@ public class BestsDrawer : DrawerBase
         { Ranks.D, (0.0001, 0.064, 4) }
     };
 
-    private double RatingProc(int rating, Ranks rank)
+    private double RatingProc(int rating, Ranks rank, bool min)
     {
-        if (rating < 232)
-        {
-            return 0;
-        }
-
         if (!_ratings.TryGetValue(rank, out (double, double, double) ratings))
         {
             return 0;
@@ -654,8 +649,14 @@ public class BestsDrawer : DrawerBase
             return 0;
         }
 
-        double result = rating / (achievements * currentRating);
-        if (result > 15)
+        if (min)
+        {
+            rating += 1;
+        }
+
+        double threshold = rating / achievements / currentRating;
+        double result = Math.Ceiling(threshold * 10) / 10;
+        if (result is < 1 or > 15)
         {
             return 0;
         }
