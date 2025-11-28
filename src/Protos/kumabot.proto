@@ -22,8 +22,8 @@ service ListApi {
 
 message LxnsBestsRequest {
   string devToken = 1;
-  google.protobuf.UInt32Value qq = 2;
-  google.protobuf.StringValue personalToken = 3;
+  google.protobuf.StringValue personalToken = 2;
+  google.protobuf.UInt32Value qq = 3;
 }
 
 message DivingFishBestsRequest {
@@ -34,9 +34,10 @@ message DivingFishBestsRequest {
 }
 
 message LxnsListRequest {
-  string personalToken = 1;
-  string level = 2;
-  sint32 page = 3;
+  string devToken = 1;
+  string personalToken = 2;
+  string level = 3;
+  sint32 page = 4;
 }
 
 message DivingFishListRequest {

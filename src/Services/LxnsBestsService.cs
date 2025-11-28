@@ -37,14 +37,25 @@ public partial class BestsService
             LxnsPersonalClient lxns = new(personalToken);
             try
             {
-                player = await lxns.GetPlayerAsync();
+                player = await lxns.GetPlayerAsync(lxnsDev);
             }
             catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized)
             {
                 throw new RpcException(new(StatusCode.Unauthenticated, ex.Message, ex));
             }
 
-            player.Client = lxnsDev;
+            try
+            {
+                player = await lxnsDev.GetPlayerAsync(player.FriendCode);
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.NotFound)
+            {
+                throw new RpcException(new(StatusCode.NotFound, ex.Message, ex));
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Forbidden)
+            {
+                throw new RpcException(new(StatusCode.PermissionDenied, ex.Message, ex));
+            }
         }
         else
         {
