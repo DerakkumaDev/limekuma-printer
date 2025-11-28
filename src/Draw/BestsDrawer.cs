@@ -6,7 +6,6 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors;
-using System.Collections.Concurrent;
 
 namespace Limekuma.Draw;
 
@@ -82,12 +81,12 @@ public class BestsDrawer : DrawerBase
 
         Font robinEbFont16 = RobinEbFont.GetSizeFont(33);
 
-        List<char> ratingLE = [.. user.Rating.ToString().Reverse()];
         using Image<Rgba32> ratingImage = new(512, 64);
         ratingImage.Mutate(ctx =>
         {
             ReadOnlySpan<int> ratingPos = [111, 82, 55, 26, 0];
-            for (int i = 0; i < ratingLE.Count; ++i)
+            ReadOnlySpan<char> ratingLE = [.. user.Rating.ToString().Reverse()];
+            for (int i = 0; i < ratingLE.Length; ++i)
             {
                 ctx.DrawText(ratingLE[i].ToString(), robinEbFont16, Brushes.Solid(new Rgb24(249, 198, 10)),
                     Pens.Solid(new Rgba32(0, 0, 0, 150), 1f), new(ratingPos[i], 20));
@@ -210,8 +209,7 @@ public class BestsDrawer : DrawerBase
         });
         if (drawLevelSeg)
         {
-            using Image levelSegImage = DrawLevelSug(ever.First().DXRating, ever.Last().DXRating,
-                current.First().DXRating, current.Last().DXRating);
+            using Image levelSegImage = DrawLevelSug(ever, current);
             bg.Mutate(ctx => ctx.DrawImage(levelSegImage, new Point(60, 197), 1));
         }
 
@@ -547,31 +545,57 @@ public class BestsDrawer : DrawerBase
         return bg;
     }
 
-    public Image DrawLevelSug(int b35max, int b35min, int b15max, int b15min)
+    public Image DrawLevelSug(IReadOnlyList<CommonRecord> ever, IReadOnlyList<CommonRecord> current)
     {
         Image bg = AssetManager.Shared.Load(LevelSugBackgroundPath);
-        int[] posX = [270, 390, 510, 630];
-        int[] posY = [73, 113, 179, 219];
-        int len = Math.Min(posX.Length, posY.Length);
-        int b35maxDiff = b35max - b35min;
-        int b35minDiff = Random.Shared.Next(1, 6);
-        int b15maxDiff = b15max - b15min;
-        int b15minDiff = Random.Shared.Next(1, 6);
-        ConcurrentBag<(Point, Image)> images = [];
-        int[] diffs = [b35maxDiff, b35minDiff, b15maxDiff, b15minDiff];
-        Parallel.For(0, diffs.Length, i =>
+        (Point, Image)[] images = new (Point, Image)[20];
+        int b35max = 0;
+        int b35min = 0;
+        if (ever.Count > 0)
         {
-            Point pos = new(155, posY[i % len]);
-            Image levelImage = BoldFont.DrawImage(30, $"{$"+{diffs[i]}",3}", new(new Rgb24(255, 255, 255)),
+            b35max = ever[0].DXRating;
+            b35min = ever[^1].DXRating;
+        }
+
+        int b35maxDiff = b35max;
+        if (ever.Count > 34)
+        {
+            b35maxDiff -= b35min;
+        }
+
+        int b35minDiff = b35maxDiff > 0 ? 1 : 0;
+        int b15max = 0;
+        int b15min = 0;
+        if (current.Count > 0)
+        {
+            b15max = current[0].DXRating;
+            b15min = current[^1].DXRating;
+        }
+
+        int b15maxDiff = b15max;
+        if (current.Count > 14)
+        {
+            b15maxDiff -= b15min;
+        }
+
+        int b15minDiff = b15maxDiff > 0 ? 1 : 0;
+        Parallel.For(0, 4, i =>
+        {
+            ReadOnlySpan<int> posY = [73, 113, 179, 219];
+            ReadOnlySpan<int> diffs = [b35maxDiff, b35minDiff, b15maxDiff, b15minDiff];
+            Point pos = new(140, posY[i % 4]);
+            Image levelImage = BoldFont.DrawImage(30, $"{$"+{diffs[i]}",4}", new(new Rgb24(255, 255, 255)),
                 [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-            images.Add((pos, levelImage));
+            images[i] = (pos, levelImage);
         });
-        int[] ratings = [b35max, b35min + b35minDiff, b15max, b15min + b15minDiff];
-        Ranks[] ranks = [Ranks.SSSPlus, Ranks.SSS, Ranks.SSPlus, Ranks.SS];
-        Parallel.For(0, posX.Length * posY.Length, i =>
+        Parallel.For(0, 16, i =>
         {
-            int indexX = i % len;
-            int indexY = i / len;
+            ReadOnlySpan<int> posX = [270, 390, 510, 630];
+            ReadOnlySpan<int> posY = [73, 113, 179, 219];
+            ReadOnlySpan<Ranks> ranks = [Ranks.SSSPlus, Ranks.SSS, Ranks.SSPlus, Ranks.SS];
+            ReadOnlySpan<int> ratings = [b35max, b35min, b15max, b15min];
+            int indexX = i % 4;
+            int indexY = i / 4;
             int rating = ratings[indexY];
             Ranks rank = ranks[indexX];
             double currentRating = RatingProc(rating, rank);
@@ -579,7 +603,7 @@ public class BestsDrawer : DrawerBase
             Point pos = new(posX[indexX], posY[indexY]);
             Image levelImage = BoldFont.DrawImage(30, ratingText, new(new Rgb24(255, 255, 255)),
                 [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
-            images.Add((pos, levelImage));
+            images[i + 4] = (pos, levelImage);
         });
         bg.Mutate(ctx =>
         {

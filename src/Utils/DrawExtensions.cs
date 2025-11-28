@@ -7,6 +7,7 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
+using System.Buffers;
 #if RELEASE
 using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
@@ -16,8 +17,6 @@ namespace Limekuma.Utils;
 
 internal static class DrawExtensions
 {
-    private const int ChunkSize = 1024 * 32;
-
     extension(FontFamily font)
     {
         internal Font GetSizeFont(float size) => new(font, size);
@@ -148,11 +147,11 @@ internal static class DrawExtensions
             await image.SaveAsPngAsync(outStream);
 #endif
             outStream.Seek(0, SeekOrigin.Begin);
-            byte[] buffer = new byte[ChunkSize];
+            using IMemoryOwner<byte> owner = MemoryPool<byte>.Shared.Rent();
 
             while (true)
             {
-                int numBytesRead = await outStream.ReadAsync(buffer);
+                int numBytesRead = await outStream.ReadAsync(owner.Memory);
                 if (numBytesRead is 0)
                 {
                     break;
@@ -160,7 +159,7 @@ internal static class DrawExtensions
 
                 await responseStream.WriteAsync(new()
                 {
-                    Data = UnsafeByteOperations.UnsafeWrap(buffer.AsMemory(0, numBytesRead))
+                    Data = UnsafeByteOperations.UnsafeWrap(owner.Memory)
                 });
             }
         }

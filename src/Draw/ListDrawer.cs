@@ -49,12 +49,12 @@ public class ListDrawer : BestsDrawer
 
         Font robinEbFont16 = RobinEbFont.GetSizeFont(33);
 
-        List<char> ratingLE = [.. user.Rating.ToString().Reverse()];
         using Image<Rgba32> ratingImage = new(512, 64);
         ratingImage.Mutate(ctx =>
         {
             ReadOnlySpan<int> ratingPos = [111, 82, 55, 26, 0];
-            for (int i = 0; i < ratingLE.Count; ++i)
+            ReadOnlySpan<char> ratingLE = [.. user.Rating.ToString().Reverse()];
+            for (int i = 0; i < ratingLE.Length; ++i)
             {
                 ctx.DrawText(ratingLE[i].ToString(), robinEbFont16, Brushes.Solid(new Rgb24(249, 198, 10)),
                     Pens.Solid(new Rgba32(0, 0, 0, 150), 1f), new(ratingPos[i], 20));
