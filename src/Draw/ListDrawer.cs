@@ -68,16 +68,16 @@ public class ListDrawer : BestsDrawer
         Point shougoubasePos = new(181, 143);
         PointF shougouPos = new(shougoubasePos.X + ((shougoubase.Width - shougouSize.Width) / 2), 151);
         using Image shougouImage = HeavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)),
-            Pens.Solid(new Rgb24(0, 0, 0), 5f), [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Spline, 6);
+            Pens.Solid(new Rgb24(51, 51, 51), 1.25f), [SymbolsFont, Symbols2Font, NotoBlackFont]);
 
         string pagination = $"{page} / {total}";
         FontRectangle paginationSize = HeavyFont.GetSize(70, pagination, [SymbolsFont, Symbols2Font, NotoBlackFont]);
         PointF paginationPos = new(256 - (paginationSize.Width / 2), 815);
         using Image paginationImage = HeavyFont.DrawImage(70, pagination, new(new Rgb24(53, 74, 164)),
-            [SymbolsFont, Symbols2Font, NotoBlackFont], KnownResamplers.Lanczos3);
+            [SymbolsFont, Symbols2Font, NotoBlackFont]);
 
         using Image nameImage = MediumFont.DrawImage(21, user.Name, new(new Rgb24(0, 0, 0)),
-            [SymbolsFont, Symbols2Font, NotoMediumFont], KnownResamplers.Lanczos3);
+            [SymbolsFont, Symbols2Font, NotoMediumFont]);
 
         bg.Mutate(ctx =>
         {
@@ -134,7 +134,7 @@ public class ListDrawer : BestsDrawer
 
             Image countImage = BoldFont.DrawImage(20, countText,
                 new(count >= totalCount ? new(248, 179, 42) : new Rgb24(53, 74, 164)),
-                [SymbolsFont, Symbols2Font, NotoBoldFont], KnownResamplers.Lanczos3);
+                [SymbolsFont, Symbols2Font, NotoBoldFont]);
 
             statsData[idx] = (countPos, countImage);
         });
