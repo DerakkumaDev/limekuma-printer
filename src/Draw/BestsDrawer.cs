@@ -318,10 +318,12 @@ public class BestsDrawer : DrawerBase
 
         using Image achiPart1Image = HeavyFont.DrawImage(76, achiPart1, color,
             [SymbolsFont, Symbols2Font, NotoBlackFont]);
-        using Image achiPart2Image = BoldFont.DrawImage(76, achiPart2, color, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        using Image achiPart2Image =
+            BoldFont.DrawImage(76, achiPart2, color, [SymbolsFont, Symbols2Font, NotoBoldFont]);
         using Image achiPart3Image = HeavyFont.DrawImage(54, achiPart3, color,
             [SymbolsFont, Symbols2Font, NotoBlackFont]);
-        using Image achiPart4Image = BoldFont.DrawImage(65, achiPart4, color, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        using Image achiPart4Image =
+            BoldFont.DrawImage(65, achiPart4, color, [SymbolsFont, Symbols2Font, NotoBoldFont]);
 
         #endregion
 
