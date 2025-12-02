@@ -47,28 +47,31 @@ public class ListDrawer : BestsDrawer
         shougoubase.Resize(0.94, KnownResamplers.Lanczos3);
         frameLine.Resize(0.745, KnownResamplers.Lanczos3);
 
-        Font robinEbFont16 = RobinEbFont.GetSizeFont(33);
+        Font robinEbFont16 = RobinEbFont.GetSizeFont(4);
 
-        using Image<Rgba32> ratingImage = new(512, 64);
+        using Image<Rgba32> ratingImage = new(256, 32);
         ratingImage.Mutate(ctx =>
         {
-            ReadOnlySpan<int> ratingPos = [111, 82, 55, 26, 0];
+            ReadOnlySpan<int> ratingPos = [56, 41, 27, 13, 0];
             ReadOnlySpan<char> ratingLE = [.. user.Rating.ToString().Reverse()];
             for (int i = 0; i < ratingLE.Length; ++i)
             {
-                ctx.DrawText(ratingLE[i].ToString(), robinEbFont16, Brushes.Solid(new Rgb24(249, 198, 10)),
-                    Pens.Solid(new Rgba32(0, 0, 0, 150), 1f), new(ratingPos[i], 20));
+                RichTextOptions options = new(robinEbFont16)
+                {
+                    Dpi = 300,
+                    Origin = new(ratingPos[i], 10)
+                };
+                ctx.DrawText(options, ratingLE[i].ToString(), Brushes.Solid(new Rgb24(249, 198, 10)),
+                    Pens.Solid(new Rgba32(0, 0, 0, 100), 1.33f));
             }
-
-            ctx.Resize(ratingImage.Width / 2, ratingImage.Height / 2, KnownResamplers.Spline);
         });
 
         string shougou = user.TrophyText;
         FontRectangle shougouSize = HeavyFont.GetSize(14, shougou, [SymbolsFont, Symbols2Font, NotoBlackFont]);
-        Point shougoubasePos = new(181, 143);
+        Point shougoubasePos = new(180, 143);
         PointF shougouPos = new(shougoubasePos.X + ((shougoubase.Width - shougouSize.Width) / 2), 151);
         using Image shougouImage = HeavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)),
-            Pens.Solid(new Rgb24(51, 51, 51), 1.25f), [SymbolsFont, Symbols2Font, NotoBlackFont]);
+            Pens.Solid(new Rgba32(0, 0, 0, 200), 1.5f), [SymbolsFont, Symbols2Font, NotoBlackFont]);
 
         string pagination = $"{page} / {total}";
         FontRectangle paginationSize = HeavyFont.GetSize(70, pagination, [SymbolsFont, Symbols2Font, NotoBlackFont]);
