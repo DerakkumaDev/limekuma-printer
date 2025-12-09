@@ -24,35 +24,47 @@ public abstract class DrawerBase
 
     static DrawerBase()
     {
-        FontCollection fonts = new();
-        MediumFont = fonts.Add(Path.Combine(FontRootPath, "rounded-x-mplus-1p-medium.ttf"));
-        BoldFont = fonts.Add(Path.Combine(FontRootPath, "rounded-x-mplus-1p-bold.ttf"));
-        HeavyFont = fonts.Add(Path.Combine(FontRootPath, "rounded-x-mplus-1p-heavy.ttf"));
+        LatinMediumFont = new FontCollection().Add(Path.Combine(FontRootPath, "SF-Pro-Rounded-Medium.otf"));
+        LatinBoldFont = new FontCollection().Add(Path.Combine(FontRootPath, "SF-Pro-Rounded-Bold.otf"));
+        LatinHeavyFont = new FontCollection().Add(Path.Combine(FontRootPath, "SF-Pro-Rounded-Heavy.otf"));
 
-        NotoMediumFont = fonts.Add(Path.Combine(FontRootPath, "NotoSansCJKsc-Medium.otf"));
-        NotoBoldFont = fonts.Add(Path.Combine(FontRootPath, "NotoSansCJKsc-Bold.otf"));
-        NotoBlackFont = fonts.Add(Path.Combine(FontRootPath, "NotoSansCJKsc-Black.otf"));
-        SymbolsFont = fonts.Add(Path.Combine(FontRootPath, "NotoSansSymbols-Regular.ttf"));
-        Symbols2Font = fonts.Add(Path.Combine(FontRootPath, "NotoSansSymbols2-Regular.ttf"));
+        JpMediumFont = new FontCollection().Add(Path.Combine(FontRootPath, "rounded-mgenplus-1c-medium.ttf"));
+        JpBoldFont = new FontCollection().Add(Path.Combine(FontRootPath, "rounded-mgenplus-1c-bold.ttf"));
+        JpHeavyFont = new FontCollection().Add(Path.Combine(FontRootPath, "rounded-mgenplus-1c-heavy.ttf"));
 
-        RobinEbFont = fonts.Add(Path.Combine(FontRootPath, "3b02d0e2b846ab130c78c93bec66bf26.otf"));
+        ScMediumFont = new FontCollection().Add(Path.Combine(FontRootPath, "STYuantiRegular.ttf"));
+        ScBoldFont = new FontCollection().Add(Path.Combine(FontRootPath, "STYuantiBold.ttf"));
+        //ScHeavyFont = new FontCollection().Add(Path.Combine(FontRootPath, "STYuantiBold.ttf"));
+        ScHeavyFont = ScBoldFont;
+
+        SymbolsFont = new FontCollection().Add(Path.Combine(FontRootPath, "NotoSansSymbols-Regular.ttf"));
+        Symbols2Font = new FontCollection().Add(Path.Combine(FontRootPath, "NotoSansSymbols2-Regular.ttf"));
+
+        RobinEbFont = new FontCollection().Add(Path.Combine(FontRootPath, "3b02d0e2b846ab130c78c93bec66bf26.otf"));
     }
 
     #region Font Families
 
-    // Main fonts (Rounded-X M+ 1p from 自家製フォント工房)
-    protected static FontFamily MediumFont { get; }
-    protected static FontFamily BoldFont { get; }
-    protected static FontFamily HeavyFont { get; }
+    // Latin Fonts (SF Rounded from Apple)
+    protected static FontFamily LatinMediumFont { get; }
+    protected static FontFamily LatinBoldFont { get; }
+    protected static FontFamily LatinHeavyFont { get; }
 
-    // Fallback fonts (思源黑体/Noto Sans from Adobe & Google)
-    protected static FontFamily NotoMediumFont { get; }
-    protected static FontFamily NotoBoldFont { get; }
-    protected static FontFamily NotoBlackFont { get; }
+    // Jepanese Fonts (ヒラギノ丸ゴ from SCREEN GA)
+    protected static FontFamily JpMediumFont { get; }
+    protected static FontFamily JpBoldFont { get; }
+    protected static FontFamily JpHeavyFont { get; }
+
+    // Chinese Fonts (华文圆体 from 常州华文)
+    protected static FontFamily ScMediumFont { get; }
+    protected static FontFamily ScBoldFont { get; }
+    protected static FontFamily ScHeavyFont { get; }
+
+    // Symbol Fonts (Noto Sans from Adobe & Google)
     protected static FontFamily SymbolsFont { get; }
     protected static FontFamily Symbols2Font { get; }
 
-    // Number fonts (FOT-Rodin ProN from Fontworks)
+    // Number fonts (ロダン from Fontworks)
     protected static FontFamily RobinEbFont { get; }
 
     #endregion

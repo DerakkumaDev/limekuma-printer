@@ -99,25 +99,25 @@ public class BestsDrawer : DrawerBase
         });
 
         string shougou = user.TrophyText;
-        FontRectangle shougouSize = HeavyFont.GetSize(14, shougou, [SymbolsFont, Symbols2Font, NotoBlackFont]);
+        FontRectangle shougouSize = LatinHeavyFont.GetSize(14, shougou, [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
         Point shougoubasePos = new(180, 143);
         PointF shougouPos = new(shougoubasePos.X + ((shougoubase.Width - shougouSize.Width) / 2), 151);
-        using Image shougouImage = HeavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)),
-            Pens.Solid(new Rgba32(0, 0, 0, 200), 1.5f), [SymbolsFont, Symbols2Font, NotoBlackFont]);
+        using Image shougouImage = LatinHeavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)),
+            Pens.Solid(new Rgba32(0, 0, 0, 200), 1.5f), [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
 
-        using Image nameImage = MediumFont.DrawImage(21, user.Name, new(new Rgb24(0, 0, 0)),
-            [SymbolsFont, Symbols2Font, NotoMediumFont]);
+        using Image nameImage = LatinMediumFont.DrawImage(21, user.Name, new(new Rgb24(0, 0, 0)),
+            [JpMediumFont, ScMediumFont, SymbolsFont, Symbols2Font]);
 
         string scorePart1 = everTotal.ToString();
         string scorePart2 = "B35";
         string scorePart3 = $"+{currentTotal}";
         string scorePart4 = "B15";
         string scorePart5 = $"={everTotal + currentTotal}";
-        FontRectangle scorePart1Size = BoldFont.GetSize(27, scorePart1, [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        FontRectangle scorePart2Size = BoldFont.GetSize(19, scorePart2, [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        FontRectangle scorePart3Size = BoldFont.GetSize(27, scorePart3, [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        FontRectangle scorePart4Size = BoldFont.GetSize(19, scorePart4, [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        FontRectangle scorePart5Size = BoldFont.GetSize(27, scorePart5, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        FontRectangle scorePart1Size = LatinBoldFont.GetSize(27, scorePart1, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle scorePart2Size = LatinBoldFont.GetSize(19, scorePart2, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle scorePart3Size = LatinBoldFont.GetSize(27, scorePart3, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle scorePart4Size = LatinBoldFont.GetSize(19, scorePart4, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle scorePart5Size = LatinBoldFont.GetSize(27, scorePart5, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
         float scoreWidth = scorePart1Size.Width + scorePart2Size.Width + scorePart3Size.Width + scorePart4Size.Width +
                            scorePart5Size.Width;
         PointF scorePart1Pos = new(285 - (scoreWidth / 2), 532);
@@ -127,21 +127,21 @@ public class BestsDrawer : DrawerBase
         PointF scorePart5Pos = new(scorePart4Pos.X + scorePart4Size.Width, 532);
         Rgb24 scoreColorValue = new(75, 77, 138);
         Color scoreColor = new(scoreColorValue);
-        using Image scorePart1Image = BoldFont.DrawImage(27, scorePart1, scoreColor,
-            [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        using Image scorePart2Image = BoldFont.DrawImage(21, scorePart2, scoreColor,
-            [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        using Image scorePart3Image = BoldFont.DrawImage(27, scorePart3, scoreColor,
-            [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        using Image scorePart4Image = BoldFont.DrawImage(21, scorePart4, scoreColor,
-            [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        using Image scorePart5Image = BoldFont.DrawImage(27, scorePart5, scoreColor,
-            [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        using Image scorePart1Image = LatinBoldFont.DrawImage(27, scorePart1, scoreColor,
+            [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        using Image scorePart2Image = LatinBoldFont.DrawImage(21, scorePart2, scoreColor,
+            [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        using Image scorePart3Image = LatinBoldFont.DrawImage(27, scorePart3, scoreColor,
+            [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        using Image scorePart4Image = LatinBoldFont.DrawImage(21, scorePart4, scoreColor,
+            [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        using Image scorePart5Image = LatinBoldFont.DrawImage(27, scorePart5, scoreColor,
+            [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
-        FontRectangle typeSize = BoldFont.GetSize(32, typename, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        FontRectangle typeSize = LatinBoldFont.GetSize(32, typename, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
         PointF typePos = new(720 - (typeSize.Width / 2), 725);
-        using Image typeImage = BoldFont.DrawImage(32, typename, new(new Rgb24(0, 109, 103)),
-            [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        using Image typeImage = LatinBoldFont.DrawImage(32, typename, new(new Rgb24(0, 109, 103)),
+            [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         if (isAnime)
         {
@@ -281,21 +281,21 @@ public class BestsDrawer : DrawerBase
 
         #region Title
 
-        Font boldFont40 = BoldFont.GetSizeFont(40);
+        Font boldFont40 = LatinBoldFont.GetSizeFont(40);
 
         string title = score.Title;
         string drawName = title;
         for (FontRectangle size = TextMeasurer.MeasureSize(drawName,
-                 new(boldFont40) { FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont] });
+                 new(boldFont40) { FallbackFontFamilies = [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font] });
              size.Width > 450;
              size = TextMeasurer.MeasureSize(drawName,
-                 new(boldFont40) { FallbackFontFamilies = [SymbolsFont, Symbols2Font, NotoBoldFont] }))
+                 new(boldFont40) { FallbackFontFamilies = [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font] }))
         {
             title = title[..^1];
             drawName = $"{title}…";
         }
 
-        using Image titleImage = BoldFont.DrawImage(40, drawName, color, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        using Image titleImage = LatinBoldFont.DrawImage(40, drawName, color, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         #endregion
 
@@ -307,23 +307,23 @@ public class BestsDrawer : DrawerBase
         string achiPart3 = achievements.Length > 1 ? achievements[1].PadRight(4, '0') : "0000";
         string achiPart4 = "%";
 
-        FontRectangle achiPart1Size = HeavyFont.GetSize(76, achiPart1, [SymbolsFont, Symbols2Font, NotoBlackFont]);
-        FontRectangle achiPart2Size = BoldFont.GetSize(76, achiPart2, [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        FontRectangle achiPart3Size = HeavyFont.GetSize(54, achiPart3, [SymbolsFont, Symbols2Font, NotoBlackFont]);
+        FontRectangle achiPart1Size = LatinHeavyFont.GetSize(76, achiPart1, [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
+        FontRectangle achiPart2Size = LatinBoldFont.GetSize(76, achiPart2, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle achiPart3Size = LatinHeavyFont.GetSize(54, achiPart3, [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
 
         Point achiPart1Pos = new(371, 90);
         PointF achiPart2Pos = new(achiPart1Pos.X + achiPart1Size.Width, 90);
         PointF achiPart3Pos = new(achiPart2Pos.X + achiPart2Size.Width, 108);
         PointF achiPart4Pos = new(achiPart3Pos.X + achiPart3Size.Width, 100);
 
-        using Image achiPart1Image = HeavyFont.DrawImage(76, achiPart1, color,
-            [SymbolsFont, Symbols2Font, NotoBlackFont]);
+        using Image achiPart1Image = LatinHeavyFont.DrawImage(76, achiPart1, color,
+            [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
         using Image achiPart2Image =
-            BoldFont.DrawImage(76, achiPart2, color, [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        using Image achiPart3Image = HeavyFont.DrawImage(54, achiPart3, color,
-            [SymbolsFont, Symbols2Font, NotoBlackFont]);
+            LatinBoldFont.DrawImage(76, achiPart2, color, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        using Image achiPart3Image = LatinHeavyFont.DrawImage(54, achiPart3, color,
+            [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
         using Image achiPart4Image =
-            BoldFont.DrawImage(65, achiPart4, color, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+            LatinBoldFont.DrawImage(65, achiPart4, color, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         #endregion
 
@@ -331,17 +331,17 @@ public class BestsDrawer : DrawerBase
 
         string indexPart1 = "#";
         string indexPart2 = index.ToString();
-        FontRectangle indexPart1Size = BoldFont.GetSize(24, indexPart1, [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        FontRectangle indexPart2Size = BoldFont.GetSize(30, indexPart2, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        FontRectangle indexPart1Size = LatinBoldFont.GetSize(24, indexPart1, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle indexPart2Size = LatinBoldFont.GetSize(30, indexPart2, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
         float indexWidth = indexPart1Size.Width + indexPart2Size.Width;
         PointF indexPart1Pos = new(335 - (indexWidth / 2), 250);
         PointF indexPart2Pos = new(indexPart1Pos.X + indexPart1Size.Width, 245);
         Rgb24 indexColorValue = new(255, 255, 255);
         Color indexColor = new(indexColorValue);
-        using Image indexPart1Image = BoldFont.DrawImage(24, indexPart1, indexColor,
-            [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        using Image indexPart2Image = BoldFont.DrawImage(30, indexPart2, indexColor,
-            [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        using Image indexPart1Image = LatinBoldFont.DrawImage(24, indexPart1, indexColor,
+            [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        using Image indexPart2Image = LatinBoldFont.DrawImage(30, indexPart2, indexColor,
+            [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         #endregion
 
@@ -350,24 +350,24 @@ public class BestsDrawer : DrawerBase
         string[] level = score.LevelValue.ToString().Split('.');
         string levelPart1 = $"{level[0]}.";
         string levelPart2 = level.Length > 1 ? level[1] : "0";
-        FontRectangle levelPart1Size = BoldFont.GetSize(34, levelPart1, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        FontRectangle levelPart1Size = LatinBoldFont.GetSize(34, levelPart1, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         Point levelPart1Pos = new(375, 182);
         PointF levelPart2Pos = new(levelPart1Pos.X + levelPart1Size.Width, 187);
-        using Image levelPart1Image = BoldFont.DrawImage(34, levelPart1, color,
-            [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        using Image levelPart2Image = BoldFont.DrawImage(28, levelPart2, color,
-            [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        using Image levelPart1Image = LatinBoldFont.DrawImage(34, levelPart1, color,
+            [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        using Image levelPart2Image = LatinBoldFont.DrawImage(28, levelPart2, color,
+            [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         #endregion
 
         #region Rating
 
         string rating = score.DXRating.ToString();
-        FontRectangle ratingSize = BoldFont.GetSize(34, rating, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        FontRectangle ratingSize = LatinBoldFont.GetSize(34, rating, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         PointF ratingPos = new(548 - ratingSize.Width, 182);
-        using Image ratingImage = BoldFont.DrawImage(34, rating, color, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        using Image ratingImage = LatinBoldFont.DrawImage(34, rating, color, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         #endregion
 
@@ -376,17 +376,17 @@ public class BestsDrawer : DrawerBase
         string numeroPart1 = "No.";
         string numeroPart2 = score.Id.ToString();
 
-        FontRectangle numeroPart1Size = BoldFont.GetSize(24, numeroPart1, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        FontRectangle numeroPart1Size = LatinBoldFont.GetSize(24, numeroPart1, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         Point numeroPart1Pos = new(386, 250);
         PointF numeroPart2Pos = new(numeroPart1Pos.X + numeroPart1Size.Width, 245);
 
         Rgb24 numeroColorValue = new(28, 43, 120);
         Color numeroColor = new(numeroColorValue);
-        using Image numeroPart1Image = BoldFont.DrawImage(24, numeroPart1, numeroColor,
-            [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        using Image numeroPart2Image = BoldFont.DrawImage(30, numeroPart2, numeroColor,
-            [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        using Image numeroPart1Image = LatinBoldFont.DrawImage(24, numeroPart1, numeroColor,
+            [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        using Image numeroPart2Image = LatinBoldFont.DrawImage(30, numeroPart2, numeroColor,
+            [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         #endregion
 
@@ -395,15 +395,15 @@ public class BestsDrawer : DrawerBase
         string dxScorePart1 = $"{score.DXScore}/";
         string dxScorePart2 = score.TotalDXScore.ToString();
 
-        FontRectangle dxScorePart1Size = BoldFont.GetSize(30, dxScorePart1, [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        FontRectangle dxScorePart2Size = BoldFont.GetSize(24, dxScorePart2, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        FontRectangle dxScorePart1Size = LatinBoldFont.GetSize(30, dxScorePart1, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle dxScorePart2Size = LatinBoldFont.GetSize(24, dxScorePart2, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         PointF dxScorePart2Pos = new(734 - dxScorePart2Size.Width, 250);
         PointF dxScorePart1Pos = new(dxScorePart2Pos.X - dxScorePart1Size.Width, 245);
-        using Image dxScorePart1Image = BoldFont.DrawImage(30, dxScorePart1, numeroColor,
-            [SymbolsFont, Symbols2Font, NotoBoldFont]);
-        using Image dxScorePart2Image = BoldFont.DrawImage(24, dxScorePart2, numeroColor,
-            [SymbolsFont, Symbols2Font, NotoBoldFont]);
+        using Image dxScorePart1Image = LatinBoldFont.DrawImage(30, dxScorePart1, numeroColor,
+            [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        using Image dxScorePart2Image = LatinBoldFont.DrawImage(24, dxScorePart2, numeroColor,
+            [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         #endregion
 
@@ -588,8 +588,8 @@ public class BestsDrawer : DrawerBase
             ReadOnlySpan<int> posY = [73, 113, 179, 219];
             ReadOnlySpan<int> diffs = [b35maxDiff, b35minDiff, b15maxDiff, b15minDiff];
             Point pos = new(140, posY[i % 4]);
-            Image levelImage = BoldFont.DrawImage(30, $"{$"+{diffs[i]}",4}", new(new Rgb24(255, 255, 255)),
-                [SymbolsFont, Symbols2Font, NotoBoldFont]);
+            Image levelImage = LatinBoldFont.DrawImage(30, $"{$"+{diffs[i]}",4}", new(new Rgb24(255, 255, 255)),
+                [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
             images[i] = (pos, levelImage);
         });
         Parallel.For(0, 16, i =>
@@ -605,8 +605,8 @@ public class BestsDrawer : DrawerBase
             double currentRating = RatingProc(rating, rank, indexY % 2 > 0);
             string ratingText = currentRating > 0 ? $"{currentRating,4:F1}" : "-----";
             Point pos = new(posX[indexX], posY[indexY]);
-            Image levelImage = BoldFont.DrawImage(30, ratingText, new(new Rgb24(255, 255, 255)),
-                [SymbolsFont, Symbols2Font, NotoBoldFont]);
+            Image levelImage = LatinBoldFont.DrawImage(30, ratingText, new(new Rgb24(255, 255, 255)),
+                [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
             images[i + 4] = (pos, levelImage);
         });
         bg.Mutate(ctx =>

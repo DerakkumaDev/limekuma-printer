@@ -67,20 +67,20 @@ public class ListDrawer : BestsDrawer
         });
 
         string shougou = user.TrophyText;
-        FontRectangle shougouSize = HeavyFont.GetSize(14, shougou, [SymbolsFont, Symbols2Font, NotoBlackFont]);
+        FontRectangle shougouSize = LatinHeavyFont.GetSize(14, shougou, [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
         Point shougoubasePos = new(180, 143);
         PointF shougouPos = new(shougoubasePos.X + ((shougoubase.Width - shougouSize.Width) / 2), 151);
-        using Image shougouImage = HeavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)),
-            Pens.Solid(new Rgba32(0, 0, 0, 200), 1.5f), [SymbolsFont, Symbols2Font, NotoBlackFont]);
+        using Image shougouImage = LatinHeavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)),
+            Pens.Solid(new Rgba32(0, 0, 0, 200), 1.5f), [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
 
         string pagination = $"{page} / {total}";
-        FontRectangle paginationSize = HeavyFont.GetSize(70, pagination, [SymbolsFont, Symbols2Font, NotoBlackFont]);
+        FontRectangle paginationSize = LatinHeavyFont.GetSize(70, pagination, [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
         PointF paginationPos = new(256 - (paginationSize.Width / 2), 815);
-        using Image paginationImage = HeavyFont.DrawImage(70, pagination, new(new Rgb24(53, 74, 164)),
-            [SymbolsFont, Symbols2Font, NotoBlackFont]);
+        using Image paginationImage = LatinHeavyFont.DrawImage(70, pagination, new(new Rgb24(53, 74, 164)),
+            [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
 
-        using Image nameImage = MediumFont.DrawImage(21, user.Name, new(new Rgb24(0, 0, 0)),
-            [SymbolsFont, Symbols2Font, NotoMediumFont]);
+        using Image nameImage = LatinMediumFont.DrawImage(21, user.Name, new(new Rgb24(0, 0, 0)),
+            [JpMediumFont, ScMediumFont, SymbolsFont, Symbols2Font]);
 
         bg.Mutate(ctx =>
         {
@@ -120,7 +120,7 @@ public class ListDrawer : BestsDrawer
         {
             int count = counts[idx];
             string countText = $"{count}/{totalCount}";
-            FontRectangle countSize = BoldFont.GetSize(20, countText, [SymbolsFont, Symbols2Font, NotoBoldFont]);
+            FontRectangle countSize = LatinBoldFont.GetSize(20, countText, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
             PointF countPos;
             if (idx < 7)
@@ -135,9 +135,9 @@ public class ListDrawer : BestsDrawer
                 countPos = new(200 - (countSize.Width / 2) + (row * 102), 264 + ((col + 1) * 90));
             }
 
-            Image countImage = BoldFont.DrawImage(20, countText,
+            Image countImage = LatinBoldFont.DrawImage(20, countText,
                 new(count >= totalCount ? new(248, 179, 42) : new Rgb24(53, 74, 164)),
-                [SymbolsFont, Symbols2Font, NotoBoldFont]);
+                [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
             statsData[idx] = (countPos, countImage);
         });
