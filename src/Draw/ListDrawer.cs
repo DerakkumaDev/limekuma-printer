@@ -125,14 +125,14 @@ public class ListDrawer : BestsDrawer
             PointF countPos;
             if (idx < 7)
             {
-                countPos = new(200 - (countSize.Width / 2) + (idx * 120), 264);
+                countPos = new(200 - (countSize.Width / 2) + (idx * 120), 250);
             }
             else
             {
                 int remain = idx - 7;
                 int col = remain / 8;
                 int row = remain % 8;
-                countPos = new(200 - (countSize.Width / 2) + (row * 102), 264 + ((col + 1) * 90));
+                countPos = new(200 - (countSize.Width / 2) + (row * 102), 250 + ((col + 1) * 90));
             }
 
             Image countImage = LatinBoldFont.DrawImage(20, countText,
