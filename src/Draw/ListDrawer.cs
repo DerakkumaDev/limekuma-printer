@@ -36,6 +36,19 @@ public class ListDrawer : BestsDrawer
         using Image namebase = AssetManager.Shared.Load(NamebasePath);
         using Image ratingbase = AssetManager.Shared.Load(Path.Combine(RatingRootPath, $"{user.RatingLevel}.png"));
         using Image proberLogo = AssetManager.Shared.Load(Path.Combine(ProberLogoRootPath, $"{prober}.png"));
+        string proberState;
+        string? proberStateDesc = null;
+        if (records.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank < Ranks.C)))
+        {
+            proberState = "warning";
+            proberStateDesc = "查分器可能启用了掩码";
+        }
+        else
+        {
+            proberState = "on";
+        }
+
+        using Image proberbase = AssetManager.Shared.Load(Path.Combine(ProberRootPath, $"{proberState}.png"));
 
         frameImage.Resize(0.95, KnownResamplers.Lanczos3);
         levelImage.Resize(0.7, KnownResamplers.Lanczos3);
@@ -67,20 +80,39 @@ public class ListDrawer : BestsDrawer
         });
 
         string shougou = user.TrophyText;
-        FontRectangle shougouSize = LatinHeavyFont.GetSize(14, shougou, [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
+        FontRectangle shougouSize =
+            LatinHeavyFont.GetSize(14, shougou, [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
         Point shougoubasePos = new(180, 143);
         PointF shougouPos = new(shougoubasePos.X + ((shougoubase.Width - shougouSize.Width) / 2), 151);
         using Image shougouImage = LatinHeavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)),
             Pens.Solid(new Rgba32(0, 0, 0, 200), 1.5f), [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
 
         string pagination = $"{page} / {total}";
-        FontRectangle paginationSize = LatinHeavyFont.GetSize(70, pagination, [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
+        FontRectangle paginationSize =
+            LatinHeavyFont.GetSize(70, pagination, [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
         PointF paginationPos = new(256 - (paginationSize.Width / 2), 815);
         using Image paginationImage = LatinHeavyFont.DrawImage(70, pagination, new(new Rgb24(53, 74, 164)),
             [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
 
         using Image nameImage = LatinMediumFont.DrawImage(21, user.Name, new(new Rgb24(0, 0, 0)),
             [JpMediumFont, ScMediumFont, SymbolsFont, Symbols2Font]);
+
+        if (proberStateDesc is not null)
+        {
+            using Image proberStateDescbase = AssetManager.Shared.Load(ProberStateDescbasePath);
+            FontRectangle proberStateDescSize = LatinBoldFont.GetSize(27, proberStateDesc,
+                [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+            PointF proberStateDescPos = new(834 - (proberStateDescSize.Width / 2), 528);
+            Rgb24 proberStateDescColorValue = new(75, 77, 138);
+            Color proberStateDescColor = new(proberStateDescColorValue);
+            using Image proberStateDescImage = LatinBoldFont.DrawImage(27, proberStateDesc, proberStateDescColor,
+                [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+            bg.Mutate(ctx =>
+            {
+                ctx.DrawImage(proberStateDescbase, new Point(574, 492), 1);
+                ctx.DrawImage(proberStateDescImage, (Point)proberStateDescPos, 1);
+            });
+        }
 
         bg.Mutate(ctx =>
         {
@@ -98,7 +130,8 @@ public class ListDrawer : BestsDrawer
             ctx.DrawImage(shougouImage, (Point)shougouPos, 1);
             ctx.DrawImage(paginationImage, (Point)paginationPos, 1);
             ctx.DrawImage(frameLine, new Point(40, 36), 1);
-            ctx.DrawImage(proberLogo, new Point(1011, 407), 1);
+            ctx.DrawImage(proberbase, new Point(1011, 407), 1);
+            ctx.DrawImage(proberLogo, new Point(1015, 411), 1);
             foreach ((Point point, Image recordImage) in recordImages)
             {
                 using (recordImage)
@@ -120,7 +153,8 @@ public class ListDrawer : BestsDrawer
         {
             int count = counts[idx];
             string countText = $"{count}/{totalCount}";
-            FontRectangle countSize = LatinBoldFont.GetSize(20, countText, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+            FontRectangle countSize =
+                LatinBoldFont.GetSize(20, countText, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
             PointF countPos;
             if (idx < 7)

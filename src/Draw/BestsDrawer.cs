@@ -24,6 +24,7 @@ public class BestsDrawer : DrawerBase
     public const string FrameLinePath = "./Static/Maimai/Bests/frame.png";
     public const string NamebasePath = "./Static/Maimai/Bests/namebase.png";
     public const string ScorebasePath = "./Static/Maimai/Bests/scorebase.png";
+    public const string ProberStateDescbasePath = "./Static/Maimai/Bests/descbase.png";
     public const string BackgroundPath = "./Static/Maimai/Bests/background.png";
     public const string BackgroundAnimationPath = "./Static/Maimai/Bests/background_animation.png";
     public const string LevelSugBackgroundPath = "./Static/Maimai/Bests/rating_base.png";
@@ -40,6 +41,7 @@ public class BestsDrawer : DrawerBase
     public const string FrameLinePath = "./Resources/Background/frame.png";
     public const string NamebasePath = "./Resources/Background/namebase.png";
     public const string ScorebasePath = "./Resources/Background/scorebase.png";
+    public const string ProberStateDescbasePath = "./Resources/Prober/descbase.png";
     public const string BackgroundPath = "./Resources/Background/bests.png";
     public const string BackgroundAnimationPath = "./Resources/Background/bests_animation.png";
     public const string LevelSugBackgroundPath = "./Resources/Background/level_seg.png";
@@ -69,6 +71,26 @@ public class BestsDrawer : DrawerBase
         using Image namebase = AssetManager.Shared.Load(NamebasePath);
         using Image ratingbase = AssetManager.Shared.Load(Path.Combine(RatingRootPath, $"{user.RatingLevel}.png"));
         using Image proberLogo = AssetManager.Shared.Load(Path.Combine(ProberLogoRootPath, $"{prober}.png"));
+        string proberState;
+        string? proberStateDesc = null;
+        int realRating = everTotal + currentTotal;
+        if (user.Rating != realRating)
+        {
+            proberState = "off";
+            proberStateDesc = "DX评分与最佳成绩不匹配";
+        }
+        else if (ever.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank < Ranks.C)) ||
+                 current.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank < Ranks.C)))
+        {
+            proberState = "warning";
+            proberStateDesc = "查分器可能启用了掩码";
+        }
+        else
+        {
+            proberState = "on";
+        }
+
+        using Image proberbase = AssetManager.Shared.Load(Path.Combine(ProberRootPath, $"{proberState}.png"));
 
         frameImage.Resize(0.95, KnownResamplers.Lanczos3);
         plate.Resize(0.951, KnownResamplers.Lanczos3);
@@ -99,7 +121,8 @@ public class BestsDrawer : DrawerBase
         });
 
         string shougou = user.TrophyText;
-        FontRectangle shougouSize = LatinHeavyFont.GetSize(14, shougou, [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
+        FontRectangle shougouSize =
+            LatinHeavyFont.GetSize(14, shougou, [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
         Point shougoubasePos = new(180, 143);
         PointF shougouPos = new(shougoubasePos.X + ((shougoubase.Width - shougouSize.Width) / 2), 151);
         using Image shougouImage = LatinHeavyFont.DrawImage(14, shougou, Brushes.Solid(new Rgb24(255, 255, 255)),
@@ -112,19 +135,24 @@ public class BestsDrawer : DrawerBase
         string scorePart2 = "B35";
         string scorePart3 = $"+{currentTotal}";
         string scorePart4 = "B15";
-        string scorePart5 = $"={everTotal + currentTotal}";
-        FontRectangle scorePart1Size = LatinBoldFont.GetSize(27, scorePart1, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
-        FontRectangle scorePart2Size = LatinBoldFont.GetSize(19, scorePart2, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
-        FontRectangle scorePart3Size = LatinBoldFont.GetSize(27, scorePart3, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
-        FontRectangle scorePart4Size = LatinBoldFont.GetSize(19, scorePart4, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
-        FontRectangle scorePart5Size = LatinBoldFont.GetSize(27, scorePart5, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        string scorePart5 = $"={realRating}";
+        FontRectangle scorePart1Size =
+            LatinBoldFont.GetSize(27, scorePart1, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle scorePart2Size =
+            LatinBoldFont.GetSize(19, scorePart2, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle scorePart3Size =
+            LatinBoldFont.GetSize(27, scorePart3, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle scorePart4Size =
+            LatinBoldFont.GetSize(19, scorePart4, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle scorePart5Size =
+            LatinBoldFont.GetSize(27, scorePart5, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
         float scoreWidth = scorePart1Size.Width + scorePart2Size.Width + scorePart3Size.Width + scorePart4Size.Width +
                            scorePart5Size.Width;
-        PointF scorePart1Pos = new(285 - (scoreWidth / 2), 532);
-        PointF scorePart2Pos = new(scorePart1Pos.X + scorePart1Size.Width, 543);
-        PointF scorePart3Pos = new(scorePart2Pos.X + scorePart2Size.Width, 532);
-        PointF scorePart4Pos = new(scorePart3Pos.X + scorePart3Size.Width, 543);
-        PointF scorePart5Pos = new(scorePart4Pos.X + scorePart4Size.Width, 532);
+        PointF scorePart1Pos = new(287 - (scoreWidth / 2), 527);
+        PointF scorePart2Pos = new(scorePart1Pos.X + scorePart1Size.Width, 542);
+        PointF scorePart3Pos = new(scorePart2Pos.X + scorePart2Size.Width, 527);
+        PointF scorePart4Pos = new(scorePart3Pos.X + scorePart3Size.Width, 542);
+        PointF scorePart5Pos = new(scorePart4Pos.X + scorePart4Size.Width, 527);
         Rgb24 scoreColorValue = new(75, 77, 138);
         Color scoreColor = new(scoreColorValue);
         using Image scorePart1Image = LatinBoldFont.DrawImage(27, scorePart1, scoreColor,
@@ -138,15 +166,31 @@ public class BestsDrawer : DrawerBase
         using Image scorePart5Image = LatinBoldFont.DrawImage(27, scorePart5, scoreColor,
             [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
-        FontRectangle typeSize = LatinBoldFont.GetSize(32, typename, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle typeSize =
+            LatinBoldFont.GetSize(32, typename, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
         PointF typePos = new(720 - (typeSize.Width / 2), 725);
         using Image typeImage = LatinBoldFont.DrawImage(32, typename, new(new Rgb24(0, 109, 103)),
             [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
+        if (proberStateDesc is not null)
+        {
+            using Image proberStateDescbase = AssetManager.Shared.Load(ProberStateDescbasePath);
+            FontRectangle proberStateDescSize = LatinBoldFont.GetSize(27, proberStateDesc,
+                [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+            PointF proberStateDescPos = new(834 - (proberStateDescSize.Width / 2), 528);
+            using Image proberStateDescImage = LatinBoldFont.DrawImage(27, proberStateDesc, scoreColor,
+                [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+            bg.Mutate(ctx =>
+            {
+                ctx.DrawImage(proberStateDescbase, new Point(574, 492), 1);
+                ctx.DrawImage(proberStateDescImage, (Point)proberStateDescPos, 1);
+            });
+        }
+
         if (isAnime)
         {
             using Image scorebase = AssetManager.Shared.Load(ScorebasePath);
-            bg.Mutate(ctx => ctx.DrawImage(scorebase, new Point(25, 492), 1));
+            bg.Mutate(ctx => ctx.DrawImage(scorebase, new Point(27, 492), 1));
         }
 
         bg.Mutate(ctx =>
@@ -169,7 +213,8 @@ public class BestsDrawer : DrawerBase
             ctx.DrawImage(scorePart4Image, (Point)scorePart4Pos, 1);
             ctx.DrawImage(scorePart5Image, (Point)scorePart5Pos, 1);
             ctx.DrawImage(typeImage, (Point)typePos, 1);
-            ctx.DrawImage(proberLogo, new Point(1011, 67), 1);
+            ctx.DrawImage(proberbase, new Point(1011, 67), 1);
+            ctx.DrawImage(proberLogo, new Point(1015, 71), 1);
             foreach ((Point point, Image scoreImage) in sdBests)
             {
                 using (scoreImage)
@@ -213,7 +258,7 @@ public class BestsDrawer : DrawerBase
         if (drawLevelSeg)
         {
             using Image levelSegImage = DrawLevelSug(ever, current);
-            bg.Mutate(ctx => ctx.DrawImage(levelSegImage, new Point(60, 197), 1));
+            bg.Mutate(ctx => ctx.DrawImage(levelSegImage, new Point(76, 200), 1));
         }
 
         return bg;
@@ -295,7 +340,8 @@ public class BestsDrawer : DrawerBase
             drawName = $"{title}…";
         }
 
-        using Image titleImage = LatinBoldFont.DrawImage(40, drawName, color, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        using Image titleImage =
+            LatinBoldFont.DrawImage(40, drawName, color, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         #endregion
 
@@ -307,9 +353,12 @@ public class BestsDrawer : DrawerBase
         string achiPart3 = achievements.Length > 1 ? achievements[1].PadRight(4, '0') : "0000";
         string achiPart4 = "%";
 
-        FontRectangle achiPart1Size = LatinHeavyFont.GetSize(76, achiPart1, [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
-        FontRectangle achiPart2Size = LatinBoldFont.GetSize(76, achiPart2, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
-        FontRectangle achiPart3Size = LatinHeavyFont.GetSize(54, achiPart3, [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
+        FontRectangle achiPart1Size =
+            LatinHeavyFont.GetSize(76, achiPart1, [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
+        FontRectangle achiPart2Size =
+            LatinBoldFont.GetSize(76, achiPart2, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle achiPart3Size =
+            LatinHeavyFont.GetSize(54, achiPart3, [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
 
         Point achiPart1Pos = new(371, 90);
         PointF achiPart2Pos = new(achiPart1Pos.X + achiPart1Size.Width, 90);
@@ -331,8 +380,10 @@ public class BestsDrawer : DrawerBase
 
         string indexPart1 = "#";
         string indexPart2 = index.ToString();
-        FontRectangle indexPart1Size = LatinBoldFont.GetSize(24, indexPart1, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
-        FontRectangle indexPart2Size = LatinBoldFont.GetSize(30, indexPart2, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle indexPart1Size =
+            LatinBoldFont.GetSize(24, indexPart1, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle indexPart2Size =
+            LatinBoldFont.GetSize(30, indexPart2, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
         float indexWidth = indexPart1Size.Width + indexPart2Size.Width;
         PointF indexPart1Pos = new(335 - (indexWidth / 2), 250);
         PointF indexPart2Pos = new(indexPart1Pos.X + indexPart1Size.Width, 245);
@@ -350,7 +401,8 @@ public class BestsDrawer : DrawerBase
         string[] level = score.LevelValue.ToString().Split('.');
         string levelPart1 = $"{level[0]}.";
         string levelPart2 = level.Length > 1 ? level[1] : "0";
-        FontRectangle levelPart1Size = LatinBoldFont.GetSize(34, levelPart1, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle levelPart1Size =
+            LatinBoldFont.GetSize(34, levelPart1, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         Point levelPart1Pos = new(375, 182);
         PointF levelPart2Pos = new(levelPart1Pos.X + levelPart1Size.Width, 187);
@@ -364,10 +416,12 @@ public class BestsDrawer : DrawerBase
         #region Rating
 
         string rating = score.DXRating.ToString();
-        FontRectangle ratingSize = LatinBoldFont.GetSize(34, rating, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle ratingSize =
+            LatinBoldFont.GetSize(34, rating, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         PointF ratingPos = new(548 - ratingSize.Width, 182);
-        using Image ratingImage = LatinBoldFont.DrawImage(34, rating, color, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        using Image ratingImage =
+            LatinBoldFont.DrawImage(34, rating, color, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         #endregion
 
@@ -376,7 +430,8 @@ public class BestsDrawer : DrawerBase
         string numeroPart1 = "No.";
         string numeroPart2 = score.Id.ToString();
 
-        FontRectangle numeroPart1Size = LatinBoldFont.GetSize(24, numeroPart1, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle numeroPart1Size =
+            LatinBoldFont.GetSize(24, numeroPart1, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         Point numeroPart1Pos = new(386, 250);
         PointF numeroPart2Pos = new(numeroPart1Pos.X + numeroPart1Size.Width, 245);
@@ -395,8 +450,10 @@ public class BestsDrawer : DrawerBase
         string dxScorePart1 = $"{score.DXScore}/";
         string dxScorePart2 = score.TotalDXScore.ToString();
 
-        FontRectangle dxScorePart1Size = LatinBoldFont.GetSize(30, dxScorePart1, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
-        FontRectangle dxScorePart2Size = LatinBoldFont.GetSize(24, dxScorePart2, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle dxScorePart1Size =
+            LatinBoldFont.GetSize(30, dxScorePart1, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+        FontRectangle dxScorePart2Size =
+            LatinBoldFont.GetSize(24, dxScorePart2, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
 
         PointF dxScorePart2Pos = new(734 - dxScorePart2Size.Width, 250);
         PointF dxScorePart1Pos = new(dxScorePart2Pos.X - dxScorePart1Size.Width, 245);
@@ -587,15 +644,15 @@ public class BestsDrawer : DrawerBase
         {
             ReadOnlySpan<int> posY = [73, 113, 179, 219];
             ReadOnlySpan<int> diffs = [b35maxDiff, b35minDiff, b15maxDiff, b15minDiff];
-            Point pos = new(140, posY[i % 4]);
+            Point pos = new(148, posY[i % 4]);
             Image levelImage = LatinBoldFont.DrawImage(30, $"{$"+{diffs[i]}",4}", new(new Rgb24(255, 255, 255)),
                 [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
             images[i] = (pos, levelImage);
         });
         Parallel.For(0, 16, i =>
         {
-            ReadOnlySpan<int> posX = [270, 390, 510, 630];
-            ReadOnlySpan<int> posY = [73, 113, 179, 219];
+            ReadOnlySpan<int> posX = [273, 393, 513, 633];
+            ReadOnlySpan<int> posY = [73, 113, 178, 218];
             ReadOnlySpan<Ranks> ranks = [Ranks.SSSPlus, Ranks.SSS, Ranks.SSPlus, Ranks.SS];
             ReadOnlySpan<int> ratings = [b35max, b35min, b15max, b15min];
             int indexX = i % 4;
