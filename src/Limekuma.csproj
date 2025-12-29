@@ -7,6 +7,8 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <LangVersion>preview</LangVersion>
     <PublishSingleFile>true</PublishSingleFile>
+    <EnablePreviewFeatures>true</EnablePreviewFeatures>
+    <Features>$(Features);runtime-async=on</Features>
   </PropertyGroup>
 
   <ItemGroup>
