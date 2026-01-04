@@ -77,7 +77,7 @@ public class BestsDrawer : DrawerBase
         if (user.Rating != realRating)
         {
             proberState = "off";
-            proberStateDesc = "DX评分与最佳成绩不匹配";
+            proberStateDesc = "DX评分与评分对象曲目不匹配";
         }
         else if (ever.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank < Ranks.C)) ||
                  current.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank < Ranks.C)))
@@ -132,9 +132,9 @@ public class BestsDrawer : DrawerBase
             [JpMediumFont, ScMediumFont, SymbolsFont, Symbols2Font]);
 
         string scorePart1 = everTotal.ToString();
-        string scorePart2 = "B35";
+        string scorePart2 = "最佳";
         string scorePart3 = $"+{currentTotal}";
-        string scorePart4 = "B15";
+        string scorePart4 = "新曲";
         string scorePart5 = $"={realRating}";
         FontRectangle scorePart1Size =
             LatinBoldFont.GetSize(27, scorePart1, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
@@ -149,9 +149,9 @@ public class BestsDrawer : DrawerBase
         float scoreWidth = scorePart1Size.Width + scorePart2Size.Width + scorePart3Size.Width + scorePart4Size.Width +
                            scorePart5Size.Width;
         PointF scorePart1Pos = new(287 - (scoreWidth / 2), 527);
-        PointF scorePart2Pos = new(scorePart1Pos.X + scorePart1Size.Width, 542);
+        PointF scorePart2Pos = new(scorePart1Pos.X + scorePart1Size.Width, 541);
         PointF scorePart3Pos = new(scorePart2Pos.X + scorePart2Size.Width, 527);
-        PointF scorePart4Pos = new(scorePart3Pos.X + scorePart3Size.Width, 542);
+        PointF scorePart4Pos = new(scorePart3Pos.X + scorePart3Size.Width, 541);
         PointF scorePart5Pos = new(scorePart4Pos.X + scorePart4Size.Width, 527);
         Rgb24 scoreColorValue = new(75, 77, 138);
         Color scoreColor = new(scoreColorValue);

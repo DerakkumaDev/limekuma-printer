@@ -53,7 +53,7 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
-            "水鱼 Best 50", "divingfish");
+            "评分对象曲目（水鱼源）", "divingfish");
 
         await bestsImage.WriteToResponseAsync(responseStream);
     }
@@ -64,7 +64,7 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
-            "水鱼 Best 50", "divingfish", true);
+            "评分对象曲目（水鱼源）", "divingfish", true);
 
         await bestsImage.WriteToResponseAsync(responseStream, true);
     }
@@ -75,7 +75,7 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
-            "水鱼 Best 50", "divingfish", false, true);
+            "评分对象曲目（水鱼源）", "divingfish", false, true);
 
         await bestsImage.WriteToResponseAsync(responseStream);
     }

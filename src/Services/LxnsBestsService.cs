@@ -94,7 +94,7 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
         using Image bestsImage =
-            new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, "落雪 Best 50", "lxns");
+            new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal, "评分对象曲目（落雪源）", "lxns");
 
         await bestsImage.WriteToResponseAsync(responseStream);
     }
@@ -105,7 +105,7 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
-            "落雪 Best 50", "lxns", true);
+            "评分对象曲目（落雪源）", "lxns", true);
 
         await bestsImage.WriteToResponseAsync(responseStream, true);
     }
@@ -116,7 +116,7 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
         using Image bestsImage = new BestsDrawer().Draw(user, bestEver, bestCurrent, everTotal, currentTotal,
-            "落雪 Best 50", "lxns", false, true);
+            "评分对象曲目（落雪源）", "lxns", false, true);
 
         await bestsImage.WriteToResponseAsync(responseStream);
     }
