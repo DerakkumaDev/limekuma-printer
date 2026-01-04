@@ -89,24 +89,24 @@ public class ListDrawer : BestsDrawer
 
         string pagination = $"{page} / {total}";
         FontRectangle paginationSize =
-            LatinHeavyFont.GetSize(70, pagination, [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
+            LatinHeavyFont.GetSize(70, pagination, [ScHeavyFont, JpHeavyFont, SymbolsFont, Symbols2Font]);
         PointF paginationPos = new(256 - (paginationSize.Width / 2), 815);
         using Image paginationImage = LatinHeavyFont.DrawImage(70, pagination, new(new Rgb24(53, 74, 164)),
-            [JpHeavyFont, ScHeavyFont, SymbolsFont, Symbols2Font]);
+            [ScHeavyFont, JpHeavyFont, SymbolsFont, Symbols2Font]);
 
         using Image nameImage = LatinMediumFont.DrawImage(21, user.Name, new(new Rgb24(0, 0, 0)),
-            [JpMediumFont, ScMediumFont, SymbolsFont, Symbols2Font]);
+            [ScMediumFont, JpMediumFont, SymbolsFont, Symbols2Font]);
 
         if (proberStateDesc is not null)
         {
             using Image proberStateDescbase = AssetManager.Shared.Load(ProberStateDescbasePath);
             FontRectangle proberStateDescSize = LatinBoldFont.GetSize(27, proberStateDesc,
-                [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+                [ScBoldFont, JpBoldFont, SymbolsFont, Symbols2Font]);
             PointF proberStateDescPos = new(834 - (proberStateDescSize.Width / 2), 528);
             Rgb24 proberStateDescColorValue = new(75, 77, 138);
             Color proberStateDescColor = new(proberStateDescColorValue);
             using Image proberStateDescImage = LatinBoldFont.DrawImage(27, proberStateDesc, proberStateDescColor,
-                [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+                [ScBoldFont, JpBoldFont, SymbolsFont, Symbols2Font]);
             bg.Mutate(ctx =>
             {
                 ctx.DrawImage(proberStateDescbase, new Point(574, 492), 1);
@@ -154,7 +154,7 @@ public class ListDrawer : BestsDrawer
             int count = counts[idx];
             string countText = $"{count}/{totalCount}";
             FontRectangle countSize =
-                LatinBoldFont.GetSize(20, countText, [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+                LatinBoldFont.GetSize(20, countText, [ScBoldFont, JpBoldFont, SymbolsFont, Symbols2Font]);
 
             PointF countPos;
             if (idx < 7)
@@ -171,7 +171,7 @@ public class ListDrawer : BestsDrawer
 
             Image countImage = LatinBoldFont.DrawImage(20, countText,
                 new(count >= totalCount ? new(248, 179, 42) : new Rgb24(53, 74, 164)),
-                [JpBoldFont, ScBoldFont, SymbolsFont, Symbols2Font]);
+                [ScBoldFont, JpBoldFont, SymbolsFont, Symbols2Font]);
 
             statsData[idx] = (countPos, countImage);
         });
