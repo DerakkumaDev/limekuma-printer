@@ -38,18 +38,19 @@ public sealed class AssetProvider : IAssetProvider, IMeasureService
 
     public (FontFamily, List<FontFamily>) ResolveFont(string key)
     {
-        if (!_fontRules.TryGetValue(key, out (string MainFont, List<string>? Fallbacks) font))
+        if (!_fontRules.TryGetValue(key, out (string, List<string>?) font))
         {
             throw new FontFamilyNotFoundException(key);
         }
 
-        FontFamily mainFont = LoadFont(font.MainFont);
-        if (font.Fallbacks is null)
+        (string mainFontName, List<string>? fallbackNames) = font;
+        FontFamily mainFont = LoadFont(mainFontName);
+        if (fallbackNames is null)
         {
             return (mainFont, []);
         }
 
-        List<FontFamily> fallbacks = [.. font.Fallbacks.Select(LoadFont)];
+        List<FontFamily> fallbacks = [.. fallbackNames.Select(LoadFont)];
         return (mainFont, fallbacks);
     }
 
@@ -66,12 +67,13 @@ public sealed class AssetProvider : IAssetProvider, IMeasureService
 
     public string? GetPath(string key)
     {
-        if (!_pathRules.TryGetValue(key, out (string Path, string? _) pathRule))
+        if (!_pathRules.TryGetValue(key, out (string, string?) pathRule))
         {
             return null;
         }
 
-        return pathRule.Path;
+        (string path, _) = pathRule;
+        return path;
     }
 
     private void LoadResources(string resourcePath)
@@ -138,17 +140,18 @@ public sealed class AssetProvider : IAssetProvider, IMeasureService
 
     private string ResolveResourcePath(string ns, string key)
     {
-        if (!_pathRules.TryGetValue(ns, out (string Path, string? Rule) pathRule))
+        if (!_pathRules.TryGetValue(ns, out (string, string?) pathRule))
         {
             return key;
         }
 
-        if (pathRule.Rule is null)
+        (string path, string? rule) = pathRule;
+        if (rule is null)
         {
-            return Path.Combine(pathRule.Path, key);
+            return Path.Combine(path, key);
         }
 
-        return Path.Combine(pathRule.Path, Smart.Format(pathRule.Rule, new { key }));
+        return Path.Combine(path, Smart.Format(rule, new { key }));
     }
 
     private Image LoadImage(string path)
