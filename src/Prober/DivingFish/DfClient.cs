@@ -1,5 +1,6 @@
 using Limekuma.Prober.DivingFish.Enums;
 using Limekuma.Utils;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -21,6 +22,8 @@ public abstract class DfClient
         {
             BaseAddress = new("https://www.diving-fish.com/")
         };
+        _httpClient.DefaultRequestHeaders.UserAgent.Add(new("limekuma",
+            Assembly.GetExecutingAssembly().GetName().Version?.ToString()));
 
         _jsonOptions = new()
         {

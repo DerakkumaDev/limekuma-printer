@@ -1,5 +1,6 @@
 using Limekuma.Draw;
 using Limekuma.Prober.Common;
+using System.Reflection;
 
 namespace Limekuma.Utils;
 
@@ -27,6 +28,8 @@ internal static class ServiceHelper
         }
 
         using HttpClient http = new();
+        http.DefaultRequestHeaders.UserAgent.Add(new("limekuma",
+            Assembly.GetExecutingAssembly().GetName().Version?.ToString()));
         await using Stream stream = await http.GetStreamAsync(url);
         await using FileStream fileStream = File.OpenWrite(path);
         await stream.CopyToAsync(fileStream);
