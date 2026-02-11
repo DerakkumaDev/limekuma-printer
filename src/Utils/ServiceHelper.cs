@@ -27,8 +27,8 @@ internal static class ServiceHelper
         }
 
         using HttpClient http = new();
-        using Stream stream = await http.GetStreamAsync(url);
-        using FileStream fileStream = File.OpenWrite(path);
-        stream.CopyTo(fileStream);
+        await using Stream stream = await http.GetStreamAsync(url);
+        await using FileStream fileStream = File.OpenWrite(path);
+        await stream.CopyToAsync(fileStream);
     }
 }

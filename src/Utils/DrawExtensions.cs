@@ -26,7 +26,7 @@ internal static class DrawExtensions
             int textImageWidth = (int)Math.Ceiling(textbox.Width);
             int textImageHeight = (int)Math.Ceiling(textbox.Height);
 
-            Font f = GetSizeFont(font, size / 300 * 72);
+            Font f = font.GetSizeFont(size / 300 * 72);
             RichTextOptions options = new(f)
             {
                 Dpi = 300,
@@ -45,7 +45,7 @@ internal static class DrawExtensions
             int textImageWidth = (int)Math.Ceiling(textbox.Width);
             int textImageHeight = (int)Math.Ceiling(textbox.Height);
 
-            Font f = GetSizeFont(font, size / 300 * 72);
+            Font f = font.GetSizeFont(size / 300 * 72);
             RichTextOptions options = new(f)
             {
                 Dpi = 300,
@@ -60,7 +60,7 @@ internal static class DrawExtensions
 
         internal FontRectangle GetSize(float size, string text, IReadOnlyList<FontFamily> fallbacks)
         {
-            Font f = GetSizeFont(font, size);
+            Font f = font.GetSizeFont(size);
             return TextMeasurer.MeasureAdvance(text, new(f)
             {
                 FallbackFontFamilies = fallbacks

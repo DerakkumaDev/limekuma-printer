@@ -6,6 +6,7 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors;
+using System.Globalization;
 
 namespace Limekuma.Draw;
 
@@ -132,9 +133,9 @@ public class BestsDrawer : DrawerBase
             [ScMediumFont, JpMediumFont, SymbolsFont, Symbols2Font]);
 
         string scorePart1 = everTotal.ToString();
-        string scorePart2 = "最佳";
+        const string scorePart2 = "最佳";
         string scorePart3 = $"+{currentTotal}";
-        string scorePart4 = "新曲";
+        const string scorePart4 = "新曲";
         string scorePart5 = $"={realRating}";
         FontRectangle scorePart1Size =
             LatinBoldFont.GetSize(27, scorePart1, [ScBoldFont, JpBoldFont, SymbolsFont, Symbols2Font]);
@@ -264,7 +265,7 @@ public class BestsDrawer : DrawerBase
         return bg;
     }
 
-    public List<(Point, Image)> DrawScores(IReadOnlyList<CommonRecord> scores, int start_index = 0,
+    public List<(Point, Image)> DrawScores(IReadOnlyList<CommonRecord> scores, int startIndex = 0,
         bool isAnime = false)
     {
         int count = scores.Count;
@@ -278,7 +279,7 @@ public class BestsDrawer : DrawerBase
         Parallel.For(0, count, idx =>
         {
             CommonRecord record = scores[idx];
-            int realIndex = idx + start_index + 1;
+            int realIndex = idx + startIndex + 1;
 
             Point p;
             if (idx < 3)
@@ -313,13 +314,13 @@ public class BestsDrawer : DrawerBase
         }
 
         Color color = new(colorValue);
-        string bg_filename = $"{score.Difficulty}.png";
+        string bgFilename = $"{score.Difficulty}.png";
         if (isMax)
         {
-            bg_filename = $"{score.Difficulty}_max.png";
+            bgFilename = $"{score.Difficulty}_max.png";
         }
 
-        Image bg = AssetManager.Shared.Load(Path.Combine(PartRootPath, bg_filename));
+        Image bg = AssetManager.Shared.Load(Path.Combine(PartRootPath, bgFilename));
         using Image jacket = AssetManager.Shared.Load(Path.Combine(JacketRootPath, $"{score.Id % 10000}.png"));
         using Image songType = AssetManager.Shared.Load(Path.Combine(SongTypeRootPath, $"{score.Type}.png"));
         using Image rank = AssetManager.Shared.Load(Path.Combine(RateRootPath, $"{score.Rank}.png"));
@@ -347,11 +348,11 @@ public class BestsDrawer : DrawerBase
 
         #region Achievements
 
-        string[] achievements = score.Achievements.ToString().Split('.');
+        string[] achievements = score.Achievements.ToString(CultureInfo.InvariantCulture).Split('.');
         string achiPart1 = achievements[0];
-        string achiPart2 = ".";
+        const string achiPart2 = ".";
         string achiPart3 = achievements.Length > 1 ? achievements[1].PadRight(4, '0') : "0000";
-        string achiPart4 = "%";
+        const string achiPart4 = "%";
 
         FontRectangle achiPart1Size =
             LatinHeavyFont.GetSize(76, achiPart1, [ScHeavyFont, JpHeavyFont, SymbolsFont, Symbols2Font]);
@@ -378,7 +379,7 @@ public class BestsDrawer : DrawerBase
 
         #region Serial Number
 
-        string indexPart1 = "#";
+        const string indexPart1 = "#";
         string indexPart2 = index.ToString();
         FontRectangle indexPart1Size =
             LatinBoldFont.GetSize(24, indexPart1, [ScBoldFont, JpBoldFont, SymbolsFont, Symbols2Font]);
@@ -398,7 +399,7 @@ public class BestsDrawer : DrawerBase
 
         #region LevelValue
 
-        string[] level = score.LevelValue.ToString().Split('.');
+        string[] level = score.LevelValue.ToString(CultureInfo.InvariantCulture).Split('.');
         string levelPart1 = $"{level[0]}.";
         string levelPart2 = level.Length > 1 ? level[1] : "0";
         FontRectangle levelPart1Size =
@@ -427,7 +428,7 @@ public class BestsDrawer : DrawerBase
 
         #region Numero
 
-        string numeroPart1 = "No.";
+        const string numeroPart1 = "No.";
         string numeroPart2 = score.Id.ToString();
 
         FontRectangle numeroPart1Size =
@@ -548,59 +549,61 @@ public class BestsDrawer : DrawerBase
             GraphicsOptions options = ctx.GetGraphicsOptions();
             DrawImageProcessor jacketMaskProcessor = new(jacketMask, new(13, 17), jacketMask.Bounds,
                 options.ColorBlendingMode, options.AlphaCompositionMode, 1);
-            using (IImageProcessor<Rgba32> jacketMaskspecificProcessor =
+            using (IImageProcessor<Rgba32> jacketMaskSpecificProcessor =
                    jacketMaskProcessor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
             {
-                jacketMaskspecificProcessor.Execute();
+                jacketMaskSpecificProcessor.Execute();
             }
 
             ctx.ApplyProcessor(jacketMaskProcessor);
             DrawImageProcessor rankMaskProcessor = new(rankMask, new(790, 78), rankMask.Bounds,
                 options.ColorBlendingMode, options.AlphaCompositionMode, 1);
-            using (IImageProcessor<Rgba32> rankMaskspecificProcessor =
+            using (IImageProcessor<Rgba32> rankMaskSpecificProcessor =
                    rankMaskProcessor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
             {
-                rankMaskspecificProcessor.Execute();
+                rankMaskSpecificProcessor.Execute();
             }
 
             ctx.ApplyProcessor(rankMaskProcessor);
         });
-        if (score.ComboFlag > ComboFlags.None || score.SyncFlag > SyncFlags.None)
+        if (score is { ComboFlag: <= ComboFlags.None, SyncFlag: <= SyncFlags.None })
         {
-            using Image comboMask = AssetManager.Shared.Load(Path.Combine(ComboRootPath, "mask.png"));
-            if (score.ComboFlag > ComboFlags.None)
+            return bg;
+        }
+
+        using Image comboMask = AssetManager.Shared.Load(Path.Combine(ComboRootPath, "mask.png"));
+        if (score.ComboFlag > ComboFlags.None)
+        {
+            bg.Mutate(ctx =>
             {
-                bg.Mutate(ctx =>
+                GraphicsOptions options = ctx.GetGraphicsOptions();
+                DrawImageProcessor processor = new(comboMask, new(774, 189), comboMask.Bounds,
+                    PixelColorBlendingMode.Screen, options.AlphaCompositionMode, 1);
+                using (IImageProcessor<Rgba32> specificProcessor =
+                       processor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
                 {
-                    GraphicsOptions options = ctx.GetGraphicsOptions();
-                    DrawImageProcessor processor = new(comboMask, new(774, 189), comboMask.Bounds,
-                        PixelColorBlendingMode.Screen, options.AlphaCompositionMode, 1);
-                    using (IImageProcessor<Rgba32> specificProcessor =
-                           processor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
-                    {
-                        specificProcessor.Execute();
-                    }
+                    specificProcessor.Execute();
+                }
 
-                    ctx.ApplyProcessor(processor);
-                });
-            }
+                ctx.ApplyProcessor(processor);
+            });
+        }
 
-            if (score.SyncFlag > SyncFlags.None)
+        if (score.SyncFlag > SyncFlags.None)
+        {
+            bg.Mutate(ctx =>
             {
-                bg.Mutate(ctx =>
+                GraphicsOptions options = ctx.GetGraphicsOptions();
+                DrawImageProcessor processor = new(comboMask, new(868, 189), comboMask.Bounds,
+                    PixelColorBlendingMode.Screen, options.AlphaCompositionMode, 1);
+                using (IImageProcessor<Rgba32> specificProcessor =
+                       processor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
                 {
-                    GraphicsOptions options = ctx.GetGraphicsOptions();
-                    DrawImageProcessor processor = new(comboMask, new(868, 189), comboMask.Bounds,
-                        PixelColorBlendingMode.Screen, options.AlphaCompositionMode, 1);
-                    using (IImageProcessor<Rgba32> specificProcessor =
-                           processor.CreatePixelSpecificProcessor(ctx.Configuration, (Image<Rgba32>)bg, bg.Bounds))
-                    {
-                        specificProcessor.Execute();
-                    }
+                    specificProcessor.Execute();
+                }
 
-                    ctx.ApplyProcessor(processor);
-                });
-            }
+                ctx.ApplyProcessor(processor);
+            });
         }
 
         return bg;
@@ -610,40 +613,40 @@ public class BestsDrawer : DrawerBase
     {
         Image bg = AssetManager.Shared.Load(LevelSugBackgroundPath);
         (Point, Image)[] images = new (Point, Image)[20];
-        int b35max = 0;
-        int b35min = 0;
+        int b35Max = 0;
+        int b35Min = 0;
         if (ever.Count > 0)
         {
-            b35max = ever[0].DXRating;
-            b35min = ever[^1].DXRating;
+            b35Max = ever[0].DXRating;
+            b35Min = ever[^1].DXRating;
         }
 
-        int b35maxDiff = b35max;
+        int b35MaxDiff = b35Max;
         if (ever.Count > 34)
         {
-            b35maxDiff -= b35min;
+            b35MaxDiff -= b35Min;
         }
 
-        int b35minDiff = b35maxDiff > 0 ? 1 : 0;
-        int b15max = 0;
-        int b15min = 0;
+        int b35MinDiff = b35MaxDiff > 0 ? 1 : 0;
+        int b15Max = 0;
+        int b15Min = 0;
         if (current.Count > 0)
         {
-            b15max = current[0].DXRating;
-            b15min = current[^1].DXRating;
+            b15Max = current[0].DXRating;
+            b15Min = current[^1].DXRating;
         }
 
-        int b15maxDiff = b15max;
+        int b15MaxDiff = b15Max;
         if (current.Count > 14)
         {
-            b15maxDiff -= b15min;
+            b15MaxDiff -= b15Min;
         }
 
-        int b15minDiff = b15maxDiff > 0 ? 1 : 0;
+        int b15MinDiff = b15MaxDiff > 0 ? 1 : 0;
         Parallel.For(0, 4, i =>
         {
             ReadOnlySpan<int> posY = [73, 113, 179, 219];
-            ReadOnlySpan<int> diffs = [b35maxDiff, b35minDiff, b15maxDiff, b15minDiff];
+            ReadOnlySpan<int> diffs = [b35MaxDiff, b35MinDiff, b15MaxDiff, b15MinDiff];
             Point pos = new(148, posY[i % 4]);
             Image diffImage = LatinBoldFont.DrawImage(30, $"+{diffs[i]}", new(new Rgb24(255, 255, 255)),
                 [ScBoldFont, JpBoldFont, SymbolsFont, Symbols2Font]);
@@ -654,7 +657,7 @@ public class BestsDrawer : DrawerBase
             ReadOnlySpan<int> posX = [273, 393, 513, 633];
             ReadOnlySpan<int> posY = [73, 113, 178, 218];
             ReadOnlySpan<Ranks> ranks = [Ranks.SSSPlus, Ranks.SSS, Ranks.SSPlus, Ranks.SS];
-            ReadOnlySpan<int> ratings = [b35max, b35min, b15max, b15min];
+            ReadOnlySpan<int> ratings = [b35Max, b35Min, b15Max, b15Min];
             int indexX = i % 4;
             int indexY = i / 4;
             int rating = ratings[indexY];
