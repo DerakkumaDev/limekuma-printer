@@ -3,16 +3,16 @@ using System.Text.Json.Serialization;
 
 namespace Limekuma.Utils;
 
-[JsonConverter(typeof(OptionalJsonConverter))]
-public class Optional<TA, TB>
+[JsonConverter(typeof(UnionJsonConverter))]
+public class Union<TA, TB>
 {
     private readonly TA? _valueA;
     private readonly TB? _valueB;
 
-    public Optional(TA? value) => _valueA = value;
-    public Optional(TB? value) => _valueB = value;
+    public Union(TA? value) => _valueA = value;
+    public Union(TB? value) => _valueB = value;
 
-    public Optional(object? obj)
+    public Union(object? obj)
     {
         if (obj is null)
         {
@@ -48,13 +48,13 @@ public class Optional<TA, TB>
         }
     }
 
-    public static implicit operator TA?(Optional<TA, TB> o) => o._valueA;
+    public static implicit operator TA?(Union<TA, TB> o) => o._valueA;
 
-    public static implicit operator TB?(Optional<TA, TB> o) => o._valueB;
+    public static implicit operator TB?(Union<TA, TB> o) => o._valueB;
 
-    public static implicit operator Optional<TA, TB>(TA a) => new(a);
+    public static implicit operator Union<TA, TB>(TA a) => new(a);
 
-    public static implicit operator Optional<TA, TB>(TB b) => new(b);
+    public static implicit operator Union<TA, TB>(TB b) => new(b);
 
     public new Type? GetType() => Value?.GetType();
 
@@ -65,22 +65,22 @@ public class Optional<TA, TB>
     public new int? GetHashCode() => Value?.GetHashCode();
 }
 
-public class OptionalJsonConverter : JsonConverterFactory
+public class UnionJsonConverter : JsonConverterFactory
 {
     public override bool CanConvert(Type typeToConvert) => typeToConvert.IsGenericType &&
                                                            typeToConvert.GetGenericTypeDefinition() ==
-                                                           typeof(Optional<,>);
+                                                           typeof(Union<,>);
 
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
         Type[] typeArgs = typeToConvert.GetGenericArguments();
-        Type converterType = typeof(OptionalJsonConverterInner<,>).MakeGenericType(typeArgs);
+        Type converterType = typeof(UnionJsonConverterInner<,>).MakeGenericType(typeArgs);
         return (JsonConverter)Activator.CreateInstance(converterType)!;
     }
 
-    private class OptionalJsonConverterInner<TA, TB> : JsonConverter<Optional<TA, TB>>
+    private class UnionJsonConverterInner<TA, TB> : JsonConverter<Union<TA, TB>>
     {
-        public override Optional<TA, TB> Read(ref Utf8JsonReader reader, Type typeToConvert,
+        public override Union<TA, TB> Read(ref Utf8JsonReader reader, Type typeToConvert,
             JsonSerializerOptions options)
         {
             try
@@ -110,7 +110,7 @@ public class OptionalJsonConverter : JsonConverterFactory
             return new(null);
         }
 
-        public override void Write(Utf8JsonWriter writer, Optional<TA, TB> value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, Union<TA, TB> value, JsonSerializerOptions options)
         {
             if (value.Value is null)
             {
