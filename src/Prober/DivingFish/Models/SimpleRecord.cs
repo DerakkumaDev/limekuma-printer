@@ -11,10 +11,10 @@ public class SimpleRecord
     public required double Achievements { get; init; }
 
     [JsonPropertyName("fc")]
-    public required Optional<ComboFlags, string> ComboFlag { get; init; }
+    public required Union<ComboFlags, string> ComboFlag { get; init; }
 
     [JsonPropertyName("fs")]
-    public required Optional<SyncFlags, string> SyncFlag { get; init; }
+    public required Union<SyncFlags, string> SyncFlag { get; init; }
 
     [JsonPropertyName("id")]
     public required string Id { get; init; }

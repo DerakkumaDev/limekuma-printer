@@ -15,5 +15,5 @@ public record UtageChart : Chart
     public required bool IsBuddy { get; init; }
 
     [JsonPropertyName("notes")]
-    public new Optional<Notes, BuddyNotes>? Notes { get; init; }
+    public new Union<Notes, BuddyNotes>? Notes { get; init; }
 }
