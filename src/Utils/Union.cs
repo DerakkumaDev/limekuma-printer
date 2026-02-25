@@ -6,30 +6,71 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace Limekuma.Utils;
 
-[JsonConverter(typeof(UnionJsonConverter))]
-public class Union<TA, TB>
+internal enum UnionValueState
 {
-    private readonly TA? _valueA;
-    private readonly TB? _valueB;
+    Empty,
+    First,
+    Second
+}
 
-    public Union(TA? value) => _valueA = value;
-    public Union(TB? value) => _valueB = value;
+[JsonConverter(typeof(UnionJsonConverter))]
+public sealed class Union<T1, T2>
+{
+    private readonly T1? _value1;
+    private readonly T2? _value2;
+    private readonly UnionValueState _valueState = UnionValueState.Empty;
 
-    public Union(object? obj)
+    public Union(T1? value) : this()
     {
-        if (obj is null)
+        if (value is null)
         {
             return;
         }
 
-        if (obj is TA valueA)
+        _valueState = UnionValueState.First;
+        _value1 = value;
+    }
+
+    public Union(T2? value) : this()
+    {
+        if (value is null)
         {
-            _valueA = valueA;
+            return;
         }
 
-        if (obj is TB valueB)
+        _valueState = UnionValueState.Second;
+        _value2 = value;
+    }
+
+    public Union(object? value) : this()
+    {
+        switch (value)
         {
-            _valueB = valueB;
+            case null:
+                return;
+            case T1 value1:
+                _valueState = UnionValueState.First;
+                _value1 = value1;
+                break;
+            case T2 value2:
+                _valueState = UnionValueState.Second;
+                _value2 = value2;
+                break;
+            default:
+                throw new ArgumentException($"Union value must be of type {typeof(T1).Name} or {typeof(T2).Name}.", nameof(value));
+        }
+    }
+
+    private Union()
+    {
+        if (typeof(T1).IsAssignableFrom(typeof(T2)))
+        {
+            throw new ArgumentException($"Union value type {typeof(T1).Name} is assignable from type {typeof(T2).Name}.");
+        }
+
+        if (typeof(T2).IsAssignableFrom(typeof(T1)))
+        {
+            throw new ArgumentException($"Union value type {typeof(T2).Name} is assignable from type {typeof(T1).Name}.");
         }
     }
 
@@ -37,35 +78,44 @@ public class Union<TA, TB>
     {
         get
         {
-            if (_valueA is not null)
+            return _valueState switch
             {
-                return _valueA;
-            }
-
-            if (_valueB is not null)
-            {
-                return _valueB;
-            }
-
-            return null;
+                UnionValueState.Empty => null,
+                UnionValueState.First => _value1,
+                UnionValueState.Second => _value2,
+                _ => throw new InvalidOperationException($"Union value type {_valueState} is not valid."),
+            };
         }
     }
 
-    public static implicit operator TA?(Union<TA, TB> o) => o._valueA;
+    public static implicit operator T1?(Union<T1, T2> o) => o._value1;
 
-    public static implicit operator TB?(Union<TA, TB> o) => o._valueB;
+    public static implicit operator T2?(Union<T1, T2> o) => o._value2;
 
-    public static implicit operator Union<TA, TB>(TA a) => new(a);
+    public static implicit operator Union<T1, T2>(T1 a) => new(a);
 
-    public static implicit operator Union<TA, TB>(TB b) => new(b);
+    public static implicit operator Union<T1, T2>(T2 b) => new(b);
 
-    public new Type? GetType() => Value?.GetType();
+    public Type? ValueType => Value?.GetType();
 
-    public new string? ToString() => Value?.ToString();
+    public override string? ToString() => Value?.ToString();
 
-    public new bool? Equals(object? obj) => Value?.Equals(obj);
+    public override bool Equals(object? obj)
+    {
+        if (obj is Union<T1, T2> value)
+        {
+            if (value._valueState != _valueState)
+            {
+                return false;
+            }
 
-    public new int? GetHashCode() => Value?.GetHashCode();
+            return Value?.Equals(value.Value) ?? value.Value is null;
+        }
+
+        return Value?.Equals(obj) ?? obj is null;
+    }
+
+    public override int GetHashCode() => Value?.GetHashCode() ?? 0;
 }
 
 public sealed class UnionJsonConverter : JsonConverterFactory
