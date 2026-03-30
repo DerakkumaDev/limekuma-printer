@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -16,11 +17,15 @@ internal enum UnionValueState
 [JsonConverter(typeof(UnionJsonConverter))]
 public sealed class Union<T1, T2>
 {
-    private readonly T1? _value1;
-    private readonly T2? _value2;
+    [AllowNull]
+    private readonly T1 _value1;
+
+    [AllowNull]
+    private readonly T2 _value2;
+
     private readonly UnionValueState _valueState = UnionValueState.Empty;
 
-    public Union(T1? value) : this()
+    public Union([AllowNull] T1 value) : this()
     {
         if (value is null)
         {
@@ -31,7 +36,7 @@ public sealed class Union<T1, T2>
         _value1 = value;
     }
 
-    public Union(T2? value) : this()
+    public Union([AllowNull] T2 value) : this()
     {
         if (value is null)
         {
@@ -42,7 +47,7 @@ public sealed class Union<T1, T2>
         _value2 = value;
     }
 
-    public Union(object? value) : this()
+    public Union([AllowNull] object value) : this()
     {
         switch (value)
         {
@@ -57,7 +62,8 @@ public sealed class Union<T1, T2>
                 _value2 = value2;
                 break;
             default:
-                throw new ArgumentException($"Union value must be of type {typeof(T1).Name} or {typeof(T2).Name}.", nameof(value));
+                throw new ArgumentException($"Union value must be of type {typeof(T1).Name} or {typeof(T2).Name}.",
+                    nameof(value));
         }
     }
 
@@ -65,40 +71,41 @@ public sealed class Union<T1, T2>
     {
         if (typeof(T1).IsAssignableFrom(typeof(T2)))
         {
-            throw new ArgumentException($"Union value type {typeof(T1).Name} is assignable from type {typeof(T2).Name}.");
+            throw new ArgumentException(
+                $"Union value type {typeof(T1).Name} is assignable from type {typeof(T2).Name}.");
         }
 
         if (typeof(T2).IsAssignableFrom(typeof(T1)))
         {
-            throw new ArgumentException($"Union value type {typeof(T2).Name} is assignable from type {typeof(T1).Name}.");
+            throw new ArgumentException(
+                $"Union value type {typeof(T2).Name} is assignable from type {typeof(T1).Name}.");
         }
     }
 
-    public object? Value
+    [MaybeNull]
+    public object Value => _valueState switch
     {
-        get
-        {
-            return _valueState switch
-            {
-                UnionValueState.Empty => null,
-                UnionValueState.First => _value1,
-                UnionValueState.Second => _value2,
-                _ => throw new InvalidOperationException($"Union value type {_valueState} is not valid."),
-            };
-        }
-    }
+        UnionValueState.Empty => null,
+        UnionValueState.First => _value1,
+        UnionValueState.Second => _value2,
+        _ => throw new InvalidOperationException($"Union value type {_valueState} is not valid.")
+    };
 
-    public static implicit operator T1?(Union<T1, T2> o) => o._value1;
+    [MaybeNull]
+    public Type ValueType => Value?.GetType();
 
-    public static implicit operator T2?(Union<T1, T2> o) => o._value2;
+    [return: MaybeNull]
+    public static implicit operator T1(Union<T1, T2> o) => o._value1;
+
+    [return: MaybeNull]
+    public static implicit operator T2(Union<T1, T2> o) => o._value2;
 
     public static implicit operator Union<T1, T2>(T1 a) => new(a);
 
     public static implicit operator Union<T1, T2>(T2 b) => new(b);
 
-    public Type? ValueType => Value?.GetType();
-
-    public override string? ToString() => Value?.ToString();
+    [return: MaybeNull]
+    public override string ToString() => Value?.ToString();
 
     public override bool Equals(object? obj)
     {
@@ -109,10 +116,10 @@ public sealed class Union<T1, T2>
                 return false;
             }
 
-            return Value?.Equals(value.Value) ?? value.Value is null;
+            return Value?.Equals(value.Value) ?? (value.Value is null);
         }
 
-        return Value?.Equals(obj) ?? obj is null;
+        return Value?.Equals(obj) ?? (obj is null);
     }
 
     public override int GetHashCode() => Value?.GetHashCode() ?? 0;
@@ -136,7 +143,7 @@ public sealed class UnionJsonConverter : JsonConverterFactory
     {
         public override Union<T1, T2> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            if (reader.TokenType == JsonTokenType.Null)
+            if (reader.TokenType is JsonTokenType.Null)
             {
                 return new(null);
             }
@@ -148,6 +155,7 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                 T1? first = JsonSerializer.Deserialize<T1>(ref reader, options);
                 return new(first);
             }
+
             T2? second = JsonSerializer.Deserialize<T2>(ref reader, options);
             return new(second);
         }
@@ -163,7 +171,8 @@ public sealed class UnionJsonConverter : JsonConverterFactory
             JsonSerializer.Serialize(writer, value.Value, options);
         }
 
-        private static bool? TryChooseFirstAdvanced(Type rawT1, Type rawT2, ref Utf8JsonReader reader, JsonSerializerOptions options)
+        private static bool? TryChooseFirstAdvanced(Type rawT1, Type rawT2, ref Utf8JsonReader reader,
+            JsonSerializerOptions options)
         {
             Type t1 = UnwrapNullable(rawT1);
             Type t2 = UnwrapNullable(rawT2);
@@ -177,29 +186,33 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                         {
                             return null;
                         }
+
                         if (t1Obj && !t2Obj)
                         {
                             return true;
                         }
+
                         if (!t1Obj && t2Obj)
                         {
                             return false;
                         }
 
-                        HashSet<string> jsonProps = ReadObjectPropertyNames(ref reader, options.PropertyNameCaseInsensitive);
+                        HashSet<string> jsonProps =
+                            ReadObjectPropertyNames(ref reader, options.PropertyNameCaseInsensitive);
                         HashSet<string> t1Props = GetTypeJsonPropertyNames(t1, options);
                         HashSet<string> t2Props = GetTypeJsonPropertyNames(t2, options);
 
                         int m1 = 0;
-                        foreach (var p in jsonProps)
+                        foreach (string p in jsonProps)
                         {
                             if (t1Props.Contains(p))
                             {
                                 m1++;
                             }
                         }
+
                         int m2 = 0;
-                        foreach (var p in jsonProps)
+                        foreach (string p in jsonProps)
                         {
                             if (t2Props.Contains(p))
                             {
@@ -211,6 +224,7 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                         {
                             return true;
                         }
+
                         if (m2 > m1)
                         {
                             return false;
@@ -220,7 +234,7 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                         bool t2Dict = IsDictionaryLike(t2);
                         if (t1Dict != t2Dict)
                         {
-                            if (m1 == 0 && m2 == 0)
+                            if (m1 is 0 && m2 is 0)
                             {
                                 return t1Dict;
                             }
@@ -236,10 +250,12 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                         {
                             return null;
                         }
+
                         if (t1Arr && !t2Arr)
                         {
                             return true;
                         }
+
                         if (!t1Arr && t2Arr)
                         {
                             return false;
@@ -251,23 +267,26 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                         JsonTokenType elemToken = JsonTokenType.Null;
                         while (copy.Read())
                         {
-                            if (copy.TokenType == JsonTokenType.StartArray)
+                            if (copy.TokenType is JsonTokenType.StartArray)
                             {
                                 depth++;
                                 continue;
                             }
-                            if (copy.TokenType == JsonTokenType.EndArray)
+
+                            if (copy.TokenType is JsonTokenType.EndArray)
                             {
-                                if (depth == 1)
+                                if (depth is 1)
                                 {
                                     break;
                                 }
+
                                 depth--;
                                 continue;
                             }
-                            if (depth == 1)
+
+                            if (depth is 1)
                             {
-                                if (copy.TokenType != JsonTokenType.Comment)
+                                if (copy.TokenType is not JsonTokenType.Comment)
                                 {
                                     elemToken = copy.TokenType;
                                     foundElement = true;
@@ -287,6 +306,7 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                         {
                             return null;
                         }
+
                         return ShouldChooseFirst(e1, e2, elemToken);
                     }
                 default:
@@ -375,19 +395,23 @@ public sealed class UnionJsonConverter : JsonConverterFactory
             {
                 return true;
             }
+
             foreach (Type i in t.GetInterfaces())
             {
-                if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                if (i.IsGenericType && i.GetGenericTypeDefinition() is IDictionary)
                 {
                     return true;
                 }
             }
+
             return false;
         }
 
         private static HashSet<string> GetTypeJsonPropertyNames(Type t, JsonSerializerOptions options)
         {
-            StringComparer comparer = options.PropertyNameCaseInsensitive ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+            StringComparer comparer = options.PropertyNameCaseInsensitive
+                ? StringComparer.OrdinalIgnoreCase
+                : StringComparer.Ordinal;
             HashSet<string> set = new(comparer);
             JsonTypeInfo? info;
             try
@@ -398,7 +422,8 @@ public sealed class UnionJsonConverter : JsonConverterFactory
             {
                 info = null;
             }
-            if (info is not null && info.Kind == JsonTypeInfoKind.Object)
+
+            if (info is not null && info.Kind is JsonTypeInfoKind.Object)
             {
                 foreach (JsonPropertyInfo p in info.Properties)
                 {
@@ -407,6 +432,7 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                         set.Add(p.Name);
                     }
                 }
+
                 if (set.Count > 0)
                 {
                     return set;
@@ -419,14 +445,18 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                 {
                     continue;
                 }
+
                 if (prop.GetMethod is null && prop.SetMethod is null)
                 {
                     continue;
                 }
+
                 JsonPropertyNameAttribute? nameAttr = prop.GetCustomAttribute<JsonPropertyNameAttribute>();
                 string name = nameAttr is not null
                     ? nameAttr.Name
-                    : (options.PropertyNamingPolicy is null ? prop.Name : options.PropertyNamingPolicy.ConvertName(prop.Name));
+                    : options.PropertyNamingPolicy is null
+                        ? prop.Name
+                        : options.PropertyNamingPolicy.ConvertName(prop.Name);
                 set.Add(name);
             }
 
@@ -436,14 +466,18 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                 {
                     continue;
                 }
+
                 if (field.GetCustomAttribute<JsonIncludeAttribute>() is null)
                 {
                     continue;
                 }
+
                 JsonPropertyNameAttribute? nameAttr = field.GetCustomAttribute<JsonPropertyNameAttribute>();
                 string name = nameAttr is not null
                     ? nameAttr.Name
-                    : (options.PropertyNamingPolicy is null ? field.Name : options.PropertyNamingPolicy.ConvertName(field.Name));
+                    : options.PropertyNamingPolicy is null
+                        ? field.Name
+                        : options.PropertyNamingPolicy.ConvertName(field.Name);
                 set.Add(name);
             }
 
@@ -455,10 +489,11 @@ public sealed class UnionJsonConverter : JsonConverterFactory
             StringComparer comparer = caseInsensitive ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
             HashSet<string> names = new(comparer);
             Utf8JsonReader copy = reader;
-            if (copy.TokenType != JsonTokenType.StartObject)
+            if (copy.TokenType is not JsonTokenType.StartObject)
             {
                 return names;
             }
+
             int depth = 0;
             bool started = false;
             while (true)
@@ -467,26 +502,31 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                 {
                     break;
                 }
+
                 JsonTokenType token = copy.TokenType;
-                if (token == JsonTokenType.StartObject || token == JsonTokenType.StartArray)
+                if (token is JsonTokenType.StartObject or JsonTokenType.StartArray)
                 {
                     depth++;
                     started = true;
                     continue;
                 }
-                if (token == JsonTokenType.EndObject || token == JsonTokenType.EndArray)
+
+                if (token is JsonTokenType.EndObject or JsonTokenType.EndArray)
                 {
-                    if (started && depth == 0)
+                    if (started && depth is 0)
                     {
                         break;
                     }
+
                     if (depth > 0)
                     {
                         depth--;
                     }
+
                     continue;
                 }
-                if (token == JsonTokenType.PropertyName && depth == 0)
+
+                if (token is JsonTokenType.PropertyName && depth is 0)
                 {
                     string? name = copy.GetString();
                     if (name is not null)
@@ -495,6 +535,7 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                     }
                 }
             }
+
             return names;
         }
 
@@ -570,9 +611,9 @@ public sealed class UnionJsonConverter : JsonConverterFactory
             {
                 switch (i.IsGenericType)
                 {
-                    case true when i.GetGenericTypeDefinition() == typeof(IDictionary<,>):
+                    case true when i.GetGenericTypeDefinition() is IDictionary:
                         return false;
-                    case true when i.GetGenericTypeDefinition() == typeof(IEnumerable<>):
+                    case true when i.GetGenericTypeDefinition() is IEnumerable:
                         return true;
                 }
             }
@@ -612,13 +653,15 @@ public sealed class UnionJsonConverter : JsonConverterFactory
             {
                 return t.GetElementType();
             }
+
             foreach (Type i in t.GetInterfaces())
             {
-                if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                if (i.IsGenericType && i.GetGenericTypeDefinition() is IEnumerable)
                 {
                     return i.GetGenericArguments()[0];
                 }
             }
+
             return null;
         }
     }
