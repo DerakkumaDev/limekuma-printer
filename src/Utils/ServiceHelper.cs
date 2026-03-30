@@ -1,5 +1,6 @@
 using Limekuma.Prober.Common;
 using Limekuma.Render;
+using System.Reflection;
 
 namespace Limekuma.Utils;
 
@@ -18,24 +19,26 @@ internal static class ServiceHelper
     internal static async Task PrepareRecordDataAsync(CommonRecord record) =>
         await PrepareImageAsset("Jacket", record.Id % 10000, record.JacketUrl);
 
-    private static async Task PrepareImageAsset(string type, int id, string url)
+    private static async Task PrepareImageAsset(string assetKey, int id, string url)
     {
-        AssetProvider assetProvider = AssetProvider.Shared;
-        string? path = assetProvider.GetPath(type);
-        if (path is null)
+        string? basePath = AssetProvider.Shared.GetPath(assetKey);
+        if (string.IsNullOrEmpty(basePath))
         {
             return;
         }
 
-        path = Path.Combine(path, $"{id}.png");
+        string path = Path.Combine(basePath, $"{id}.png");
         if (File.Exists(path))
         {
             return;
         }
+        Directory.CreateDirectory(basePath);
 
         using HttpClient http = new();
-        using Stream stream = await http.GetStreamAsync(url);
-        using FileStream fileStream = File.OpenWrite(path);
-        stream.CopyTo(fileStream);
+        http.DefaultRequestHeaders.UserAgent.Add(new("limekuma",
+            Assembly.GetExecutingAssembly().GetName().Version?.ToString()));
+        await using Stream stream = await http.GetStreamAsync(url);
+        await using FileStream fileStream = File.OpenWrite(path);
+        await stream.CopyToAsync(fileStream);
     }
 }

@@ -4,7 +4,6 @@ using Limekuma.Prober.Lxns;
 using Limekuma.Prober.Lxns.Models;
 using Limekuma.Render;
 using Limekuma.Utils;
-using LimeKuma;
 using SixLabors.ImageSharp;
 using System.Net;
 
@@ -15,15 +14,29 @@ public partial class ListService
     public override async Task GetFromLxns(LxnsListRequest request, IServerStreamWriter<ImageResponse> responseStream,
         ServerCallContext context)
     {
+        Player player;
+        LxnsDeveloperClient lxnsDev = new(request.DevToken);
         LxnsPersonalClient lxns = new(request.PersonalToken);
-        CommonUser user;
         try
         {
-            user = await lxns.GetPlayerAsync();
+            player = await lxns.GetPlayerAsync(lxnsDev);
         }
         catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized)
         {
             throw new RpcException(new(StatusCode.Unauthenticated, ex.Message, ex));
+        }
+
+        try
+        {
+            player = await lxnsDev.GetPlayerAsync(player.FriendCode);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.NotFound)
+        {
+            throw new RpcException(new(StatusCode.NotFound, ex.Message, ex));
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Forbidden)
+        {
+            throw new RpcException(new(StatusCode.PermissionDenied, ex.Message, ex));
         }
 
         List<Record> records;
@@ -40,11 +53,11 @@ public partial class ListService
         int count = records.Count;
         List<CommonRecord> cRecords = records.ConvertAll<CommonRecord>(_ => _);
         cRecords.SortRecordForList();
-        (int[] counts, int startIndex, int endIndex) = await PrepareDataAsync(user, cRecords, request.Page);
+        (int[] counts, int startIndex, int endIndex) = await PrepareDataAsync(player, cRecords, request.Page);
         int total = (int)Math.Ceiling((double)count / 55);
 
-        using Image listImage = await new Drawer().DrawListAsync(user, cRecords[startIndex..endIndex], request.Page,
-            total, counts, request.Level, "lxns");
+        using Image listImage = await new Drawer().DrawListAsync(player, cRecords[startIndex..endIndex], request.Page, total,
+            counts, request.Level, "lxns");
 
         await responseStream.WriteToResponseAsync(listImage);
     }

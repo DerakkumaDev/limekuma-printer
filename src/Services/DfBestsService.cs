@@ -4,7 +4,6 @@ using Limekuma.Prober.DivingFish;
 using Limekuma.Prober.DivingFish.Models;
 using Limekuma.Render;
 using Limekuma.Utils;
-using LimeKuma;
 using SixLabors.ImageSharp;
 using System.Net;
 
@@ -54,7 +53,7 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
         using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
-            "水鱼 Best 50", "divingfish");
+            "评分对象曲目（水鱼源）", "divingfish");
 
         await responseStream.WriteToResponseAsync(bestsImage);
     }
@@ -65,7 +64,7 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
         using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
-            "水鱼 Best 50", "divingfish", true);
+            "评分对象曲目（水鱼源）", "divingfish", true);
 
         await responseStream.WriteToResponseAsync(bestsImage, true);
     }
@@ -76,7 +75,7 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
         using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
-            "水鱼 Best 50", "divingfish", false, true);
+            "评分对象曲目（水鱼源）", "divingfish", false, true);
 
         await responseStream.WriteToResponseAsync(bestsImage, true);
     }

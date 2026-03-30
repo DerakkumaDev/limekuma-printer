@@ -4,7 +4,6 @@ using Limekuma.Prober.DivingFish;
 using Limekuma.Prober.DivingFish.Models;
 using Limekuma.Render;
 using Limekuma.Utils;
-using LimeKuma;
 using SixLabors.ImageSharp;
 using System.Net;
 
@@ -41,8 +40,8 @@ public partial class ListService
         (int[] counts, int startIndex, int endIndex) = await PrepareDataAsync(user, cRecords, request.Page);
         int total = (int)Math.Ceiling((double)count / 55);
 
-        using Image listImage = await new Drawer().DrawListAsync(user, cRecords[startIndex..endIndex], request.Page,
-            total, counts, request.Level, "divingfish");
+        using Image listImage = await new Drawer().DrawListAsync(user, cRecords[startIndex..endIndex], request.Page, total, counts,
+            request.Level, "divingfish");
 
         await responseStream.WriteToResponseAsync(listImage);
     }

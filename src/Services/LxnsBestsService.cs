@@ -4,7 +4,6 @@ using Limekuma.Prober.Lxns;
 using Limekuma.Prober.Lxns.Models;
 using Limekuma.Render;
 using Limekuma.Utils;
-using LimeKuma;
 using SixLabors.ImageSharp;
 using System.Net;
 
@@ -37,14 +36,25 @@ public partial class BestsService
             LxnsPersonalClient lxns = new(personalToken);
             try
             {
-                player = await lxns.GetPlayerAsync();
+                player = await lxns.GetPlayerAsync(lxnsDev);
             }
             catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized)
             {
                 throw new RpcException(new(StatusCode.Unauthenticated, ex.Message, ex));
             }
 
-            player.Client = lxnsDev;
+            try
+            {
+                player = await lxnsDev.GetPlayerAsync(player.FriendCode);
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.NotFound)
+            {
+                throw new RpcException(new(StatusCode.NotFound, ex.Message, ex));
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Forbidden)
+            {
+                throw new RpcException(new(StatusCode.PermissionDenied, ex.Message, ex));
+            }
         }
         else
         {
@@ -84,8 +94,7 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
         using Image bestsImage =
-            await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal, "落雪 Best 50",
-                "lxns");
+            await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal, "评分对象曲目（落雪源）", "lxns");
 
         await responseStream.WriteToResponseAsync(bestsImage);
     }
@@ -96,7 +105,7 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
         using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
-            "落雪 Best 50", "lxns", true);
+            "评分对象曲目（落雪源）", "lxns", true);
 
         await responseStream.WriteToResponseAsync(bestsImage, true);
     }
@@ -107,7 +116,7 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
         using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
-            "落雪 Best 50", "lxns", false, true);
+            "评分对象曲目（落雪源）", "lxns", false, true);
 
         await responseStream.WriteToResponseAsync(bestsImage, true);
     }

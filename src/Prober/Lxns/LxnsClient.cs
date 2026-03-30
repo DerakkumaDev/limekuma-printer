@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json;
 
 namespace Limekuma.Prober.Lxns;
@@ -13,6 +14,8 @@ public abstract class LxnsClient
         {
             BaseAddress = new("https://maimai.lxns.net/")
         };
+        _httpClient.DefaultRequestHeaders.UserAgent.Add(new("limekuma",
+            Assembly.GetExecutingAssembly().GetName().Version?.ToString()));
 
         _jsonOptions = new()
         {
