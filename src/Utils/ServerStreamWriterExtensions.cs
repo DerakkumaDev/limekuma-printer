@@ -2,6 +2,7 @@ using Google.Protobuf;
 using Grpc.Core;
 using SixLabors.ImageSharp;
 #if RELEASE
+using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Processing;
 #endif
@@ -35,7 +36,7 @@ internal static class ServerStreamWriterExtensions
                 GifEncoder encoder = new()
                 {
                     Quantizer = KnownQuantizers.Wu,
-                    ColorTableMode = GifColorTableMode.Local
+                    ColorTableMode = FrameColorTableMode.Local
                 };
                 await image.SaveAsGifAsync(outStream, encoder);
             }
