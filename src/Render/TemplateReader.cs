@@ -30,6 +30,7 @@ public sealed partial class TemplateReader
             ["Grid"] = ParseGridNodeAsync,
             ["Image"] = ParseImageNodeAsync,
             ["Text"] = ParseTextNodeAsync,
+            ["Set"] = ParseSetNodeAsync,
             ["If"] = ParseIfNodeAsync,
             ["For"] = ParseForNodeAsync,
             ["Include"] = ParseIncludeNodeAsync

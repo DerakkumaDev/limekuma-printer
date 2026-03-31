@@ -101,6 +101,12 @@ public sealed partial class TemplateReader
             await EvaluateTemplateAttributeOrAsync(element, "truncateSuffix", string.Empty, scope),
             await EvaluateOptionalSmartTemplateAttributeAsync(element, "key", scope));
 
+    private async Task<Node> ParseSetNodeAsync(XElement element, object? scope) =>
+        new SetNode(
+            GetRequiredAttributeValue(element, "var"),
+            await EvaluateSetValueAsync(GetRequiredAttributeValue(element, "value"), scope),
+            await EvaluateOptionalSmartTemplateAttributeAsync(element, "key", scope));
+
     private async Task<Node> ParseIfNodeAsync(XElement element, object? scope)
     {
         bool pass = await EvaluateRequiredExpressionAsAsync<bool>(GetRequiredAttributeValue(element, "rule"), scope);
@@ -153,12 +159,37 @@ public sealed partial class TemplateReader
     private async Task<List<Node>> ParseChildrenAsync(XElement element, object? scope)
     {
         List<Node> children = [];
+        object? currentScope = scope;
         foreach (XElement child in element.Elements())
         {
-            children.Add(await ParseElementAsync(child, scope));
+            Node node = await ParseElementAsync(child, currentScope);
+            if (node is SetNode setNode)
+            {
+                currentScope = MergeScope(currentScope, setNode.Name, setNode.Value);
+                continue;
+            }
+
+            children.Add(node);
         }
 
         return children;
+    }
+
+    private async Task<object?> EvaluateSetValueAsync(string raw, object? scope)
+    {
+        if (raw.StartsWith("@{", StringComparison.Ordinal) && raw.EndsWith('}'))
+        {
+            return await _expressionEngine.EvalAsync(raw[2..^1], scope);
+        }
+
+        try
+        {
+            return await _expressionEngine.EvalAsync(raw, scope);
+        }
+        catch
+        {
+            return await EvaluateTemplateAsync(raw, scope);
+        }
     }
 
     private async Task<IEnumerable<object>?> EvaluateCollectionAsync(string expression, object? scope)
@@ -167,7 +198,6 @@ public sealed partial class TemplateReader
         return rawItems switch
         {
             null => null,
-            string => null,
             IEnumerable<object> objectItems => objectItems,
             IEnumerable enumerable => enumerable.Cast<object>(),
             IConvertible convertible => Enumerable.Range(0, Math.Max(0, Convert.ToInt32(convertible, CultureInfo.InvariantCulture)))
@@ -189,6 +219,21 @@ public sealed partial class TemplateReader
 
         result[variableName] = item;
         result[indexName] = index;
+        return result;
+    }
+
+    private static Dictionary<string, object?> MergeScope(object? parent, string variableName, object? value)
+    {
+        Dictionary<string, object?> result = new(StringComparer.OrdinalIgnoreCase);
+        if (parent is IDictionary<string, object?> map)
+        {
+            foreach ((string key, object? mapValue) in map)
+            {
+                result[key] = mapValue;
+            }
+        }
+
+        result[variableName] = value;
         return result;
     }
 }
