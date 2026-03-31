@@ -32,6 +32,10 @@ public sealed class Drawer
             [.. currentList.Select((record, idx) => new { Record = record, Index = idx + everList.Count + 1 })];
         int everDelta = everList.Count > 34 ? everList[0].DXRating - everList[^1].DXRating : everList.Count > 0 ? everList[0].DXRating : 0;
         int currentDelta = currentList.Count > 14 ? currentList[0].DXRating - currentList[^1].DXRating : currentList.Count > 0 ? currentList[0].DXRating : 0;
+        int everMax = everList.Count > 0 ? everList[0].DXRating : 0;
+        int everMin = everList.Count > 0 ? everList[^1].DXRating : 0;
+        int currentMax = currentList.Count > 0 ? currentList[0].DXRating : 0;
+        int currentMin = currentList.Count > 0 ? currentList[^1].DXRating : 0;
         int realRating = everTotal + currentTotal;
         string proberState = "on";
         if (user.Rating != realRating)
@@ -59,6 +63,10 @@ public sealed class Drawer
             ["isAnime"] = isAnime,
             ["drawLevelSeg"] = drawLevelSeg,
             ["proberState"] = proberState,
+            ["everMax"] = everMax,
+            ["everMin"] = everMin,
+            ["currentMax"] = currentMax,
+            ["currentMin"] = currentMin,
         };
         return await DrawAsync(scope, xmlPath);
     }
@@ -81,11 +89,12 @@ public sealed class Drawer
             ["recordCards"] = recordCards,
             ["page"] = page,
             ["total"] = total,
-            ["counts"] = countList,
+            ["counts"] = countList[..^1],
             ["statsTotalCount"] = totalCount,
             ["level"] = level,
             ["prober"] = prober,
             ["proberState"] = warning ? "warning" : "on",
+            ["isAnime"] = false,
         };
         return await DrawAsync(scope, xmlPath);
     }
@@ -93,9 +102,15 @@ public sealed class Drawer
     private async Task<Image> DrawAsync(Dictionary<string, object?> scope, string xmlPath)
     {
         AsyncNCalcEngine expr = new();
+        RegisterFunctions(expr);
         TemplateReader loader = new(expr);
         Node tree = await loader.LoadAsync(xmlPath, scope);
         AssetProvider assets = AssetProvider.Shared;
         return NodeRenderer.Render((CanvasNode)tree, assets, assets);
+    }
+
+    private void RegisterFunctions(AsyncNCalcEngine expr)
+    {
+        expr.RegisterFunction("ToString", (object x) => Convert.ToString(x));
     }
 }

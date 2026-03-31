@@ -1,11 +1,17 @@
 using NCalc;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Globalization;
+using System.Reflection;
 
 namespace Limekuma.Render.ExpressionEngine;
 
 public sealed class AsyncNCalcEngine
 {
+    private readonly ConcurrentDictionary<string, Delegate> _functions = new();
+
+    public void RegisterFunction(string name, Delegate func) => _functions[name] = func;
+
     public async Task<T?> EvalAsync<T>(string expr, object? scope)
     {
         object? result = await EvalAsync(expr, scope);
@@ -44,6 +50,23 @@ public sealed class AsyncNCalcEngine
         {
             expression.Parameters[key] = value is Enum e ? Convert.ToInt32(e, CultureInfo.InvariantCulture) : value;
         }
+        expression.EvaluateFunctionAsync += async (name, args) =>
+        {
+            if (_functions.TryGetValue(name, out Delegate? func))
+            {
+                ParameterInfo[] parameters = func.Method.GetParameters();
+                object?[] funcArgs = new object[args.Parameters.Length];
+                for (int i = 0; i < args.Parameters.Length; ++i)
+                {
+                    object? paramValue = await args.Parameters[i].EvaluateAsync();
+                    funcArgs[i] = CoerceValue(paramValue,
+                        i < parameters.Length ? parameters[i].ParameterType : typeof(object));
+                }
+
+                object? result = func.DynamicInvoke(funcArgs);
+                args.Result = result;
+            }
+        };
 
         return await expression.EvaluateAsync();
     }
@@ -99,5 +122,69 @@ public sealed class AsyncNCalcEngine
         }
 
         return finalTarget == typeof(string) ? value.ToString() : value;
+    }
+
+    private object? CoerceValue(object? value, Type targetType)
+    {
+        if (value is null)
+        {
+            if (targetType.IsValueType)
+            {
+                return Activator.CreateInstance(targetType);
+            }
+
+            return value;
+        }
+
+        if (targetType.IsInstanceOfType(value))
+        {
+            return value;
+        }
+
+        if (targetType == typeof(string))
+        {
+            return value.ToString();
+        }
+
+        if (targetType == typeof(bool))
+        {
+            if (value is string sv)
+            {
+                if (bool.TryParse(sv, out bool bv))
+                {
+                    return bv;
+                }
+
+                if (double.TryParse(sv, out double dv))
+                {
+                    return Math.Abs(dv) > 0.0000001;
+                }
+            }
+
+            if (value is not IConvertible conv)
+            {
+                return false;
+            }
+
+            double dvd = conv.ToDouble(CultureInfo.InvariantCulture);
+            return Math.Abs(dvd) > 0.0000001;
+        }
+
+        if (!typeof(IConvertible).IsAssignableFrom(targetType))
+        {
+            return value;
+        }
+
+        if (value is IConvertible)
+        {
+            return Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
+        }
+
+        if (value is string s2)
+        {
+            return Convert.ChangeType(s2, targetType, CultureInfo.InvariantCulture);
+        }
+
+        return value;
     }
 }
