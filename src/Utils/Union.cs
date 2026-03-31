@@ -148,16 +148,29 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                 return new(null);
             }
 
+            Utf8JsonReader originalReader = reader;
             bool preferFirst = TryChooseFirstAdvanced(typeof(T1), typeof(T2), ref reader, options)
                                ?? ShouldChooseFirst(typeof(T1), typeof(T2), reader.TokenType);
             if (preferFirst)
             {
-                T1? first = JsonSerializer.Deserialize<T1>(ref reader, options);
-                return new(first);
+                if (TryDeserialize(ref reader, options, out T1? first))
+                {
+                    return new(first);
+                }
+
+                reader = originalReader;
+                T2? secondFallback = JsonSerializer.Deserialize<T2>(ref reader, options);
+                return new(secondFallback);
             }
 
-            T2? second = JsonSerializer.Deserialize<T2>(ref reader, options);
-            return new(second);
+            if (TryDeserialize(ref reader, options, out T2? second))
+            {
+                return new(second);
+            }
+
+            reader = originalReader;
+            T1? firstFallback = JsonSerializer.Deserialize<T1>(ref reader, options);
+            return new(firstFallback);
         }
 
         public override void Write(Utf8JsonWriter writer, Union<T1, T2> value, JsonSerializerOptions options)
@@ -322,8 +335,18 @@ public sealed class UnionJsonConverter : JsonConverterFactory
             {
                 case JsonTokenType.String:
                     {
-                        bool t1Match = IsStringLike(t1);
                         bool t2Match = IsStringLike(t2);
+                        if (t1.IsEnum && t2Match)
+                        {
+                            return true;
+                        }
+
+                        bool t1Match = IsStringLike(t1);
+                        if (t2.IsEnum && t1Match)
+                        {
+                            return false;
+                        }
+
                         return t1Match switch
                         {
                             true when !t2Match => true,
@@ -384,6 +407,27 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                 case JsonTokenType.Null:
                 default:
                     return true;
+            }
+        }
+
+        private static bool TryDeserialize<T>(ref Utf8JsonReader reader, JsonSerializerOptions options, out T? value)
+        {
+            Utf8JsonReader copy = reader;
+            try
+            {
+                value = JsonSerializer.Deserialize<T>(ref copy, options);
+                reader = copy;
+                return true;
+            }
+            catch (JsonException)
+            {
+                value = default;
+                return false;
+            }
+            catch (NotSupportedException)
+            {
+                value = default;
+                return false;
             }
         }
 
