@@ -6,11 +6,9 @@ using System.Xml.Linq;
 
 namespace Limekuma.Render;
 
-public sealed class AssetProvider : IAssetProvider, IMeasureService
+public sealed class AssetProvider
 {
-    private readonly ConcurrentDictionary<string, Image> _assets;
-    private readonly FontCollection _fontCollection;
-    private readonly ConcurrentDictionary<string, string> _fontFamilyNames;
+    private readonly ConcurrentDictionary<string, LoadedFont> _fontCache;
     private readonly Dictionary<string, (string, List<string>?)> _fontRules;
     private readonly Dictionary<string, (string, string?)> _pathRules;
 
@@ -22,9 +20,7 @@ public sealed class AssetProvider : IAssetProvider, IMeasureService
     {
         _fontRules = [];
         _pathRules = [];
-        _assets = [];
-        _fontCollection = new();
-        _fontFamilyNames = [];
+        _fontCache = [];
         LoadResources(resourcePath);
     }
 
@@ -33,7 +29,7 @@ public sealed class AssetProvider : IAssetProvider, IMeasureService
     public Image LoadImage(string ns, string key)
     {
         string path = ResolveResourcePath(ns, key);
-        return LoadImage(path);
+        return Image.Load(path);
     }
 
     public (FontFamily, List<FontFamily>) ResolveFont(string key)
@@ -57,23 +53,25 @@ public sealed class AssetProvider : IAssetProvider, IMeasureService
     public Size Measure(string text, string family, float size)
     {
         (FontFamily fontFamily, List<FontFamily> fallbacks) = ResolveFont(family);
-        Font font = fontFamily.CreateFont(size);
-        FontRectangle rect = TextMeasurer.MeasureAdvance(text, new(font)
+        float scaledSize = (float)(size * 72 / 300d);
+        Font font = fontFamily.CreateFont(scaledSize);
+        FontRectangle rect = TextMeasurer.MeasureAdvance(text, new TextOptions(font)
         {
-            FallbackFontFamilies = fallbacks
+            FallbackFontFamilies = fallbacks,
+            Dpi = 300
         });
         return new((int)Math.Ceiling(rect.Width), (int)Math.Ceiling(rect.Height));
     }
 
-    public string? GetPath(string key)
+    public string? GetPath(string ns)
     {
-        if (!_pathRules.TryGetValue(key, out (string, string?) pathRule))
+        if (!_pathRules.TryGetValue(ns, out (string, string?) pathRule))
         {
             return null;
         }
 
         (string path, _) = pathRule;
-        return path;
+        return Path.GetFullPath(path);
     }
 
     private void LoadResources(string resourcePath)
@@ -93,9 +91,9 @@ public sealed class AssetProvider : IAssetProvider, IMeasureService
     {
         foreach (XElement node in resourcesNode.Elements("Path"))
         {
-            string? key = node.Attribute("key")?.Value;
+            string? ns = node.Attribute("namespace")?.Value;
             string path = node.Value;
-            if (string.IsNullOrEmpty(key))
+            if (string.IsNullOrEmpty(ns))
             {
                 continue;
             }
@@ -105,7 +103,7 @@ public sealed class AssetProvider : IAssetProvider, IMeasureService
                 continue;
             }
 
-            _pathRules[key] = new(path, node.Attribute("rule")?.Value);
+            _pathRules[ns] = new(Path.GetFullPath(path), node.Attribute("rule")?.Value);
         }
     }
 
@@ -113,9 +111,9 @@ public sealed class AssetProvider : IAssetProvider, IMeasureService
     {
         foreach (XElement node in resourcesNode.Elements("FontFamily"))
         {
-            string? key = node.Attribute("key")?.Value;
+            string? ns = node.Attribute("namespace")?.Value;
             string? fontPath = node.Element("Font")?.Value;
-            if (string.IsNullOrEmpty(key))
+            if (string.IsNullOrEmpty(ns))
             {
                 continue;
             }
@@ -128,13 +126,13 @@ public sealed class AssetProvider : IAssetProvider, IMeasureService
             XElement? fallbacks = node.Element("Fallbacks");
             if (fallbacks is null)
             {
-                _fontRules[key] = new(fontPath, null);
+                _fontRules[ns] = new(fontPath, null);
                 continue;
             }
 
             List<string> fallbackPaths =
                 [.. fallbacks.Elements("Font").Select(e => e.Value).Where(p => !string.IsNullOrEmpty(p))];
-            _fontRules[key] = new(fontPath, fallbackPaths);
+            _fontRules[ns] = new(fontPath, fallbackPaths);
         }
     }
 
@@ -142,7 +140,7 @@ public sealed class AssetProvider : IAssetProvider, IMeasureService
     {
         if (!_pathRules.TryGetValue(ns, out (string, string?) pathRule))
         {
-            return key;
+            return Path.GetFullPath(key);
         }
 
         (string path, string? rule) = pathRule;
@@ -154,27 +152,17 @@ public sealed class AssetProvider : IAssetProvider, IMeasureService
         return Path.Combine(path, Smart.Format(rule, new { key }));
     }
 
-    private Image LoadImage(string path)
-    {
-        if (!_assets.TryGetValue(path, out Image? image))
-        {
-            image = Image.Load(path);
-            _assets.TryAdd(path, image);
-        }
-
-        return image;
-    }
-
     private FontFamily LoadFont(string path)
     {
-        if (_fontFamilyNames.TryGetValue(path, out string? fontName) &&
-            _fontCollection.TryGet(fontName, out FontFamily fontFamily))
+        string fullPath = Path.GetFullPath(path);
+        LoadedFont loaded = _fontCache.GetOrAdd(fullPath, p =>
         {
-            return fontFamily;
-        }
-
-        fontFamily = _fontCollection.Add(path);
-        _fontFamilyNames.TryAdd(path, fontFamily.Name);
-        return fontFamily;
+            FontCollection collection = new();
+            FontFamily family = collection.Add(p);
+            return new(collection, family);
+        });
+        return loaded.Family;
     }
+
+    private sealed record LoadedFont(FontCollection Collection, FontFamily Family);
 }

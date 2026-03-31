@@ -1,0 +1,284 @@
+using Limekuma.Render.Nodes;
+using Limekuma.Render.Types;
+using SixLabors.Fonts;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Processing.Processors.Transforms;
+
+namespace Limekuma.Render;
+
+public static partial class NodeRenderer
+{
+    private static void RenderLayerNode(Image canvas, LayerNode layer, AssetProvider assets, AssetProvider measurer,
+        Point origin, float inheritedOpacity, Size? desiredSize, float scale, ResamplerType resampler) =>
+        RenderChildren(canvas, layer.Children, assets, measurer, origin, inheritedOpacity * layer.Opacity, desiredSize,
+            scale, resampler);
+
+    private static void RenderPositionedNode(Image canvas, PositionedNode pos, AssetProvider assets,
+        AssetProvider measurer, Point origin, float inheritedOpacity, Size? desiredSize, float scale,
+        ResamplerType resampler)
+    {
+        Size contentSize = MeasureChildren(pos.Children, assets, measurer);
+        int containerWidth = pos.Width ?? contentSize.Width;
+        int containerHeight = pos.Height ?? contentSize.Height;
+        int offsetX = pos.AnchorX switch
+        {
+            PositionAnchor.Center => containerWidth / 2,
+            PositionAnchor.End => containerWidth,
+            _ => 0
+        };
+        int offsetY = pos.AnchorY switch
+        {
+            PositionAnchor.Center => containerHeight / 2,
+            PositionAnchor.End => containerHeight,
+            _ => 0
+        };
+
+        Point childOrigin = new(origin.X + pos.Position.X - offsetX, origin.Y + pos.Position.Y - offsetY);
+        Size? childDesiredSize = (pos.Width.HasValue || pos.Height.HasValue)
+            ? new(containerWidth, containerHeight)
+            : desiredSize;
+        RenderChildren(canvas, pos.Children, assets, measurer, childOrigin, inheritedOpacity, childDesiredSize, scale,
+            resampler);
+    }
+
+    private static void RenderResizedNode(Image canvas, ResizedNode resize, AssetProvider assets,
+        AssetProvider measurer, Point origin, float inheritedOpacity)
+    {
+        Size naturalSize = Measure(resize.Child, assets, measurer);
+        int baseWidth = Math.Max(1, naturalSize.Width);
+        int baseHeight = Math.Max(1, naturalSize.Height);
+
+        using Image<Rgba32> rendered = new(baseWidth, baseHeight);
+        RenderNode(rendered, resize.Child, assets, measurer, new(0, 0), 1, null, 1, resize.Resampler);
+
+        int width = resize.DesiredSize?.Width ?? rendered.Width;
+        int height = resize.DesiredSize?.Height ?? rendered.Height;
+        width = Math.Max(1, (int)Math.Round(width * resize.Scale));
+        height = Math.Max(1, (int)Math.Round(height * resize.Scale));
+        rendered.Mutate(ctx => ctx.Resize(width, height, GetResampler(resize.Resampler)));
+        canvas.Mutate(ctx => ctx.DrawImage(rendered, origin, inheritedOpacity));
+    }
+
+    private static void RenderStackNode(Image canvas, StackNode stack, AssetProvider assets, AssetProvider measurer,
+        Point origin, float inheritedOpacity, Size? desiredSize, float scale, ResamplerType resampler)
+    {
+        List<Node> flowChildren = ExpandFlowChildren(stack.Children);
+        List<(Node Node, Size Size)> items = [.. flowChildren.Select(c => (c, Measure(c, assets, measurer)))];
+        if (items.Count is 0)
+        {
+            return;
+        }
+
+        bool isRow = stack.Direction is StackDirection.Row;
+        int containerMain = isRow ? desiredSize?.Width ?? int.MaxValue : desiredSize?.Height ?? int.MaxValue;
+        List<List<(Node Node, Size Size)>> lines = [];
+        List<(Node Node, Size Size)> currentLine = [];
+        int currentMain = 0;
+        foreach ((Node node, Size size) in items)
+        {
+            int itemMain = isRow ? size.Width : size.Height;
+            int nextMain = currentLine.Count is 0 ? itemMain : currentMain + stack.Spacing + itemMain;
+            bool wrapNow = stack.Wrap && currentLine.Count > 0 && nextMain > containerMain;
+            if (wrapNow)
+            {
+                lines.Add(currentLine);
+                currentLine = [];
+                currentMain = 0;
+            }
+
+            currentLine.Add((node, size));
+            currentMain = currentLine.Count is 1 ? itemMain : currentMain + stack.Spacing + itemMain;
+        }
+
+        if (currentLine.Count > 0)
+        {
+            lines.Add(currentLine);
+        }
+
+        List<(int Main, int Cross)> lineSize = [];
+        foreach (List<(Node Node, Size Size)> line in lines)
+        {
+            int lineMain = line.Sum(i => isRow ? i.Size.Width : i.Size.Height);
+            if (line.Count > 1)
+            {
+                lineMain += stack.Spacing * (line.Count - 1);
+            }
+
+            int lineCross = line.Max(i => isRow ? i.Size.Height : i.Size.Width);
+            lineSize.Add((lineMain, lineCross));
+        }
+
+        int contentMain = lineSize.Max(l => l.Main);
+        int contentCross = lineSize.Sum(l => l.Cross) + Math.Max(0, lines.Count - 1) * stack.RunSpacing;
+        int resolvedContainerMain = isRow
+            ? stack.Width ?? desiredSize?.Width ?? contentMain
+            : stack.Height ?? desiredSize?.Height ?? contentMain;
+
+        int crossCursor = isRow ? origin.Y : origin.X;
+        for (int lineIndex = 0; lineIndex < lines.Count; lineIndex++)
+        {
+            List<(Node Node, Size Size)> line = lines[lineIndex];
+            (int lineMain, int lineCross) = lineSize[lineIndex];
+            (int startMain, int between) = ResolveMainAxisLayout(stack.JustifyContent, resolvedContainerMain, lineMain,
+                stack.Spacing, line.Count);
+            int mainCursor = startMain;
+            foreach ((Node node, Size size) in line)
+            {
+                int itemCross = isRow ? size.Height : size.Width;
+                int crossOffset = ResolveStartCenterEndOffset(stack.AlignItems, lineCross, itemCross);
+                Size? childDesiredSize = null;
+                if (stack.AlignItems is AlignItems.Stretch)
+                {
+                    childDesiredSize = isRow ? new(size.Width, lineCross) : new(lineCross, size.Height);
+                }
+
+                Point childOrigin = isRow
+                    ? new(origin.X + mainCursor, crossCursor + crossOffset)
+                    : new(crossCursor + crossOffset, origin.Y + mainCursor);
+                RenderNode(canvas, node, assets, measurer, childOrigin, inheritedOpacity, childDesiredSize, scale,
+                    resampler);
+                mainCursor += (isRow ? size.Width : size.Height) + between;
+            }
+
+            crossCursor += lineCross + stack.RunSpacing;
+        }
+    }
+
+    private static void RenderGridNode(Image canvas, GridNode grid, AssetProvider assets, AssetProvider measurer,
+        Point origin, float inheritedOpacity, Size? desiredSize, float scale, ResamplerType resampler)
+    {
+        List<Node> flowChildren = ExpandFlowChildren(grid.Children);
+        if (flowChildren.Count == 0)
+        {
+            return;
+        }
+
+        int columns = Math.Max(1, grid.Columns);
+        int rows = (int)Math.Ceiling(flowChildren.Count / (double)columns);
+        Size[] sizes = [.. flowChildren.Select(c => Measure(c, assets, measurer))];
+        int[] colWidths = new int[columns];
+        int[] rowHeights = new int[rows];
+        for (int i = 0; i < flowChildren.Count; i++)
+        {
+            int r = i / columns;
+            int c = i % columns;
+            colWidths[c] = Math.Max(colWidths[c], sizes[i].Width);
+            rowHeights[r] = Math.Max(rowHeights[r], sizes[i].Height);
+        }
+
+        int[] colX = new int[columns];
+        int[] rowY = new int[rows];
+        for (int c = 1; c < columns; c++)
+        {
+            colX[c] = colX[c - 1] + colWidths[c - 1] + grid.ColumnGap;
+        }
+
+        for (int r = 1; r < rows; r++)
+        {
+            rowY[r] = rowY[r - 1] + rowHeights[r - 1] + grid.RowGap;
+        }
+
+        int contentWidth = colWidths.Sum() + Math.Max(0, columns - 1) * grid.ColumnGap;
+        int contentHeight = rowHeights.Sum() + Math.Max(0, rows - 1) * grid.RowGap;
+        int containerWidth = grid.Width ?? desiredSize?.Width ?? contentWidth;
+        int containerHeight = grid.Height ?? desiredSize?.Height ?? contentHeight;
+        int gridOffsetX = Math.Max(0, (containerWidth - contentWidth) / 2);
+        int gridOffsetY = Math.Max(0, (containerHeight - contentHeight) / 2);
+
+        for (int i = 0; i < flowChildren.Count; i++)
+        {
+            int r = i / columns;
+            int c = i % columns;
+            Size size = sizes[i];
+            int cellWidth = colWidths[c];
+            int cellHeight = rowHeights[r];
+            int childXOffset = ResolveStartCenterEndOffset(grid.JustifyItems, cellWidth, size.Width);
+            int childYOffset = ResolveStartCenterEndOffset(grid.AlignItems, cellHeight, size.Height);
+            Size? childDesiredSize = null;
+            if (grid.JustifyItems is AlignItems.Stretch || grid.AlignItems is AlignItems.Stretch)
+            {
+                childDesiredSize = new(
+                    grid.JustifyItems is AlignItems.Stretch ? cellWidth : size.Width,
+                    grid.AlignItems is AlignItems.Stretch ? cellHeight : size.Height);
+            }
+
+            Point childOrigin = new(origin.X + gridOffsetX + colX[c] + childXOffset,
+                origin.Y + gridOffsetY + rowY[r] + childYOffset);
+            RenderNode(canvas, flowChildren[i], assets, measurer, childOrigin, inheritedOpacity, childDesiredSize, scale,
+                resampler);
+        }
+    }
+
+    private static void RenderImageNode(Image canvas, ImageNode image, AssetProvider assets, Point origin,
+        float inheritedOpacity, Size? desiredSize, float scale, ResamplerType resampler)
+    {
+        using Image img = assets.LoadImage(image.Namespace, image.ResourceKey);
+        IResampler resamplerInstance = GetResampler(resampler);
+        if (desiredSize is { } desired && desired.Width > 0 && desired.Height > 0)
+        {
+            img.Mutate(c => c.Resize(desired.Width, desired.Height, resamplerInstance));
+        }
+
+        if (Math.Abs(scale - 1) > 0.0000001)
+        {
+            int width = Math.Max(1, (int)Math.Round(img.Width * scale));
+            int height = Math.Max(1, (int)Math.Round(img.Height * scale));
+            img.Mutate(c => c.Resize(width, height, resamplerInstance));
+        }
+
+        canvas.Mutate(c => c.DrawImage(img, origin, image.ColorBlending, image.AlphaComposition, inheritedOpacity,
+            image.ForegroundRepeatCount));
+    }
+
+    private static void RenderTextNode(Image canvas, TextNode textNode, AssetProvider assets, PointF origin)
+    {
+        (FontFamily mainFont, List<FontFamily> fallbacks) = assets.ResolveFont(textNode.FontFamily);
+        float scaledFontSize = (float)(textNode.FontSize * 72 / 300d);
+        Font font = new(mainFont, scaledFontSize);
+        RichTextOptions options = new(font)
+        {
+            Font = font,
+            FallbackFontFamilies = fallbacks,
+            Origin = origin,
+            TextAlignment = textNode.TextAlignment,
+            VerticalAlignment = textNode.VerticalAlignment,
+            HorizontalAlignment = textNode.HorizontalAlignment,
+            HintingMode = HintingMode.Standard,
+            Dpi = 300
+        };
+
+        string drawText = textNode.Text;
+        if (textNode is { TruncateWidth: { } tw, TruncateSubfix: { } ts })
+        {
+            string text = drawText;
+            while (text.Length > 0 && TextMeasurer.MeasureSize(drawText, options).Width > tw)
+            {
+                text = text[..^1];
+                drawText = $"{text}{ts}";
+            }
+
+            if (TextMeasurer.MeasureSize(drawText, options).Width > tw)
+            {
+                drawText = string.Empty;
+            }
+        }
+
+        if (textNode is { StrokeColor: { } sc, StrokeWidth: > 0 and var sw })
+        {
+            canvas.Mutate(ctx => ctx.DrawText(options, drawText, Brushes.Solid(textNode.Color), Pens.Solid(sc, sw)));
+            return;
+        }
+
+        canvas.Mutate(ctx => ctx.DrawText(options, drawText, textNode.Color));
+    }
+
+    private static void RenderCanvasNode(Image canvasImage, CanvasNode canvas, AssetProvider assets,
+        AssetProvider measurer, Point origin, float inheritedOpacity)
+    {
+        using Image subCanvas = Render(canvas, assets, measurer);
+        canvasImage.Mutate(c => c.DrawImage(subCanvas, origin, inheritedOpacity));
+    }
+}

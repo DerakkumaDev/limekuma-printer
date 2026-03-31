@@ -1,4 +1,4 @@
-namespace Limekuma.Render.Nodes;
+namespace Limekuma.Render.Types;
 
 public enum ResamplerType
 {

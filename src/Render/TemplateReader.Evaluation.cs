@@ -1,0 +1,245 @@
+using Limekuma.Render.ExpressionEngine;
+using Limekuma.Render.Types;
+using SixLabors.ImageSharp;
+using System.Globalization;
+using System.Text;
+using System.Xml.Linq;
+
+namespace Limekuma.Render;
+
+public sealed partial class TemplateReader
+{
+    private async Task<string> EvaluateRequiredTemplateAttributeAsync(XElement element, string name, object? scope) =>
+        await EvaluateTemplateAsync(GetRequiredAttributeValue(element, name), scope);
+
+    private async Task<string> EvaluateTemplateAttributeOrAsync(XElement element, string name, string defaultValue, object? scope)
+    {
+        XAttribute? attribute = element.Attribute(name);
+        if (attribute is null)
+        {
+            return defaultValue;
+        }
+
+        return await EvaluateTemplateAsync(attribute.Value, scope);
+    }
+
+    private async Task<string?> EvaluateOptionalSmartTemplateAttributeAsync(XElement element, string name, object? scope)
+    {
+        XAttribute? attribute = element.Attribute(name);
+        if (attribute is null)
+        {
+            return null;
+        }
+
+        Dictionary<string, object?> values = ScopeFlattener.Flatten(scope);
+        return Formatter.Format(attribute.Value, values);
+    }
+
+    private async Task<T> EvaluateRequiredExpressionAttributeAsync<T>(XElement element, string name, object? scope)
+    {
+        string raw = GetRequiredAttributeValue(element, name);
+        T? value = await EvaluateExpressionAsAsync<T>(raw, scope) ?? throw new InvalidOperationException($"Attribute '{name}' can not be null");
+        return value;
+    }
+
+    private async Task<T> EvaluateExpressionAttributeOrAsync<T>(XElement element, string name, T defaultValue, object? scope)
+    {
+        XAttribute? attribute = element.Attribute(name);
+        if (attribute is null)
+        {
+            return defaultValue;
+        }
+
+        if (defaultValue is null && string.IsNullOrEmpty(attribute.Value))
+        {
+            return defaultValue;
+        }
+
+        T? value = await EvaluateExpressionAsAsync<T>(attribute.Value, scope);
+        if (value is null)
+        {
+            return defaultValue;
+        }
+
+        return value;
+    }
+
+    private async Task<Size?> ParseOptionalSizeAsync(XElement element, object? scope)
+    {
+        string? width = element.Attribute("width")?.Value;
+        string? height = element.Attribute("height")?.Value;
+        if (width is null || height is null)
+        {
+            return null;
+        }
+
+        return new(
+            await EvaluateRequiredExpressionAsAsync<int>(width, scope),
+            await EvaluateRequiredExpressionAsAsync<int>(height, scope));
+    }
+
+    private async Task<T> EvaluateRequiredExpressionAsAsync<T>(string raw, object? scope)
+    {
+        T? value = await EvaluateExpressionAsAsync<T>(raw, scope) ?? throw new InvalidOperationException($"Can not evaluate expression '{raw}'");
+        return value;
+    }
+
+    private async Task<Color> ParseColorAttributeOrAsync(XElement element, string name, string defaultRaw, object? scope)
+    {
+        string raw = GetAttributeValueOrDefault(element, name, defaultRaw);
+        string colorText = await EvaluateTemplateAsync(raw, scope);
+        return Color.Parse(colorText);
+    }
+
+    private async Task<Color?> ParseColorAttributeAsync(XElement element, string name, object? scope)
+    {
+        string? raw = element.Attribute(name)?.Value;
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return null;
+        }
+
+        string colorText = await EvaluateTemplateAsync(raw, scope);
+        return Color.Parse(colorText);
+    }
+
+    private async Task<ResamplerType> ParseResamplerTypeAsync(XElement element, object? scope)
+    {
+        string resamplerName = await EvaluateTemplateAttributeOrAsync(element, "resampler", nameof(ResamplerType.Lanczos3), scope);
+        if (Enum.TryParse(resamplerName, true, out ResamplerType resampler))
+        {
+            return resampler;
+        }
+
+        return ResamplerType.Lanczos3;
+    }
+
+    private async Task<string> EvaluateTemplateAsync(string? template, object? scope)
+    {
+        if (template is null)
+        {
+            return string.Empty;
+        }
+
+        Dictionary<string, string> expressionTokens = new(StringComparer.Ordinal);
+        string safeTemplate = template;
+        int tokenIndex = 0;
+
+        foreach (System.Text.RegularExpressions.Match match in ExprSegmentRegex().Matches(template))
+        {
+            string token = $"__EXPR_TOKEN_{tokenIndex}__";
+            expressionTokens[token] = match.Groups[1].Value;
+            safeTemplate = safeTemplate.Replace(match.Value, token, StringComparison.Ordinal);
+            tokenIndex++;
+        }
+
+        IDictionary<string, object?> values = ScopeFlattener.Flatten(scope);
+        string formatted = Formatter.Format(safeTemplate, values);
+        if (expressionTokens.Count is 0)
+        {
+            return formatted;
+        }
+
+        StringBuilder output = new();
+        int offset = 0;
+
+        foreach ((string token, string expressionText) in expressionTokens)
+        {
+            int tokenPosition = formatted.IndexOf(token, offset, StringComparison.Ordinal);
+            if (tokenPosition < 0)
+            {
+                continue;
+            }
+
+            output.Append(formatted, offset, tokenPosition - offset);
+            object? value = await _expressionEngine.EvalAsync(expressionText, scope);
+            output.Append(Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty);
+            offset = tokenPosition + token.Length;
+        }
+
+        output.Append(formatted, offset, formatted.Length - offset);
+        return output.ToString();
+    }
+
+    private async Task<T?> EvaluateExpressionAsAsync<T>(string raw, object? scope)
+    {
+        Type targetType = typeof(T);
+        Type nonNullableType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+        string templateValue = await EvaluateTemplateAsync(raw, scope);
+        if (TryConvert(templateValue, nonNullableType, out object? convertedTemplateValue))
+        {
+            return (T?)convertedTemplateValue;
+        }
+
+        object? expressionValue = await _expressionEngine.EvalAsync(raw, scope);
+        if (expressionValue is null)
+        {
+            return default;
+        }
+
+        if (targetType.IsInstanceOfType(expressionValue))
+        {
+            return (T)expressionValue;
+        }
+
+        if (TryConvert(expressionValue, nonNullableType, out object? convertedExpressionValue))
+        {
+            return (T?)convertedExpressionValue;
+        }
+
+        return (T?)Convert.ChangeType(expressionValue, nonNullableType, CultureInfo.InvariantCulture);
+    }
+
+    private static bool TryConvert(object? value, Type targetType, out object? converted)
+    {
+        if (value is null)
+        {
+            converted = null;
+            return false;
+        }
+
+        if (targetType == typeof(string))
+        {
+            converted = Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
+            return true;
+        }
+
+        if (targetType == typeof(int) && int.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture),
+                NumberStyles.Integer, CultureInfo.InvariantCulture, out int intValue))
+        {
+            converted = intValue;
+            return true;
+        }
+
+        if (targetType == typeof(float) && float.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture),
+                NumberStyles.Float, CultureInfo.InvariantCulture, out float floatValue))
+        {
+            converted = floatValue;
+            return true;
+        }
+
+        if (targetType == typeof(double) && double.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture),
+                NumberStyles.Float, CultureInfo.InvariantCulture, out double doubleValue))
+        {
+            converted = doubleValue;
+            return true;
+        }
+
+        if (targetType == typeof(bool) && bool.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture), out bool boolValue))
+        {
+            converted = boolValue;
+            return true;
+        }
+
+        if (targetType.IsEnum && Enum.TryParse(targetType, Convert.ToString(value, CultureInfo.InvariantCulture), true,
+                out object? enumValue))
+        {
+            converted = enumValue;
+            return true;
+        }
+
+        converted = null;
+        return false;
+    }
+}
