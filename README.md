@@ -1,226 +1,101 @@
 <div align="center">
-<img src="docs/dxkuma.png" width="20%">
 
-# 迪拉熊 Bot - Derakkuma Bot
+<img src="docs/dxkuma.png" width="22%">
+
+# 迪拉熊Bot - Derakkuma Bot
 
 ## 酸橙熊熊 - Limekuma
 
+为舞萌DX设计的成绩图片渲染微服务
+
 </div>
 
+![Static Badge](https://img.shields.io/badge/Ver-LI26.14--A-blue)
+![Static Badge](https://img.shields.io/badge/License-AGPLv3-orange)
 [![CodeFactor](https://www.codefactor.io/repository/github/derakkumadev/limekuma-printer/badge)](https://www.codefactor.io/repository/github/derakkumadev/limekuma-printer)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/679c7eab2c8d48af8069da446f5ff8ae)](https://app.codacy.com/gh/DerakkumaDev/limekuma-printer/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![QQ](https://img.shields.io/badge/2689340931-gray?logo=qq&style=social)](https://qm.qq.com/cgi-bin/qm/qr?k=LyQOTRI7ViXYSTg0zbS2sGgcmkbYrxbP)
+[![QQ](https://img.shields.io/badge/Bot-迪拉熊-grey?style=social&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMTIuODIgMTMwLjg5Ij48ZyBkYXRhLW5hbWU9IuWbvuWxgiAyIj48ZyBkYXRhLW5hbWU9IuWbvuWxgiAxIj48cGF0aCBkPSJNNTUuNjMgMTMwLjhjLTcgMC0xMy45LjA4LTIwLjg2IDAtMTkuMTUtLjI1LTMxLjcxLTExLjQtMzQuMjItMzAuMy00LjA3LTMwLjY2IDE0LjkzLTU5LjIgNDQuODMtNjYuNjQgMi0uNTEgNS4yMS0uMzEgNS4yMS0xLjYzIDAtMi4xMy4xNC0yLjEzLjE0LTUuNTcgMC0uODktMS4zLTEuNDYtMi4yMi0yLjMxLTYuNzMtNi4yMy03LjY3LTEzLjQxLTEtMjAuMTggNS40LTUuNTIgMTEuODctNS40IDE3LjgtLjU5IDYuNDkgNS4yNiA2LjMxIDEzLjA4LS44NiAyMS0uNjguNzQtMS43OCAxLjYtMS43OCAyLjY3djQuMjFjMCAxLjM1IDIuMiAxLjYyIDQuNzkgMi4zNSAzMS4wOSA4LjY1IDQ4LjE3IDM0LjEzIDQ1IDY2LjM3LTEuNzYgMTguMTUtMTQuNTYgMzAuMjMtMzIuNyAzMC42My04LjAyLjE5LTE2LjA3LS4wMS0yNC4xMy0uMDF6IiBmaWxsPSIjMDI5OWZlIi8+PHBhdGggZD0iTTMxLjQ2IDExOC4zOGMtMTAuNS0uNjktMTYuOC02Ljg2LTE4LjM4LTE3LjI3LTMtMTkuNDIgMi43OC0zNS44NiAxOC40Ni00Ny44MyAxNC4xNi0xMC44IDI5Ljg3LTEyIDQ1LjM4LTMuMTkgMTcuMjUgOS44NCAyNC41OSAyNS44MSAyNCA0NS4yOS0uNDkgMTUuOS04LjQyIDIzLjE0LTI0LjM4IDIzLjUtNi41OS4xNC0xMy4xOSAwLTE5Ljc5IDAiIGZpbGw9IiNmZWZlZmUiLz48cGF0aCBkPSJNNDYuMDUgNzkuNThjLjA5IDUgLjIzIDkuODItNyA5Ljc3LTcuODItLjA2LTYuMS01LjY5LTYuMjQtMTAuMTktLjE1LTQuODItLjczLTEwIDYuNzMtOS44NHM2LjM3IDUuNTUgNi41MSAxMC4yNnoiIGZpbGw9IiMxMDlmZmUiLz48cGF0aCBkPSJNODAuMjcgNzkuMjdjLS41MyAzLjkxIDEuNzUgOS42NC01Ljg4IDEwLTcuNDcuMzctNi44MS00LjgyLTYuNjEtOS41LjItNC4zMi0xLjgzLTEwIDUuNzgtMTAuNDJzNi41OSA0Ljg5IDYuNzEgOS45MnoiIGZpbGw9IiMwODljZmUiLz48L2c+PC9nPjwvc3ZnPg==)](https://qun.qq.com/qunpro/robot/qunshare?robot_appid=102613765&robot_uin=3889525249)
+[![QQ](https://img.shields.io/badge/Bot-迪拉熊-gray?logo=qq&style=social)](https://qm.qq.com/cgi-bin/qm/qr?k=LyQOTRI7ViXYSTg0zbS2sGgcmkbYrxbP)
+[![QQ](https://img.shields.io/badge/Group-迪拉熊开发者交流群-gray?logo=qq&style=social)](https://qm.qq.com/cgi-bin/qm/qr?k=g-3hU7eFmvcFUuCKdCE-3COu8Ej9LfnD&jump_from=webapi&authKey=IpqRZXflOY9UKkYPn0Ho2RrVBw+UF2pfTZk6WnhU39idA4AyJt65nAwfuPfn1yZ+)
 
 ## 📖 项目简介
 
-酸橙熊熊（青柠熊熊）是一个舞萌 DX 数据渲染服务，提供高性能的图像生成和数据处理能力。项目基于 .NET 构建，采用 gRPC 协议提供高效的远程过程调用服务。
+酸橙熊熊（青柠熊熊）是一个高性能图片生成后端服务。主要用于接入舞萌DX的查分器数据，为玩家的游玩成绩（如B50、成绩列表等）生成精美的图片，常作为机器人（如迪拉熊Bot）的后端渲染引擎。
 
-## ✨ 主要特性
+本项目通过纯托管图形库ImageSharp实现了脱离原生环境依赖的图形渲染，并内置了基于XML的灵活布局引擎，能够动态渲染丰富多样的玩家成绩卡片。
 
-- 🎯 **多数据源支持**: 同时支持落雪和水鱼数据源
-- 🎨 **高质量渲染**: 基于 SixLabors.ImageSharp 的高性能图像渲染引擎
-- 📊 **数据统计**: 提供 Best 50、歌曲列表等多种数据展示
-- 🔄 **实时处理**: 支持流式图像数据传输
-- 🎭 **动画支持**: 可生成动画效果的 Best 50 图片
-- 🎮 **游戏集成**: 专为舞萌 DX 游戏设计的数据处理
+## 📚 项目文档
 
-## 🏗️ 技术架构
+关于酸橙熊熊的详细介绍、架构设计以及协作者接入指南，请参阅我们的[官方文档](https://dxkuma.srcz.one/collaborator-guide/limekuma-intro.html)。
 
-### 核心技术栈
+## ✨ 核心特性
 
-- **运行时**: .NET
-- **通信协议**: gRPC
-- **图像处理**: SixLabors.ImageSharp.Drawing
-- **字体渲染**: SixLabors.Fonts
-- **表达式引擎**: NCalc
-- **模板引擎**: SmartFormat
+- 🚀 **高性能渲染**：基于ImageSharp，无需依赖本地系统GDI或libgdiplus，跨平台支持好。
+- 📊 **多数据源支持**:
+  - 原生支持[落雪咖啡屋 (Lxns)](https://maimai.lxns.net)查分器API
+  - 原生支持[水鱼 (Diving-Fish)](https://www.diving-fish.com/maimaidx/prober/)查分器API
+- 🖼️ **丰富的图像生成接口**:
+  - **BestsApi**：生成玩家B50成绩图，支持段位、等级、头像细分及动图组合。
+  - **ListApi**：生成玩家特定等级谱面的成绩列表图。
+- 🔧 **自定义布局引擎**：渲染逻辑与布局分离，基于XML节点定义的灵活布局系统。
+- 📡 **流式gRPC通信**：基于Protobuf定义，提供流式的图片字节序列返回，降低大图片传输的内存占用。
 
-### 项目结构
+## 🛠️ 技术栈
 
-```
-Limekuma/
-├── src/                      # 源代码目录
-│   ├── Prober/               # 数据探针模块
-│   │   ├── Common/           # 通用数据模型
-│   │   ├── DivingFish/       # 水鱼数据源
-│   │   └── Lxns/             # 落雪数据源
-│   ├── Render/               # 渲染引擎
-│   │   ├── ExpressionEngine/ # 表达式引擎
-│   │   ├── Nodes/            # 渲染节点
-│   │   └── XmlSceneLoader.cs # XML场景加载器
-│   ├── Services/             # gRPC服务实现
-│   │   ├── BestsService.cs   # Best 50服务
-│   │   ├── ListService.cs    # 列表服务
-│   │   └── ...
-│   ├── Utils/                # 工具类
-│   ├── Protos/               # Protocol Buffers定义
-│   └── Resources/            # 资源文件
-├── docs/                     # 文档资源
-└── .github/                  # GitHub工作流
+- **核心框架**：.NET
+- **通信协议**：gRPC
+- **图像处理**：ImageSharp
+- **表达式引擎**：NCalc
+- **模板引擎**：SmartFormat
+- **配置管理**：Hocon
+
+## 📦 快速开始
+
+### 1. 环境要求
+
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+
+### 2. 获取源码
+
+```bash
+git clone <your-repo-url>/limekuma-printer.git
+cd limekuma-printer
 ```
 
-## 🚀 快速开始
+### 3. 安装依赖
 
-### 环境要求
-
-- .NET 10.0 SDK
-- 支持 HTTP/2 的客户端
-
-### 安装与运行
-
-1. **克隆项目**
-
-   ```bash
-   git clone https://github.com/DerakkumaDev/limekuma-printer.git
-   cd limekuma-printer
-   ```
-
-2. **恢复依赖**
-
-   ```bash
-   dotnet restore
-   ```
-
-3. **运行服务**
-   ```bash
-   dotnet run --project src/Limekuma.csproj
-   ```
-
-### 服务端点
-
-服务默认运行在 HTTP/2 端口，支持以下 gRPC 服务：
-
-#### BestsApi 服务
-
-- `GetFromLxns`: 从落雪获取 Best 50
-- `GetAnimeFromLxns`: 从落雪获取动画版 Best 50
-- `GetFromLxnsWithLevelSeg`: 从落雪获取带等级建议的 Best 50
-- `GetFromDivingFish`: 从水鱼获取 Best 50
-- `GetAnimeFromDivingFish`: 从水鱼获取动画版 Best 50
-- `GetFromDivingFishWithLevelSeg`: 从水鱼获取带等级建议的 Best 50
-
-#### ListApi 服务
-
-- `GetFromLxns`: 从落雪获取达成表
-- `GetFromDivingFish`: 从水鱼获取达成表
-
-## 📊 API 使用示例
-
-### gRPC 客户端调用
-
-```csharp
-// 创建gRPC客户端
-var channel = GrpcChannel.ForAddress("https://localhost:5001");
-var client = new BestsApi.BestsApiClient(channel);
-
-// 请求落雪Best 50数据
-var request = new LxnsBestsRequest
-{
-    DevToken = "your_dev_token",
-    Qq = 123456789,
-    PersonalToken = "your_personal_token"
-};
-
-using var call = client.GetFromLxns(request);
-await foreach (var imageResponse in call.ResponseStream.ReadAllAsync())
-{
-    // 处理图像数据
-    var imageData = imageResponse.Data;
-}
+```bash
+dotnet restore
 ```
 
-## 🎨 渲染系统
+### 4. 运行项目
 
-### XML 场景描述
-
-项目使用自定义的 XML 格式描述渲染场景：
-
-```xml
-<Canvas width="1200" height="1600" background="#FFFFFFFF">
-    <Layer opacity="1">
-        <Positioned x="100" y="100">
-            <Text value="玩家Best 50" fontFamily="NotoSans" fontSize="24" color="#000000"/>
-        </Positioned>
-        <For items="records" var="record" indexVar="i">
-            <Positioned x="{100 + (i % 5) * 120}" y="{200 + (i / 5) * 120}">
-                <Image namespace="Jacket" id="{record.JacketId}"/>
-            </Positioned>
-        </For>
-    </Layer>
-</Canvas>
+```bash
+dotnet run --project src/Limekuma.csproj
 ```
 
-### 支持的节点类型
+项目启动后，将通过配置中指定的端口提供gRPC服务。
 
-- `Canvas`: 画布容器
-- `Layer`: 图层（支持透明度）
-- `Positioned`: 定位容器
-- `Image`: 图像节点
-- `Text`: 文本节点
-- `Stack`: 堆叠布局
-- `If`: 条件渲染
-- `For`: 循环渲染
+## 📜 接口定义
 
-## 🔧 配置说明
+API接口均定义在[`src/Protos/kumabot.proto`](src/Protos/kumabot.proto)文件中。
 
-### appsettings.json
+### 支持的RPC方法
 
-```json
-{
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
-  },
-  "AllowedHosts": "*",
-  "Kestrel": {
-    "EndpointDefaults": {
-      "Protocols": "Http2"
-    }
-  }
-}
-```
+- **BestsApi**
+  - `GetFromLxns` / `GetFromDivingFish`：获取常规B50图片。
+  - `GetAnimeFromLxns` / `GetAnimeFromDivingFish`：获取包含动画版B50图片。
+  - `GetFromLxnsWithLevelSeg` / `GetFromDivingFishWithLevelSeg`：获取带等级建议的B50图片。
+- **ListApi**
+  - `GetFromLxns` / `GetFromDivingFish`：获取指定等级或页码的玩家成绩列表图片。
 
-## 📈 性能优化
+## 📄 开源协议
 
-- **内存管理**: 使用 ImageSharp 的高效内存处理
-- **并行处理**: 支持异步并行图像处理
-- **资源缓存**: 智能资源缓存机制
-- **流式传输**: 支持分块流式图像传输
-
-## 🤝 贡献指南
-
-1. Fork 本项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull request
-
-## 📄 许可证
-
-本项目采用 GNU Affero General Public License v3.0 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+本项目基于**GNU Affero General Public License v3.0（AGPL-3.0）**协议开源。详细信息请参阅[LICENSE](LICENSE)文件。
 
 ## 🐛 问题反馈
 
 如果您遇到任何问题或有建议，请通过以下方式联系我们：
 
-- 📧 QQ: 2689340931
-- 🐛 [源域漏洞追踪系统](https://l.srcz.one/kumabugs)
-
-## 🙏 致谢
-
-感谢以下开源项目的支持：
-
-- [SixLabors.ImageSharp](https://github.com/SixLabors/ImageSharp)
-- [Grpc.AspNetCore](https://github.com/grpc/grpc-dotnet)
-- [NCalc](https://github.com/ncalc/ncalc)
-- [SmartFormat](https://github.com/axuno/SmartFormat)
-
----
-
-<div align="center">
-
-**让音游数据渲染更简单** · **Powered by .NET**
-
-</div>
+- 📧 [迪拉熊开发者交流群](https://qm.qq.com/cgi-bin/qm/qr?k=g-3hU7eFmvcFUuCKdCE-3COu8Ej9LfnD&jump_from=webapi&authKey=IpqRZXflOY9UKkYPn0Ho2RrVBw+UF2pfTZk6WnhU39idA4AyJt65nAwfuPfn1yZ+)
+- 🐛 [Codeberg](https://codeberg.org/Derakkuma/dxkuma-bot)
