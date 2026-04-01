@@ -4,11 +4,12 @@ namespace Limekuma.Render.Nodes;
 
 public sealed record StackNode(
     StackDirection Direction,
-    int Spacing,
-    int RunSpacing,
+    float Spacing,
+    float RunSpacing,
     bool Wrap,
     StackJustifyContent JustifyContent,
     AlignItems AlignItems,
+    ContentAlign AlignContent,
     int? Width,
     int? Height,
     List<Node> Children,

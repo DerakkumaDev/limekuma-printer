@@ -5,7 +5,8 @@ namespace Limekuma.Render.Nodes;
 
 public sealed record ResizedNode(
     float Scale,
-    Size? DesiredSize,
+    int? Width,
+    int? Height,
     ResamplerType Resampler,
     Node Child,
     string? Key

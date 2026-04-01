@@ -13,12 +13,14 @@ public static partial class NodeRenderer
     public static Image Render(CanvasNode root, AssetProvider assets, AssetProvider measurer)
     {
         Image<Rgba32> canvas = new(root.Width, root.Height);
+        Dictionary<Node, Size> measurementCache = new(ReferenceEqualityComparer.Instance);
         if (root.Background is { } bg)
         {
             canvas.Mutate(ctx => ctx.Fill(bg));
         }
 
-        RenderChildren(canvas, root.Children, assets, measurer, new(0, 0), 1, null, 1, ResamplerType.Lanczos3);
+        RenderChildren(canvas, root.Children, assets, measurer, new(0, 0), 1, null, 1, ResamplerType.Lanczos3,
+            measurementCache);
         return canvas;
     }
 
@@ -44,40 +46,43 @@ public static partial class NodeRenderer
 
     private static void RenderChildren(Image canvas, IEnumerable<Node> children, AssetProvider assets,
         AssetProvider measurer, Point origin, float inheritedOpacity, Size? desiredSize, float scale,
-        ResamplerType resampler)
+        ResamplerType resampler, Dictionary<Node, Size> measurementCache)
     {
         foreach (Node node in children)
         {
-            RenderNode(canvas, node, assets, measurer, origin, inheritedOpacity, desiredSize, scale, resampler);
+            RenderNode(canvas, node, assets, measurer, origin, inheritedOpacity, desiredSize, scale, resampler,
+                measurementCache);
         }
     }
 
     private static void RenderNode(Image canvas, Node node, AssetProvider assets, AssetProvider measurer,
-        Point origin, float inheritedOpacity, Size? desiredSize, float scale, ResamplerType resampler)
+        Point origin, float inheritedOpacity, Size? desiredSize, float scale, ResamplerType resampler,
+        Dictionary<Node, Size> measurementCache)
     {
         switch (node)
         {
             case LayerNode layer:
                 RenderLayerNode(canvas, layer, assets, measurer, origin, inheritedOpacity, desiredSize, scale,
-                    resampler);
+                    resampler, measurementCache);
                 break;
 
             case PositionedNode pos:
                 RenderPositionedNode(canvas, pos, assets, measurer, origin, inheritedOpacity, desiredSize, scale,
-                    resampler);
+                    resampler, measurementCache);
                 break;
 
             case ResizedNode resize:
-                RenderResizedNode(canvas, resize, assets, measurer, origin, inheritedOpacity);
+                RenderResizedNode(canvas, resize, assets, measurer, origin, inheritedOpacity, measurementCache);
                 break;
 
             case StackNode stack:
                 RenderStackNode(canvas, stack, assets, measurer, origin, inheritedOpacity, desiredSize, scale,
-                    resampler);
+                    resampler, measurementCache);
                 break;
 
             case GridNode grid:
-                RenderGridNode(canvas, grid, assets, measurer, origin, inheritedOpacity, desiredSize, scale, resampler);
+                RenderGridNode(canvas, grid, assets, measurer, origin, inheritedOpacity, desiredSize, scale, resampler,
+                    measurementCache);
                 break;
 
             case ImageNode image:
@@ -85,7 +90,7 @@ public static partial class NodeRenderer
                 break;
 
             case TextNode text:
-                RenderTextNode(canvas, text, assets, origin);
+                RenderTextNode(canvas, text, assets, origin, inheritedOpacity);
                 break;
 
             case CanvasNode subCanvas:

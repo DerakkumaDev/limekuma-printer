@@ -1,23 +1,36 @@
 using Limekuma.Render.Nodes;
 using Limekuma.Render.Types;
+using SixLabors.Fonts;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing.Processing;
 
 namespace Limekuma.Render;
 
 public static partial class NodeRenderer
 {
-    private static Size Measure(Node node, AssetProvider assets, AssetProvider measurer) => node switch
+    private static Size Measure(Node node, AssetProvider assets, AssetProvider measurer,
+        Dictionary<Node, Size> measurementCache)
     {
-        ImageNode image => MeasureImageNode(image, assets),
-        TextNode text => MeasureTextNode(text, measurer),
-        ResizedNode resized => MeasureResizedNode(resized, assets, measurer),
-        StackNode stack => MeasureStackNode(stack, assets, measurer),
-        GridNode grid => MeasureGridNode(grid, assets, measurer),
-        LayerNode layer => MeasureLayerNode(layer, assets, measurer),
-        PositionedNode pos => MeasurePositionedNode(pos, assets, measurer),
-        CanvasNode canvas => new(canvas.Width, canvas.Height),
-        _ => Size.Empty
-    };
+        if (measurementCache.TryGetValue(node, out Size cached))
+        {
+            return cached;
+        }
+
+        Size measured = node switch
+        {
+            ImageNode image => MeasureImageNode(image, assets),
+            TextNode text => MeasureTextNode(text, measurer),
+            ResizedNode resized => MeasureResizedNode(resized, assets, measurer, measurementCache),
+            StackNode stack => MeasureStackNode(stack, assets, measurer, measurementCache),
+            GridNode grid => MeasureGridNode(grid, assets, measurer, measurementCache),
+            LayerNode layer => MeasureLayerNode(layer, assets, measurer, measurementCache),
+            PositionedNode pos => MeasurePositionedNode(pos, assets, measurer, measurementCache),
+            CanvasNode canvas => new(canvas.Width, canvas.Height),
+            _ => Size.Empty
+        };
+        measurementCache[node] = measured;
+        return measured;
+    }
 
     private static Size MeasureImageNode(ImageNode image, AssetProvider assets)
     {
@@ -25,24 +38,52 @@ public static partial class NodeRenderer
         return new(img.Width, img.Height);
     }
 
-    private static Size MeasureTextNode(TextNode text, AssetProvider measurer) =>
-        measurer.Measure(text.Text, text.FontFamily, text.FontSize);
-
-    private static Size MeasureResizedNode(ResizedNode resized, AssetProvider assets, AssetProvider measurer)
+    private static Size MeasureTextNode(TextNode text, AssetProvider measurer)
     {
-        Size baseSize = resized.DesiredSize ?? Measure(resized.Child, assets, measurer);
-        int width = Math.Max(1, (int)Math.Round(baseSize.Width * resized.Scale));
-        int height = Math.Max(1, (int)Math.Round(baseSize.Height * resized.Scale));
+        (FontFamily mainFont, List<FontFamily> fallbacks) = measurer.ResolveFont(text.FontFamily);
+        float scaledFontSize = (float)(text.FontSize * 72f / 300f);
+        Font font = new(mainFont, scaledFontSize);
+        RichTextOptions options = new(font)
+        {
+            Font = font,
+            FallbackFontFamilies = fallbacks,
+            TextAlignment = text.TextAlignment,
+            VerticalAlignment = text.VerticalAlignment,
+            HorizontalAlignment = text.HorizontalAlignment,
+            HintingMode = HintingMode.Standard,
+            Dpi = 300
+        };
+
+        string measuredText = text.Text;
+        if (text is { TruncateWidth: { } tw, TruncateSuffix: { } ts })
+        {
+            measuredText = TruncateTextByWidth(measuredText, ts, tw, options);
+        }
+
+        FontRectangle rect = TextMeasurer.MeasureSize(measuredText, options);
+        return new((int)Math.Ceiling(rect.Width), (int)Math.Ceiling(rect.Height));
+    }
+
+    private static Size MeasureResizedNode(ResizedNode resized, AssetProvider assets, AssetProvider measurer,
+        Dictionary<Node, Size> measurementCache)
+    {
+        Size baseSize = Measure(resized.Child, assets, measurer, measurementCache);
+        int width = resized.Width ?? baseSize.Width;
+        int height = resized.Height ?? baseSize.Height;
+        width = Math.Max(1, (int)Math.Round(width * resized.Scale));
+        height = Math.Max(1, (int)Math.Round(height * resized.Scale));
         return new(width, height);
     }
 
-    private static Size MeasureStackNode(StackNode stack, AssetProvider assets, AssetProvider measurer)
+    private static Size MeasureStackNode(StackNode stack, AssetProvider assets, AssetProvider measurer,
+        Dictionary<Node, Size> measurementCache)
     {
         List<Node> flowChildren = ExpandFlowChildren(stack.Children);
-        int width = 0, height = 0;
+        float width = 0;
+        float height = 0;
         for (int i = 0; i < flowChildren.Count; ++i)
         {
-            Size child = Measure(flowChildren[i], assets, measurer);
+            Size child = Measure(flowChildren[i], assets, measurer, measurementCache);
             if (stack.Direction is StackDirection.Row)
             {
                 width += child.Width + (i < flowChildren.Count - 1 ? stack.Spacing : 0);
@@ -55,10 +96,11 @@ public static partial class NodeRenderer
             }
         }
 
-        return new(width, height);
+        return new((int)Math.Ceiling(width), (int)Math.Ceiling(height));
     }
 
-    private static Size MeasureGridNode(GridNode grid, AssetProvider assets, AssetProvider measurer)
+    private static Size MeasureGridNode(GridNode grid, AssetProvider assets, AssetProvider measurer,
+        Dictionary<Node, Size> measurementCache)
     {
         List<Node> flowChildren = ExpandFlowChildren(grid.Children);
         if (flowChildren.Count is 0)
@@ -72,7 +114,7 @@ public static partial class NodeRenderer
         int[] rowHeights = new int[rows];
         for (int i = 0; i < flowChildren.Count; i++)
         {
-            Size size = Measure(flowChildren[i], assets, measurer);
+            Size size = Measure(flowChildren[i], assets, measurer, measurementCache);
             int r = i / columns;
             int c = i % columns;
             colWidths[c] = Math.Max(colWidths[c], size.Width);
@@ -84,24 +126,27 @@ public static partial class NodeRenderer
         return new(grid.Width ?? width, grid.Height ?? height);
     }
 
-    private static Size MeasurePositionedNode(PositionedNode pos, AssetProvider assets, AssetProvider measurer)
+    private static Size MeasurePositionedNode(PositionedNode pos, AssetProvider assets, AssetProvider measurer,
+        Dictionary<Node, Size> measurementCache)
     {
-        Size contentSize = MeasureChildren(pos.Children, assets, measurer);
+        Size contentSize = MeasureChildren(pos.Children, assets, measurer, measurementCache);
         int width = Math.Max(pos.Width ?? 0, contentSize.Width);
         int height = Math.Max(pos.Height ?? 0, contentSize.Height);
         return new(pos.Position.X + width, pos.Position.Y + height);
     }
 
-    private static Size MeasureLayerNode(LayerNode layer, AssetProvider assets, AssetProvider measurer) =>
-        MeasureChildren(layer.Children, assets, measurer);
+    private static Size MeasureLayerNode(LayerNode layer, AssetProvider assets, AssetProvider measurer,
+        Dictionary<Node, Size> measurementCache) =>
+        MeasureChildren(layer.Children, assets, measurer, measurementCache);
 
-    private static Size MeasureChildren(IEnumerable<Node> children, AssetProvider assets, AssetProvider measurer)
+    private static Size MeasureChildren(IEnumerable<Node> children, AssetProvider assets, AssetProvider measurer,
+        Dictionary<Node, Size> measurementCache)
     {
         int width = 0;
         int height = 0;
         foreach (Node child in children)
         {
-            Size size = Measure(child, assets, measurer);
+            Size size = Measure(child, assets, measurer, measurementCache);
             width = Math.Max(width, size.Width);
             height = Math.Max(height, size.Height);
         }

@@ -23,7 +23,7 @@ public sealed partial class TemplateReader
         return await EvaluateTemplateAsync(attribute.Value, scope);
     }
 
-    private async Task<string?> EvaluateOptionalSmartTemplateAttributeAsync(XElement element, string name, object? scope)
+    private async Task<string?> EvaluateOptionalTemplateAttributeAsync(XElement element, string name, object? scope)
     {
         XAttribute? attribute = element.Attribute(name);
         if (attribute is null)
@@ -31,14 +31,14 @@ public sealed partial class TemplateReader
             return null;
         }
 
-        Dictionary<string, object?> values = ScopeFlattener.Flatten(scope);
-        return Formatter.Format(attribute.Value, values);
+        return await EvaluateTemplateAsync(attribute.Value, scope);
     }
 
     private async Task<T> EvaluateRequiredExpressionAttributeAsync<T>(XElement element, string name, object? scope)
     {
         string raw = GetRequiredAttributeValue(element, name);
-        T? value = await EvaluateExpressionAsAsync<T>(raw, scope) ?? throw new InvalidOperationException($"Attribute '{name}' can not be null");
+        T? value = await EvaluateExpressionAsAsync<T>(raw, scope) ?? throw new InvalidOperationException(
+            $"DSL[AttributeNull] Required attribute evaluated to null. Context: element='{element.Name.LocalName}', attribute='{name}', expression='{raw}'");
         return value;
     }
 
@@ -64,23 +64,10 @@ public sealed partial class TemplateReader
         return value;
     }
 
-    private async Task<Size?> ParseOptionalSizeAsync(XElement element, object? scope)
-    {
-        string? width = element.Attribute("width")?.Value;
-        string? height = element.Attribute("height")?.Value;
-        if (width is null || height is null)
-        {
-            return null;
-        }
-
-        return new(
-            await EvaluateRequiredExpressionAsAsync<int>(width, scope),
-            await EvaluateRequiredExpressionAsAsync<int>(height, scope));
-    }
-
     private async Task<T> EvaluateRequiredExpressionAsAsync<T>(string raw, object? scope)
     {
-        T? value = await EvaluateExpressionAsAsync<T>(raw, scope) ?? throw new InvalidOperationException($"Can not evaluate expression '{raw}'");
+        T? value = await EvaluateExpressionAsAsync<T>(raw, scope) ?? throw new InvalidOperationException(
+            $"DSL[ExpressionEval] Can not evaluate expression. Context: expression='{raw}'");
         return value;
     }
 
@@ -104,15 +91,7 @@ public sealed partial class TemplateReader
     }
 
     private async Task<ResamplerType> ParseResamplerTypeAsync(XElement element, object? scope)
-    {
-        string resamplerName = await EvaluateTemplateAttributeOrAsync(element, "resampler", nameof(ResamplerType.Lanczos3), scope);
-        if (Enum.TryParse(resamplerName, true, out ResamplerType resampler))
-        {
-            return resampler;
-        }
-
-        return ResamplerType.Lanczos3;
-    }
+        => await EvaluateExpressionAttributeOrAsync(element, "resampler", ResamplerType.Lanczos3, scope);
 
     private async Task<string> EvaluateTemplateAsync(string? template, object? scope)
     {
@@ -121,17 +100,21 @@ public sealed partial class TemplateReader
             return string.Empty;
         }
 
-        Dictionary<string, string> expressionTokens = new(StringComparer.Ordinal);
-        string safeTemplate = template;
+        List<(string Token, string Expression)> expressionTokens = [];
+        StringBuilder safeTemplateBuilder = new();
+        int templateOffset = 0;
         int tokenIndex = 0;
-
         foreach (System.Text.RegularExpressions.Match match in ExprSegmentRegex().Matches(template))
         {
+            safeTemplateBuilder.Append(template, templateOffset, match.Index - templateOffset);
             string token = $"__EXPR_TOKEN_{tokenIndex}__";
-            expressionTokens[token] = match.Groups[1].Value;
-            safeTemplate = safeTemplate.Replace(match.Value, token, StringComparison.Ordinal);
+            safeTemplateBuilder.Append(token);
+            expressionTokens.Add((token, match.Groups[1].Value));
+            templateOffset = match.Index + match.Length;
             tokenIndex++;
         }
+        safeTemplateBuilder.Append(template, templateOffset, template.Length - templateOffset);
+        string safeTemplate = safeTemplateBuilder.ToString();
 
         IDictionary<string, object?> values = ScopeFlattener.Flatten(scope);
         string formatted = Formatter.Format(safeTemplate, values);
@@ -165,11 +148,17 @@ public sealed partial class TemplateReader
     {
         Type targetType = typeof(T);
         Type nonNullableType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+        bool isEnumTarget = nonNullableType.IsEnum;
 
         string templateValue = await EvaluateTemplateAsync(raw, scope);
         if (TryConvert(templateValue, nonNullableType, out object? convertedTemplateValue))
         {
             return (T?)convertedTemplateValue;
+        }
+
+        if (isEnumTarget && !string.IsNullOrWhiteSpace(templateValue))
+        {
+            throw BuildInvalidEnumException(nonNullableType, templateValue, raw);
         }
 
         object? expressionValue = await _expressionEngine.EvalAsync(raw, scope);
@@ -188,8 +177,17 @@ public sealed partial class TemplateReader
             return (T?)convertedExpressionValue;
         }
 
+        if (isEnumTarget)
+        {
+            throw BuildInvalidEnumException(nonNullableType, expressionValue, raw);
+        }
+
         return (T?)Convert.ChangeType(expressionValue, nonNullableType, CultureInfo.InvariantCulture);
     }
+
+    private static InvalidOperationException BuildInvalidEnumException(Type enumType, object? rawValue, string expression) =>
+        new(
+            $"DSL[Enum] Invalid enum value. Context: enum='{enumType.Name}', value='{Convert.ToString(rawValue, CultureInfo.InvariantCulture)}', expression='{expression}', allowed='{string.Join(", ", Enum.GetNames(enumType))}'");
 
     private static bool TryConvert(object? value, Type targetType, out object? converted)
     {

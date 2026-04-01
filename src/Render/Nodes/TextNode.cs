@@ -6,7 +6,7 @@ namespace Limekuma.Render.Nodes;
 public sealed record TextNode(
     string Text,
     string FontFamily,
-    int FontSize,
+    float FontSize,
     Color Color,
     TextAlignment TextAlignment,
     VerticalAlignment VerticalAlignment,
@@ -14,6 +14,6 @@ public sealed record TextNode(
     Color? StrokeColor,
     float StrokeWidth,
     float? TruncateWidth,
-    string TruncateSubfix,
+    string TruncateSuffix,
     string? Key
 ) : Node(Key);
