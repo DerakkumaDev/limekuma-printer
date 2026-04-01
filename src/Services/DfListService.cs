@@ -41,7 +41,7 @@ public partial class ListService
         int total = (int)Math.Ceiling((double)count / 55);
 
         using Image listImage = await new Drawer().DrawListAsync(user, cRecords[startIndex..endIndex], request.Page, total, counts,
-            request.Level, "divingfish");
+            startIndex, request.Level, "divingfish");
 
         await responseStream.WriteToResponseAsync(listImage);
     }

@@ -2,67 +2,47 @@ using Limekuma.Prober.Common;
 using Limekuma.Render.ExpressionEngine;
 using Limekuma.Render.Nodes;
 using SixLabors.ImageSharp;
+using System.Collections;
 
 namespace Limekuma.Render;
 
 public sealed class Drawer
 {
-    public async Task<Image> DrawBestsAsync(CommonUser user, IEnumerable<CommonRecord> ever,
-        IEnumerable<CommonRecord> current, int everTotal, int currentTotal, string typename, string prober) =>
+    public async Task<Image> DrawBestsAsync(CommonUser user, IList<CommonRecord> ever,
+        IList<CommonRecord> current, int everTotal, int currentTotal, string typename, string prober) =>
         await DrawBestsAsync(user, ever, current, everTotal, currentTotal, typename, prober, false, false);
 
-    public async Task<Image> DrawBestsAsync(CommonUser user, IEnumerable<CommonRecord> ever,
-        IEnumerable<CommonRecord> current, int everTotal, int currentTotal, string typename, string prober,
+    public async Task<Image> DrawBestsAsync(CommonUser user, IList<CommonRecord> ever,
+        IList<CommonRecord> current, int everTotal, int currentTotal, string typename, string prober,
         bool isAnime) =>
         await DrawBestsAsync(user, ever, current, everTotal, currentTotal, typename, prober, isAnime, false);
 
-    public async Task<Image> DrawBestsAsync(CommonUser user, IEnumerable<CommonRecord> ever,
-        IEnumerable<CommonRecord> current, int everTotal, int currentTotal, string typename, string prober,
+    public async Task<Image> DrawBestsAsync(CommonUser user, IList<CommonRecord> ever,
+        IList<CommonRecord> current, int everTotal, int currentTotal, string typename, string prober,
         bool isAnime, bool drawLevelSeg) => await DrawBestsAsync(user, ever, current, everTotal, currentTotal, typename,
         prober, isAnime, drawLevelSeg, "./Resources/Layouts/bests.xml");
 
-    public async Task<Image> DrawBestsAsync(CommonUser user, IEnumerable<CommonRecord> ever,
-        IEnumerable<CommonRecord> current, int everTotal, int currentTotal, string typename, string prober,
+    public async Task<Image> DrawBestsAsync(CommonUser user, IList<CommonRecord> ever,
+        IList<CommonRecord> current, int everTotal, int currentTotal, string typename, string prober,
         bool isAnime, bool drawLevelSeg, string xmlPath)
     {
-        List<CommonRecord> everList = [.. ever];
-        List<CommonRecord> currentList = [.. current];
-        List<object> everCards = [.. everList.Select((record, idx) => new { Record = record, Index = idx + 1 })];
-        List<object> currentCards =
-            [.. currentList.Select((record, idx) => new { Record = record, Index = idx + everList.Count + 1 })];
-        int everDelta = everList.Count > 34 ? everList[0].DXRating - everList[^1].DXRating : everList.Count > 0 ? everList[0].DXRating : 0;
-        int currentDelta = currentList.Count > 14 ? currentList[0].DXRating - currentList[^1].DXRating : currentList.Count > 0 ? currentList[0].DXRating : 0;
-        int everMax = everList.Count > 0 ? everList[0].DXRating : 0;
-        int everMin = everList.Count > 0 ? everList[^1].DXRating : 0;
-        int currentMax = currentList.Count > 0 ? currentList[0].DXRating : 0;
-        int currentMin = currentList.Count > 0 ? currentList[^1].DXRating : 0;
-        int realRating = everTotal + currentTotal;
-        string proberState = "on";
-        if (user.Rating != realRating)
+        int everMax = ever.Count > 0 ? ever[0].DXRating : 0;
+        int everMin = ever.Count > 0 ? ever[^1].DXRating : 0;
+        int currentMax = current.Count > 0 ? current[0].DXRating : 0;
+        int currentMin = current.Count > 0 ? current[^1].DXRating : 0;
+        bool mayMask = ever.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank > Ranks.A)) || current.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank > Ranks.A));
+        Dictionary<string, object> scope = new(StringComparer.OrdinalIgnoreCase)
         {
-            proberState = "off";
-        }
-        else if (everList.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank < Ranks.C)) ||
-                 currentList.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank < Ranks.C)))
-        {
-            proberState = "warning";
-        }
-
-        Dictionary<string, object?> scope = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ["user"] = user,
-            ["everCards"] = everCards,
-            ["currentCards"] = currentCards,
-            ["everDelta"] = everDelta,
-            ["currentDelta"] = currentDelta,
-            ["everTotal"] = everTotal,
-            ["currentTotal"] = currentTotal,
-            ["realRating"] = realRating,
-            ["typename"] = typename,
-            ["prober"] = prober,
-            ["isAnime"] = isAnime,
-            ["drawLevelSeg"] = drawLevelSeg,
-            ["proberState"] = proberState,
+            ["userInfo"] = user,
+            ["everRecords"] = ever,
+            ["currentRecords"] = current,
+            ["everRating"] = everTotal,
+            ["currentRating"] = currentTotal,
+            ["typeName"] = typename,
+            ["proberName"] = prober,
+            ["animeMode"] = isAnime,
+            ["needSuggestion"] = drawLevelSeg,
+            ["mayMask"] = mayMask,
             ["everMax"] = everMax,
             ["everMin"] = everMin,
             ["currentMax"] = currentMax,
@@ -71,35 +51,33 @@ public sealed class Drawer
         return await DrawAsync(scope, xmlPath);
     }
 
-    public async Task<Image> DrawListAsync(CommonUser user, IEnumerable<CommonRecord> records, int page, int total,
-        IEnumerable<int> counts, string level, string prober) => await DrawListAsync(user, records, page, total, counts,
-        level, prober, "./Resources/Layouts/list.xml");
+    public async Task<Image> DrawListAsync(CommonUser user, IList<CommonRecord> records, int page, int total,
+        IList<int> counts, int startIndex, string level, string prober) => await DrawListAsync(user, records, page, total, counts,
+        startIndex, level, prober, "./Resources/Layouts/list.xml");
 
-    public async Task<Image> DrawListAsync(CommonUser user, IEnumerable<CommonRecord> records, int page, int total,
-        IEnumerable<int> counts, string level, string prober, string xmlPath)
+    public async Task<Image> DrawListAsync(CommonUser user, IList<CommonRecord> records, int page, int total,
+        IList<int> counts, int startIndex, string level, string prober, string xmlPath)
     {
-        List<CommonRecord> list = [.. records];
-        List<object> recordCards = [.. list.Select((record, idx) => new { Record = record, Index = idx + 1 })];
-        List<int> countList = counts.ToList();
-        int totalCount = countList.Count > 0 ? countList[^1] : 0;
-        bool warning = list.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank < Ranks.C));
-        Dictionary<string, object?> scope = new(StringComparer.OrdinalIgnoreCase)
+        int totalCount = counts.Count > 0 ? counts[^1] : 0;
+        bool mayMask = records.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank > Ranks.A));
+        Dictionary<string, object> scope = new(StringComparer.OrdinalIgnoreCase)
         {
-            ["user"] = user,
-            ["recordCards"] = recordCards,
-            ["page"] = page,
-            ["total"] = total,
-            ["counts"] = countList[..^1],
-            ["statsTotalCount"] = totalCount,
+            ["userInfo"] = user,
+            ["pageRecords"] = records,
+            ["pageNumber"] = page,
+            ["totalPages"] = total,
+            ["statCounts"] = counts.ToList()[..^1],
+            ["totalCount"] = totalCount,
+            ["startIndex"] = startIndex,
             ["level"] = level,
-            ["prober"] = prober,
-            ["proberState"] = warning ? "warning" : "on",
-            ["isAnime"] = false,
+            ["proberName"] = prober,
+            ["mayMask"] = mayMask,
+            ["animeMode"] = false,
         };
         return await DrawAsync(scope, xmlPath);
     }
 
-    private async Task<Image> DrawAsync(Dictionary<string, object?> scope, string xmlPath)
+    private async Task<Image> DrawAsync(IDictionary<string, object> scope, string xmlPath)
     {
         AsyncNCalcEngine expr = new();
         RegisterFunctions(expr);
@@ -112,5 +90,6 @@ public sealed class Drawer
     private void RegisterFunctions(AsyncNCalcEngine expr)
     {
         expr.RegisterFunction("ToString", (object x) => Convert.ToString(x));
+        expr.RegisterFunction("Count", (IList x) => x.Count);
     }
 }

@@ -10,6 +10,7 @@ public static partial class NodeRenderer
     {
         ImageNode image => MeasureImageNode(image, assets),
         TextNode text => MeasureTextNode(text, measurer),
+        ResizedNode resized => MeasureResizedNode(resized, assets, measurer),
         StackNode stack => MeasureStackNode(stack, assets, measurer),
         GridNode grid => MeasureGridNode(grid, assets, measurer),
         LayerNode layer => MeasureLayerNode(layer, assets, measurer),
@@ -20,12 +21,20 @@ public static partial class NodeRenderer
 
     private static Size MeasureImageNode(ImageNode image, AssetProvider assets)
     {
-        using Image img = assets.LoadImage(image.Namespace, image.ResourceKey);
+        Image img = assets.LoadImage(image.Namespace, image.ResourceKey);
         return new(img.Width, img.Height);
     }
 
     private static Size MeasureTextNode(TextNode text, AssetProvider measurer) =>
         measurer.Measure(text.Text, text.FontFamily, text.FontSize);
+
+    private static Size MeasureResizedNode(ResizedNode resized, AssetProvider assets, AssetProvider measurer)
+    {
+        Size baseSize = resized.DesiredSize ?? Measure(resized.Child, assets, measurer);
+        int width = Math.Max(1, (int)Math.Round(baseSize.Width * resized.Scale));
+        int height = Math.Max(1, (int)Math.Round(baseSize.Height * resized.Scale));
+        return new(width, height);
+    }
 
     private static Size MeasureStackNode(StackNode stack, AssetProvider assets, AssetProvider measurer)
     {

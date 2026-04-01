@@ -8,6 +8,7 @@ namespace Limekuma.Render;
 
 public sealed class AssetProvider
 {
+    private readonly ConcurrentDictionary<string, Image> _assets;
     private readonly ConcurrentDictionary<string, LoadedFont> _fontCache;
     private readonly Dictionary<string, (string, List<string>?)> _fontRules;
     private readonly Dictionary<string, (string, string?)> _pathRules;
@@ -20,6 +21,7 @@ public sealed class AssetProvider
     {
         _fontRules = [];
         _pathRules = [];
+        _assets = [];
         _fontCache = [];
         LoadResources(resourcePath);
     }
@@ -29,7 +31,7 @@ public sealed class AssetProvider
     public Image LoadImage(string ns, string key)
     {
         string path = ResolveResourcePath(ns, key);
-        return Image.Load(path);
+        return LoadImage(path);
     }
 
     public (FontFamily, List<FontFamily>) ResolveFont(string key)
@@ -55,7 +57,7 @@ public sealed class AssetProvider
         (FontFamily fontFamily, List<FontFamily> fallbacks) = ResolveFont(family);
         float scaledSize = (float)(size * 72 / 300d);
         Font font = fontFamily.CreateFont(scaledSize);
-        FontRectangle rect = TextMeasurer.MeasureAdvance(text, new TextOptions(font)
+        FontRectangle rect = TextMeasurer.MeasureAdvance(text, new(font)
         {
             FallbackFontFamilies = fallbacks,
             Dpi = 300
@@ -71,7 +73,7 @@ public sealed class AssetProvider
         }
 
         (string path, _) = pathRule;
-        return Path.GetFullPath(path);
+        return path;
     }
 
     private void LoadResources(string resourcePath)
@@ -103,7 +105,7 @@ public sealed class AssetProvider
                 continue;
             }
 
-            _pathRules[ns] = new(Path.GetFullPath(path), node.Attribute("rule")?.Value);
+            _pathRules[ns] = new(path, node.Attribute("rule")?.Value);
         }
     }
 
@@ -140,7 +142,7 @@ public sealed class AssetProvider
     {
         if (!_pathRules.TryGetValue(ns, out (string, string?) pathRule))
         {
-            return Path.GetFullPath(key);
+            return key;
         }
 
         (string path, string? rule) = pathRule;
@@ -152,10 +154,20 @@ public sealed class AssetProvider
         return Path.Combine(path, Smart.Format(rule, new { key }));
     }
 
+    private Image LoadImage(string path)
+    {
+        Image loaded = _assets.GetOrAdd(path, p =>
+        {
+            Image image = Image.Load(path);
+            return image;
+        });
+
+        return loaded;
+    }
+
     private FontFamily LoadFont(string path)
     {
-        string fullPath = Path.GetFullPath(path);
-        LoadedFont loaded = _fontCache.GetOrAdd(fullPath, p =>
+        LoadedFont loaded = _fontCache.GetOrAdd(path, p =>
         {
             FontCollection collection = new();
             FontFamily family = collection.Add(p);

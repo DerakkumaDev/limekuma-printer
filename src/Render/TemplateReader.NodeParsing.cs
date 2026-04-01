@@ -104,7 +104,7 @@ public sealed partial class TemplateReader
     private async Task<Node> ParseSetNodeAsync(XElement element, object? scope) =>
         new SetNode(
             GetRequiredAttributeValue(element, "var"),
-            await EvaluateSetValueAsync(GetRequiredAttributeValue(element, "value"), scope),
+            await EvaluateRequiredExpressionAttributeAsync<object>(element, "value", scope),
             await EvaluateOptionalSmartTemplateAttributeAsync(element, "key", scope));
 
     private async Task<Node> ParseIfNodeAsync(XElement element, object? scope)
@@ -173,23 +173,6 @@ public sealed partial class TemplateReader
         }
 
         return children;
-    }
-
-    private async Task<object?> EvaluateSetValueAsync(string raw, object? scope)
-    {
-        if (raw.StartsWith("@{", StringComparison.Ordinal) && raw.EndsWith('}'))
-        {
-            return await _expressionEngine.EvalAsync(raw[2..^1], scope);
-        }
-
-        try
-        {
-            return await _expressionEngine.EvalAsync(raw, scope);
-        }
-        catch
-        {
-            return await EvaluateTemplateAsync(raw, scope);
-        }
     }
 
     private async Task<IEnumerable<object>?> EvaluateCollectionAsync(string expression, object? scope)

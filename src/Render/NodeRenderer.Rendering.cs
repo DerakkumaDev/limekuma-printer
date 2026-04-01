@@ -3,6 +3,9 @@ using Limekuma.Render.Types;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.Formats.Gif;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
@@ -59,7 +62,12 @@ public static partial class NodeRenderer
         width = Math.Max(1, (int)Math.Round(width * resize.Scale));
         height = Math.Max(1, (int)Math.Round(height * resize.Scale));
         rendered.Mutate(ctx => ctx.Resize(width, height, GetResampler(resize.Resampler)));
-        canvas.Mutate(ctx => ctx.DrawImage(rendered, origin, inheritedOpacity));
+        bool shouldInheritMetadata = canvas.Frames.Count <= 1 && rendered.Frames.Count > 1;
+        canvas.Mutate(ctx => ctx.DrawImage(rendered, origin, inheritedOpacity, GetForegroundRepeatCount(rendered)));
+        if (shouldInheritMetadata)
+        {
+            InheritCanvasFramesAndMetadataOnFirstDraw(canvas, rendered);
+        }
     }
 
     private static void RenderStackNode(Image canvas, StackNode stack, AssetProvider assets, AssetProvider measurer,
@@ -215,7 +223,7 @@ public static partial class NodeRenderer
     private static void RenderImageNode(Image canvas, ImageNode image, AssetProvider assets, Point origin,
         float inheritedOpacity, Size? desiredSize, float scale, ResamplerType resampler)
     {
-        using Image img = assets.LoadImage(image.Namespace, image.ResourceKey);
+        Image img = assets.LoadImage(image.Namespace, image.ResourceKey);
         IResampler resamplerInstance = GetResampler(resampler);
         if (desiredSize is { } desired && desired.Width > 0 && desired.Height > 0)
         {
@@ -229,8 +237,13 @@ public static partial class NodeRenderer
             img.Mutate(c => c.Resize(width, height, resamplerInstance));
         }
 
+        bool shouldInheritMetadata = canvas.Frames.Count <= 1 && img.Frames.Count > 1;
         canvas.Mutate(c => c.DrawImage(img, origin, image.ColorBlending, image.AlphaComposition, inheritedOpacity,
             image.ForegroundRepeatCount));
+        if (shouldInheritMetadata)
+        {
+            InheritCanvasFramesAndMetadataOnFirstDraw(canvas, img);
+        }
     }
 
     private static void RenderTextNode(Image canvas, TextNode textNode, AssetProvider assets, PointF origin)
@@ -279,6 +292,80 @@ public static partial class NodeRenderer
         AssetProvider measurer, Point origin, float inheritedOpacity)
     {
         using Image subCanvas = Render(canvas, assets, measurer);
-        canvasImage.Mutate(c => c.DrawImage(subCanvas, origin, inheritedOpacity));
+        bool shouldInheritMetadata = canvasImage.Frames.Count <= 1 && subCanvas.Frames.Count > 1;
+        canvasImage.Mutate(c => c.DrawImage(subCanvas, origin, inheritedOpacity, GetForegroundRepeatCount(subCanvas)));
+        if (shouldInheritMetadata)
+        {
+            InheritCanvasFramesAndMetadataOnFirstDraw(canvasImage, subCanvas);
+        }
+    }
+
+    private static void InheritCanvasFramesAndMetadataOnFirstDraw(Image canvas, Image foreground)
+    {
+        if (foreground.Frames.Count <= 1)
+        {
+            return;
+        }
+
+        int diff = foreground.Frames.Count - canvas.Frames.Count;
+        if (diff > 0)
+        {
+            for (int i = 0; i < diff; ++i)
+            {
+                canvas.Frames.AddFrame(canvas.Frames[i]);
+            }
+        }
+
+        GifMetadata sourceGifMetadata = foreground.Metadata.GetGifMetadata();
+        GifMetadata targetGifMetadata = canvas.Metadata.GetGifMetadata();
+        targetGifMetadata.RepeatCount = sourceGifMetadata.RepeatCount;
+
+        PngMetadata sourcePngMetadata = foreground.Metadata.GetPngMetadata();
+        PngMetadata targetPngMetadata = canvas.Metadata.GetPngMetadata();
+        targetPngMetadata.RepeatCount = sourcePngMetadata.RepeatCount;
+
+        WebpMetadata sourceWebpMetadata = foreground.Metadata.GetWebpMetadata();
+        WebpMetadata targetWebpMetadata = canvas.Metadata.GetWebpMetadata();
+        targetWebpMetadata.RepeatCount = sourceWebpMetadata.RepeatCount;
+
+        for (int i = 0; i < foreground.Frames.Count; i++)
+        {
+            GifFrameMetadata sourceFrameMetadata = foreground.Frames[i].Metadata.GetGifMetadata();
+            GifFrameMetadata targetFrameMetadata = canvas.Frames[i].Metadata.GetGifMetadata();
+            targetFrameMetadata.FrameDelay = sourceFrameMetadata.FrameDelay;
+
+            PngFrameMetadata sourcePngFrameMetadata = foreground.Frames[i].Metadata.GetPngMetadata();
+            PngFrameMetadata targetPngFrameMetadata = canvas.Frames[i].Metadata.GetPngMetadata();
+            targetPngFrameMetadata.FrameDelay = sourcePngFrameMetadata.FrameDelay;
+            targetPngFrameMetadata.DisposalMode = sourcePngFrameMetadata.DisposalMode;
+            targetPngFrameMetadata.BlendMode = sourcePngFrameMetadata.BlendMode;
+
+            WebpFrameMetadata sourceWebpFrameMetadata = foreground.Frames[i].Metadata.GetWebpMetadata();
+            WebpFrameMetadata targetWebpFrameMetadata = canvas.Frames[i].Metadata.GetWebpMetadata();
+            targetWebpFrameMetadata.FrameDelay = sourceWebpFrameMetadata.FrameDelay;
+            targetWebpFrameMetadata.DisposalMode = sourceWebpFrameMetadata.DisposalMode;
+            targetWebpFrameMetadata.BlendMode = sourceWebpFrameMetadata.BlendMode;
+        }
+    }
+
+    private static int GetForegroundRepeatCount(Image foreground)
+    {
+        string? formatName = foreground.Metadata.DecodedImageFormat?.Name;
+        if (string.Equals(formatName, "GIF", StringComparison.OrdinalIgnoreCase))
+        {
+            return foreground.Metadata.GetGifMetadata().RepeatCount;
+        }
+
+        if (string.Equals(formatName, "PNG", StringComparison.OrdinalIgnoreCase))
+        {
+            return (int)Math.Min(foreground.Metadata.GetPngMetadata().RepeatCount, int.MaxValue);
+        }
+
+        if (string.Equals(formatName, "WEBP", StringComparison.OrdinalIgnoreCase))
+        {
+            return (int)Math.Min(foreground.Metadata.GetWebpMetadata().RepeatCount, int.MaxValue);
+        }
+
+        return 0;
     }
 }

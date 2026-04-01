@@ -52,20 +52,22 @@ public sealed class AsyncNCalcEngine
         }
         expression.EvaluateFunctionAsync += async (name, args) =>
         {
-            if (_functions.TryGetValue(name, out Delegate? func))
+            if (!_functions.TryGetValue(name, out Delegate? func))
             {
-                ParameterInfo[] parameters = func.Method.GetParameters();
-                object?[] funcArgs = new object[args.Parameters.Length];
-                for (int i = 0; i < args.Parameters.Length; ++i)
-                {
-                    object? paramValue = await args.Parameters[i].EvaluateAsync();
-                    funcArgs[i] = CoerceValue(paramValue,
-                        i < parameters.Length ? parameters[i].ParameterType : typeof(object));
-                }
-
-                object? result = func.DynamicInvoke(funcArgs);
-                args.Result = result;
+                return;
             }
+
+            ParameterInfo[] parameters = func.Method.GetParameters();
+            object?[] funcArgs = new object[args.Parameters.Length];
+            for (int i = 0; i < args.Parameters.Length; ++i)
+            {
+                object? paramValue = await args.Parameters[i].EvaluateAsync();
+                funcArgs[i] = CoerceValue(paramValue,
+                    i < parameters.Length ? parameters[i].ParameterType : typeof(object));
+            }
+
+            object? result = func.DynamicInvoke(funcArgs);
+            args.Result = result;
         };
 
         return await expression.EvaluateAsync();
