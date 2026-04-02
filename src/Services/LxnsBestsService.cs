@@ -94,30 +94,8 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
         using Image bestsImage =
-            await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal, "评分对象曲目（落雪源）", "lxns");
+            await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal, "lxns", request.Tags);
 
         await responseStream.WriteToResponseAsync(bestsImage);
-    }
-
-    public override async Task GetAnimeFromLxns(LxnsBestsRequest request,
-        IServerStreamWriter<ImageResponse> responseStream, ServerCallContext context)
-    {
-        (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
-            int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
-        using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
-            "评分对象曲目（落雪源）", "lxns", true);
-
-        await responseStream.WriteToResponseAsync(bestsImage, true);
-    }
-
-    public override async Task GetFromLxnsWithLevelSeg(LxnsBestsRequest request,
-        IServerStreamWriter<ImageResponse> responseStream, ServerCallContext context)
-    {
-        (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
-            int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
-        using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
-            "评分对象曲目（落雪源）", "lxns", false, true);
-
-        await responseStream.WriteToResponseAsync(bestsImage, true);
     }
 }

@@ -8,11 +8,7 @@ import "google/protobuf/wrappers.proto";
 
 service BestsApi {
   rpc GetFromLxns (LxnsBestsRequest) returns (stream ImageResponse);
-  rpc GetAnimeFromLxns (LxnsBestsRequest) returns (stream ImageResponse);
-  rpc GetFromLxnsWithLevelSeg (LxnsBestsRequest) returns (stream ImageResponse);
   rpc GetFromDivingFish (DivingFishBestsRequest) returns (stream ImageResponse);
-  rpc GetAnimeFromDivingFish (DivingFishBestsRequest) returns (stream ImageResponse);
-  rpc GetFromDivingFishWithLevelSeg (DivingFishBestsRequest) returns (stream ImageResponse);
 }
 
 service ListApi {
@@ -24,6 +20,7 @@ message LxnsBestsRequest {
   string devToken = 1;
   google.protobuf.StringValue personalToken = 2;
   google.protobuf.UInt32Value qq = 3;
+  repeated string tags = 4;
 }
 
 message DivingFishBestsRequest {
@@ -31,22 +28,25 @@ message DivingFishBestsRequest {
   sint32 frame = 2;
   sint32 plate = 3;
   sint32 icon = 4;
+  repeated string tags = 5;
 }
 
 message LxnsListRequest {
   string devToken = 1;
   string personalToken = 2;
-  string level = 3;
+  string condition = 3;
   sint32 page = 4;
+  repeated string tags = 5;
 }
 
 message DivingFishListRequest {
   string token = 1;
   uint32 qq = 2;
-  string level = 3;
+  string condition = 3;
   sint32 page = 4;
   sint32 plate = 5;
   sint32 icon = 6;
+  repeated string tags = 7;
 }
 
 message ImageResponse {

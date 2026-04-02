@@ -33,7 +33,7 @@ public partial class ListService
         user.PlateId = request.Plate;
         user.IconId = request.Icon;
 
-        List<Record> records = [.. player.Records.Where(x => x.Level == request.Level)];
+        List<Record> records = [.. player.Records.Where(x => x.Level == request.Condition)];
         int count = records.Count;
         List<CommonRecord> cRecords = records.ConvertAll<CommonRecord>(_ => _);
         cRecords.SortRecordForList();
@@ -41,7 +41,7 @@ public partial class ListService
         int total = (int)Math.Ceiling((double)count / 55);
 
         using Image listImage = await new Drawer().DrawListAsync(user, cRecords[startIndex..endIndex], request.Page, total, counts,
-            startIndex, request.Level, "divingfish");
+            startIndex, request.Condition, "divingfish", request.Tags);
 
         await responseStream.WriteToResponseAsync(listImage);
     }

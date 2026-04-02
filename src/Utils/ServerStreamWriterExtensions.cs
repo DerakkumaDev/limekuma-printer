@@ -15,14 +15,11 @@ internal static class ServerStreamWriterExtensions
 
     extension(IServerStreamWriter<ImageResponse> responseStream)
     {
-        internal async Task WriteToResponseAsync(Image image) =>
-            await responseStream.WriteToResponseAsync(image, false);
-
-        internal async Task WriteToResponseAsync(Image image, bool isAnime)
+        internal async Task WriteToResponseAsync(Image image)
         {
             MemoryStream outStream = new();
 #if RELEASE
-            if (isAnime)
+            if (image.Frames.Count > 1)
             {
                 GifEncoder encoder = new()
                 {

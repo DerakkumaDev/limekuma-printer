@@ -9,22 +9,11 @@ namespace Limekuma.Render;
 public sealed class Drawer
 {
     public async Task<Image> DrawBestsAsync(CommonUser user, IList<CommonRecord> ever,
-        IList<CommonRecord> current, int everTotal, int currentTotal, string typename, string prober) =>
-        await DrawBestsAsync(user, ever, current, everTotal, currentTotal, typename, prober, false, false);
+        IList<CommonRecord> current, int everTotal, int currentTotal, string prober, IList<string> tags) =>
+        await DrawBestsAsync(user, ever, current, everTotal, currentTotal, prober, tags, "./Resources/Layouts/bests.xml");
 
     public async Task<Image> DrawBestsAsync(CommonUser user, IList<CommonRecord> ever,
-        IList<CommonRecord> current, int everTotal, int currentTotal, string typename, string prober,
-        bool isAnime) =>
-        await DrawBestsAsync(user, ever, current, everTotal, currentTotal, typename, prober, isAnime, false);
-
-    public async Task<Image> DrawBestsAsync(CommonUser user, IList<CommonRecord> ever,
-        IList<CommonRecord> current, int everTotal, int currentTotal, string typename, string prober,
-        bool isAnime, bool drawLevelSeg) => await DrawBestsAsync(user, ever, current, everTotal, currentTotal, typename,
-        prober, isAnime, drawLevelSeg, "./Resources/Layouts/bests.xml");
-
-    public async Task<Image> DrawBestsAsync(CommonUser user, IList<CommonRecord> ever,
-        IList<CommonRecord> current, int everTotal, int currentTotal, string typename, string prober,
-        bool isAnime, bool drawLevelSeg, string xmlPath)
+        IList<CommonRecord> current, int everTotal, int currentTotal, string prober, IList<string> tags, string xmlPath)
     {
         int everMax = ever.Count > 0 ? ever[0].DXRating : 0;
         int everMin = ever.Count > 0 ? ever[^1].DXRating : 0;
@@ -38,10 +27,8 @@ public sealed class Drawer
             ["currentRecords"] = current,
             ["everRating"] = everTotal,
             ["currentRating"] = currentTotal,
-            ["typeName"] = typename,
             ["proberName"] = prober,
-            ["animeMode"] = isAnime,
-            ["needSuggestion"] = drawLevelSeg,
+            ["tags"] = tags,
             ["mayMask"] = mayMask,
             ["everMax"] = everMax,
             ["everMin"] = everMin,
@@ -52,12 +39,13 @@ public sealed class Drawer
     }
 
     public async Task<Image> DrawListAsync(CommonUser user, IList<CommonRecord> records, int page, int total,
-        IList<int> counts, int startIndex, string level, string prober) => await DrawListAsync(user, records, page, total, counts,
-        startIndex, level, prober, "./Resources/Layouts/list.xml");
+        IList<int> counts, int startIndex, string condition, string prober, IList<string> tags) =>
+        await DrawListAsync(user, records, page, total, counts, startIndex, condition, prober, tags, "./Resources/Layouts/list.xml");
 
     public async Task<Image> DrawListAsync(CommonUser user, IList<CommonRecord> records, int page, int total,
-        IList<int> counts, int startIndex, string level, string prober, string xmlPath)
+        IList<int> counts, int startIndex, string condition, string prober, IList<string> tags, string xmlPath)
     {
+        List<int> countList = [.. counts];
         int totalCount = counts.Count > 0 ? counts[^1] : 0;
         bool mayMask = records.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank > Ranks.A));
         Dictionary<string, object> scope = new(StringComparer.OrdinalIgnoreCase)
@@ -66,13 +54,14 @@ public sealed class Drawer
             ["pageRecords"] = records,
             ["pageNumber"] = page,
             ["totalPages"] = total,
-            ["statCounts"] = counts.ToList()[..^1],
+            ["rankCounts"] = countList[..7],
+            ["comboCounts"] = countList[7..^1],
             ["totalCount"] = totalCount,
             ["startIndex"] = startIndex,
-            ["level"] = level,
+            ["condition"] = condition,
             ["proberName"] = prober,
+            ["tags"] = tags,
             ["mayMask"] = mayMask,
-            ["animeMode"] = false,
         };
         return await DrawAsync(scope, xmlPath);
     }

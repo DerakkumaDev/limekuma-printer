@@ -53,30 +53,8 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
         using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
-            "评分对象曲目（水鱼源）", "divingfish");
+            "divingfish", request.Tags);
 
         await responseStream.WriteToResponseAsync(bestsImage);
-    }
-
-    public override async Task GetAnimeFromDivingFish(DivingFishBestsRequest request,
-        IServerStreamWriter<ImageResponse> responseStream, ServerCallContext context)
-    {
-        (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
-            int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
-        using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
-            "评分对象曲目（水鱼源）", "divingfish", true);
-
-        await responseStream.WriteToResponseAsync(bestsImage, true);
-    }
-
-    public override async Task GetFromDivingFishWithLevelSeg(DivingFishBestsRequest request,
-        IServerStreamWriter<ImageResponse> responseStream, ServerCallContext context)
-    {
-        (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
-            int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
-        using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
-            "评分对象曲目（水鱼源）", "divingfish", false, true);
-
-        await responseStream.WriteToResponseAsync(bestsImage, true);
     }
 }

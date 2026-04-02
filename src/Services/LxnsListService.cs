@@ -49,7 +49,7 @@ public partial class ListService
             throw new RpcException(new(StatusCode.Unauthenticated, ex.Message, ex));
         }
 
-        records = [.. records.Where(x => x.Level == request.Level)];
+        records = [.. records.Where(x => x.Level == request.Condition)];
         int count = records.Count;
         List<CommonRecord> cRecords = records.ConvertAll<CommonRecord>(_ => _);
         cRecords.SortRecordForList();
@@ -57,7 +57,7 @@ public partial class ListService
         int total = (int)Math.Ceiling((double)count / 55);
 
         using Image listImage = await new Drawer().DrawListAsync(player, cRecords[startIndex..endIndex], request.Page, total,
-            counts, startIndex, request.Level, "lxns");
+            counts, startIndex, request.Condition, "lxns", request.Tags);
 
         await responseStream.WriteToResponseAsync(listImage);
     }
