@@ -41,7 +41,7 @@ public static partial class NodeRenderer
     private static Size MeasureTextNode(TextNode text, AssetProvider measurer)
     {
         (FontFamily mainFont, List<FontFamily> fallbacks) = measurer.ResolveFont(text.FontFamily);
-        float scaledFontSize = (float)(text.FontSize * 72f / 300f);
+        float scaledFontSize = text.FontSize * 72 / 300;
         Font font = new(mainFont, scaledFontSize);
         RichTextOptions options = new(font)
         {
@@ -60,7 +60,7 @@ public static partial class NodeRenderer
             measuredText = TruncateTextByWidth(measuredText, ts, tw, options);
         }
 
-        FontRectangle rect = TextMeasurer.MeasureSize(measuredText, options);
+        FontRectangle rect = TextMeasurer.MeasureAdvance(measuredText, options);
         return new((int)Math.Ceiling(rect.Width), (int)Math.Ceiling(rect.Height));
     }
 
@@ -79,24 +79,23 @@ public static partial class NodeRenderer
         Dictionary<Node, Size> measurementCache)
     {
         List<Node> flowChildren = ExpandFlowChildren(stack.Children);
-        float width = 0;
-        float height = 0;
-        for (int i = 0; i < flowChildren.Count; ++i)
-        {
-            Size child = Measure(flowChildren[i], assets, measurer, measurementCache);
-            if (stack.Direction is StackDirection.Row)
-            {
-                width += child.Width + (i < flowChildren.Count - 1 ? stack.Spacing : 0);
-                height = Math.Max(height, child.Height);
-            }
-            else
-            {
-                height += child.Height + (i < flowChildren.Count - 1 ? stack.Spacing : 0);
-                width = Math.Max(width, child.Width);
-            }
-        }
+        List<(Node Node, Size Size)> items =
+        [
+            .. flowChildren.Select(c => (c, Measure(c, assets, measurer, measurementCache)))
+        ];
+        bool isRow = stack.Direction is StackDirection.Row;
+        float wrapMain = ResolveMainAxisContainerSize(
+            isRow ? stack.Width : stack.Height,
+            null,
+            int.MaxValue);
+        List<List<(Node Node, Size Size)>> lines =
+            ResolveStackLines(items, isRow, stack.Wrap, stack.Spacing, wrapMain);
+        List<(float Main, int Cross)> lineSizes = ResolveStackLineSizes(lines, isRow, stack.Spacing);
+        (float contentMain, float contentCross) = ResolveStackContentSize(lineSizes, stack.RunSpacing);
 
-        return new((int)Math.Ceiling(width), (int)Math.Ceiling(height));
+        int contentWidth = (int)Math.Ceiling(isRow ? contentMain : contentCross);
+        int contentHeight = (int)Math.Ceiling(isRow ? contentCross : contentMain);
+        return new(stack.Width ?? contentWidth, stack.Height ?? contentHeight);
     }
 
     private static Size MeasureGridNode(GridNode grid, AssetProvider assets, AssetProvider measurer,

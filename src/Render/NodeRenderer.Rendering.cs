@@ -88,49 +88,14 @@ public static partial class NodeRenderer
         }
 
         bool isRow = stack.Direction is StackDirection.Row;
-        float containerMain = ResolveMainAxisContainerSize(
+        float wrapMain = ResolveMainAxisContainerSize(
             isRow ? stack.Width : stack.Height,
-            isRow ? desiredSize?.Width : desiredSize?.Height,
+            null,
             int.MaxValue);
-        List<List<(Node Node, Size Size)>> lines = [];
-        List<(Node Node, Size Size)> currentLine = [];
-        float currentMain = 0;
-        foreach ((Node node, Size size) in items)
-        {
-            float itemMain = isRow ? size.Width : size.Height;
-            float nextMain = currentLine.Count is 0 ? itemMain : currentMain + stack.Spacing + itemMain;
-            bool wrapNow = stack.Wrap && currentLine.Count > 0 && nextMain > containerMain;
-            if (wrapNow)
-            {
-                lines.Add(currentLine);
-                currentLine = [];
-                currentMain = 0;
-            }
-
-            currentLine.Add((node, size));
-            currentMain = currentLine.Count is 1 ? itemMain : currentMain + stack.Spacing + itemMain;
-        }
-
-        if (currentLine.Count > 0)
-        {
-            lines.Add(currentLine);
-        }
-
-        List<(float Main, int Cross)> lineSize = [];
-        foreach (List<(Node Node, Size Size)> line in lines)
-        {
-            float lineMain = line.Sum(i => isRow ? i.Size.Width : i.Size.Height);
-            if (line.Count > 1)
-            {
-                lineMain += stack.Spacing * (line.Count - 1);
-            }
-
-            int lineCross = line.Max(i => isRow ? i.Size.Height : i.Size.Width);
-            lineSize.Add((lineMain, lineCross));
-        }
-
-        float contentMain = lineSize.Max(l => l.Main);
-        float contentCross = lineSize.Sum(l => l.Cross) + Math.Max(0, lines.Count - 1) * stack.RunSpacing;
+        List<List<(Node Node, Size Size)>> lines =
+            ResolveStackLines(items, isRow, stack.Wrap, stack.Spacing, wrapMain);
+        List<(float Main, int Cross)> lineSizes = ResolveStackLineSizes(lines, isRow, stack.Spacing);
+        (float contentMain, float contentCross) = ResolveStackContentSize(lineSizes, stack.RunSpacing);
         float resolvedContainerMain = ResolveMainAxisContainerSize(
             isRow ? stack.Width : stack.Height,
             isRow ? desiredSize?.Width : desiredSize?.Height,
@@ -140,17 +105,30 @@ public static partial class NodeRenderer
             isRow ? desiredSize?.Height : desiredSize?.Width,
             contentCross);
 
-        float crossCursor = (isRow ? origin.Y : origin.X) +
+        float crossBase = (isRow ? origin.Y : origin.X) +
             ResolveStartCenterEndOffset(stack.AlignContent, resolvedContainerCross, contentCross);
+        int crossCursor = (int)Math.Round(crossBase, MidpointRounding.AwayFromZero);
+        float runError = crossBase - crossCursor;
+        int runSpacingWhole = stack.RunSpacing >= 0
+            ? (int)Math.Floor(stack.RunSpacing)
+            : (int)Math.Ceiling(stack.RunSpacing);
+        float runSpacingFraction = stack.RunSpacing - runSpacingWhole;
         for (int lineIndex = 0; lineIndex < lines.Count; lineIndex++)
         {
             List<(Node Node, Size Size)> line = lines[lineIndex];
-            (float lineMain, int lineCross) = lineSize[lineIndex];
+            (float lineMain, int lineCross) = lineSizes[lineIndex];
             (float startMain, float between) = ResolveMainAxisLayout(stack.JustifyContent, resolvedContainerMain, lineMain,
                 stack.Spacing, line.Count);
-            float mainCursor = startMain;
-            foreach ((Node node, Size size) in line)
+            float mainBase = (isRow ? origin.X : origin.Y) + startMain;
+            int mainCursor = (int)Math.Round(mainBase, MidpointRounding.AwayFromZero);
+            float gapError = mainBase - mainCursor;
+            int betweenWhole = between >= 0
+                ? (int)Math.Floor(between)
+                : (int)Math.Ceiling(between);
+            float betweenFraction = between - betweenWhole;
+            for (int itemIndex = 0; itemIndex < line.Count; itemIndex++)
             {
+                (Node node, Size size) = line[itemIndex];
                 int itemCross = isRow ? size.Height : size.Width;
                 int crossOffset = ResolveStartCenterEndOffset(stack.AlignItems, lineCross, itemCross);
                 Size? childDesiredSize = null;
@@ -159,15 +137,54 @@ public static partial class NodeRenderer
                     childDesiredSize = isRow ? new(size.Width, lineCross) : new(lineCross, size.Height);
                 }
 
-                Point childOrigin = isRow
-                    ? new((int)Math.Round(origin.X + mainCursor), (int)Math.Round(crossCursor + crossOffset))
-                    : new((int)Math.Round(crossCursor + crossOffset), (int)Math.Round(origin.Y + mainCursor));
+                float childX = isRow ? mainCursor : crossCursor + crossOffset;
+                float childY = isRow ? crossCursor + crossOffset : mainCursor;
+                Point childOrigin = new(
+                    (int)Math.Round(childX, MidpointRounding.AwayFromZero),
+                    (int)Math.Round(childY, MidpointRounding.AwayFromZero));
                 RenderNode(canvas, node, assets, measurer, childOrigin, inheritedOpacity, childDesiredSize, scale,
                     resampler, measurementCache);
-                mainCursor += (isRow ? size.Width : size.Height) + between;
+                if (itemIndex == line.Count - 1)
+                {
+                    continue;
+                }
+
+                int itemMain = isRow ? size.Width : size.Height;
+                int step = itemMain + betweenWhole;
+                gapError += betweenFraction;
+                if (gapError >= 1f)
+                {
+                    step++;
+                    gapError -= 1f;
+                }
+                else if (gapError <= -1f)
+                {
+                    step--;
+                    gapError += 1f;
+                }
+
+                mainCursor += step;
             }
 
-            crossCursor += lineCross + stack.RunSpacing;
+            if (lineIndex == lines.Count - 1)
+            {
+                continue;
+            }
+
+            int lineStep = lineCross + runSpacingWhole;
+            runError += runSpacingFraction;
+            if (runError >= 1f)
+            {
+                lineStep++;
+                runError -= 1f;
+            }
+            else if (runError <= -1f)
+            {
+                lineStep--;
+                runError += 1f;
+            }
+
+            crossCursor += lineStep;
         }
     }
 
@@ -267,7 +284,7 @@ public static partial class NodeRenderer
         float inheritedOpacity)
     {
         (FontFamily mainFont, List<FontFamily> fallbacks) = assets.ResolveFont(textNode.FontFamily);
-        float scaledFontSize = textNode.FontSize * 72f / 300f;
+        float scaledFontSize = textNode.FontSize * 72 / 300;
         Font font = new(mainFont, scaledFontSize);
         RichTextOptions options = new(font)
         {
@@ -313,12 +330,12 @@ public static partial class NodeRenderer
             return string.Empty;
         }
 
-        if (TextMeasurer.MeasureSize(text, options).Width <= maxWidth)
+        if (TextMeasurer.MeasureAdvance(text, options).Width <= maxWidth)
         {
             return text;
         }
 
-        if (TextMeasurer.MeasureSize(suffix, options).Width > maxWidth)
+        if (TextMeasurer.MeasureAdvance(suffix, options).Width > maxWidth)
         {
             return string.Empty;
         }
@@ -330,7 +347,7 @@ public static partial class NodeRenderer
         {
             int mid = (low + high + 1) / 2;
             string candidate = GetTextElementPrefix(text, textElementStarts, mid) + suffix;
-            if (TextMeasurer.MeasureSize(candidate, options).Width <= maxWidth)
+            if (TextMeasurer.MeasureAdvance(candidate, options).Width <= maxWidth)
             {
                 low = mid;
                 continue;

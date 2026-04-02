@@ -52,19 +52,6 @@ public sealed class AssetProvider
         return (mainFont, fallbacks);
     }
 
-    public Size Measure(string text, string family, float size)
-    {
-        (FontFamily fontFamily, List<FontFamily> fallbacks) = ResolveFont(family);
-        float scaledSize = (float)(size * 72 / 300d);
-        Font font = fontFamily.CreateFont(scaledSize);
-        FontRectangle rect = TextMeasurer.MeasureAdvance(text, new(font)
-        {
-            FallbackFontFamilies = fallbacks,
-            Dpi = 300
-        });
-        return new((int)Math.Ceiling(rect.Width), (int)Math.Ceiling(rect.Height));
-    }
-
     public string? GetPath(string ns)
     {
         if (!_pathRules.TryGetValue(ns, out (string, string?) pathRule))
