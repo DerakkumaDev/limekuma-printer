@@ -96,6 +96,9 @@ public static partial class NodeRenderer
             case CanvasNode subCanvas:
                 RenderCanvasNode(canvas, subCanvas, assets, measurer, origin, inheritedOpacity);
                 break;
+
+            default:
+                throw new NotImplementedException();
         }
     }
 }

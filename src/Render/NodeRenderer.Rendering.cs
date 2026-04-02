@@ -66,11 +66,11 @@ public static partial class NodeRenderer
         height = Math.Max(1, (int)Math.Round(height * resize.Scale));
         rendered.Mutate(ctx => ctx.Resize(width, height, GetResampler(resize.Resampler)));
         bool shouldInheritMetadata = canvas.Frames.Count <= 1 && rendered.Frames.Count > 1;
-        canvas.Mutate(ctx => ctx.DrawImage(rendered, origin, inheritedOpacity, GetForegroundRepeatCount(rendered)));
         if (shouldInheritMetadata)
         {
             InheritCanvasFramesAndMetadataOnFirstDraw(canvas, rendered);
         }
+        canvas.Mutate(ctx => ctx.DrawImage(rendered, origin, inheritedOpacity, GetForegroundRepeatCount(rendered)));
     }
 
     private static void RenderStackNode(Image canvas, StackNode stack, AssetProvider assets, AssetProvider measurer,
@@ -272,12 +272,12 @@ public static partial class NodeRenderer
         }
 
         bool shouldInheritMetadata = canvas.Frames.Count <= 1 && img.Frames.Count > 1;
-        canvas.Mutate(c => c.DrawImage(img, origin, image.ColorBlending, image.AlphaComposition, inheritedOpacity,
-            image.ForegroundRepeatCount));
         if (shouldInheritMetadata)
         {
             InheritCanvasFramesAndMetadataOnFirstDraw(canvas, img);
         }
+        canvas.Mutate(c => c.DrawImage(img, origin, image.ColorBlending, image.AlphaComposition, inheritedOpacity,
+            image.ForegroundRepeatCount));
     }
 
     private static void RenderTextNode(Image canvas, TextNode textNode, AssetProvider assets, PointF origin,
@@ -375,11 +375,11 @@ public static partial class NodeRenderer
     {
         using Image subCanvas = Render(canvas, assets, measurer);
         bool shouldInheritMetadata = canvasImage.Frames.Count <= 1 && subCanvas.Frames.Count > 1;
-        canvasImage.Mutate(c => c.DrawImage(subCanvas, origin, inheritedOpacity, GetForegroundRepeatCount(subCanvas)));
         if (shouldInheritMetadata)
         {
             InheritCanvasFramesAndMetadataOnFirstDraw(canvasImage, subCanvas);
         }
+        canvasImage.Mutate(c => c.DrawImage(subCanvas, origin, inheritedOpacity, GetForegroundRepeatCount(subCanvas)));
     }
 
     private static void InheritCanvasFramesAndMetadataOnFirstDraw(Image canvas, Image foreground)

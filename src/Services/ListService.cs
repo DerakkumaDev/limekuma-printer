@@ -20,10 +20,8 @@ public sealed partial class ListService : ListApi.ListApiBase
         int[] counts = new int[16];
         counts[15] = count;
 
-        int j = i;
         int end = Math.Min(i + 55, count);
         await ServiceHelper.PrepareRecordDataAsync(records[i..end]);
-        j = end;
 
         Parallel.ForEach(records, () => new int[15], (record, _, local) =>
         {
@@ -119,6 +117,6 @@ public sealed partial class ListService : ListApi.ListApiBase
             }
         });
 
-        return (counts, i, j);
+        return (counts, i, end);
     }
 }
