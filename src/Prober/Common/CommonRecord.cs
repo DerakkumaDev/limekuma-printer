@@ -1,6 +1,6 @@
 namespace Limekuma.Prober.Common;
 
-public record CommonRecord
+public record CommonRecord : IComparer<CommonRecord>
 {
     public required int Id { get; init; }
 
@@ -28,7 +28,41 @@ public record CommonRecord
 
     public required double LevelValue { get; init; }
 
+    public required bool InCurrentVersion { get; init; }
+
     public string AudioUrl => $"https://assets2.lxns.net/maimai/music/{Id % 10000}.mp3";
 
     public string JacketUrl => $"https://assets2.lxns.net/maimai/jacket/{Id % 10000}.png";
+
+    public int Compare(CommonRecord? x, CommonRecord? y)
+    {
+        if (x is null && y is null)
+        {
+            return 0;
+        }
+
+        if (x is null)
+        {
+            return -1;
+        }
+
+        if (y is null)
+        {
+            return 1;
+        }
+
+        int result = x.DXRating.CompareTo(y.DXRating);
+        if (result is not 0)
+        {
+            return result;
+        }
+
+        result = x.LevelValue.CompareTo(y.LevelValue);
+        if (result is not 0)
+        {
+            return result;
+        }
+
+        return x.Achievements.CompareTo(y.Achievements);
+    }
 }

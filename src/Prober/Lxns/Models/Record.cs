@@ -117,6 +117,7 @@ public record Record : SimpleRecord
             DXStar = record.DXStar,
             DXScore = record.DXScore,
             TotalDXScore = record.TotalDXScore,
-            LevelValue = record.LevelValue
+            LevelValue = record.LevelValue,
+            InCurrentVersion = (SongData.Shared.Versions[^1].VersionNumber / 100) == (record.Chart.Version / 100)
         };
 }

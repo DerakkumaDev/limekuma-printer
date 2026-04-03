@@ -113,6 +113,7 @@ public class Record
             DXStar = record.DXStar,
             DXScore = record.DXScore,
             TotalDXScore = record.TotalDXScore,
-            LevelValue = record.LevelValue
+            LevelValue = record.LevelValue,
+            InCurrentVersion = record.Song.BasicInfo.InCurrentVersion
         };
 }
