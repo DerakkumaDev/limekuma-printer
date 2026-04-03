@@ -53,7 +53,7 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
         using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
-            "divingfish", request.Tags);
+            request.Condition, "divingfish", request.Tags);
 
         await responseStream.WriteToResponseAsync(bestsImage);
     }

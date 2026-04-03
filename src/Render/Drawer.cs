@@ -9,24 +9,25 @@ namespace Limekuma.Render;
 public sealed class Drawer
 {
     public async Task<Image> DrawBestsAsync(CommonUser user, IList<CommonRecord> ever,
-        IList<CommonRecord> current, int everTotal, int currentTotal, string prober, IList<string> tags) =>
-        await DrawBestsAsync(user, ever, current, everTotal, currentTotal, prober, tags, "./Resources/Layouts/bests.xml");
+        IList<CommonRecord> current, int everTotal, int currentTotal, string? condition, string prober, IList<string> tags) =>
+        await DrawBestsAsync(user, ever, current, everTotal, currentTotal, condition, prober, tags, "./Resources/Layouts/bests.xml");
 
     public async Task<Image> DrawBestsAsync(CommonUser user, IList<CommonRecord> ever,
-        IList<CommonRecord> current, int everTotal, int currentTotal, string prober, IList<string> tags, string xmlPath)
+        IList<CommonRecord> current, int everTotal, int currentTotal, string? condition, string prober, IList<string> tags, string xmlPath)
     {
         int everMax = ever.Count > 0 ? ever[0].DXRating : 0;
         int everMin = ever.Count > 0 ? ever[^1].DXRating : 0;
         int currentMax = current.Count > 0 ? current[0].DXRating : 0;
         int currentMin = current.Count > 0 ? current[^1].DXRating : 0;
         bool mayMask = ever.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank > Ranks.A)) || current.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank > Ranks.A));
-        Dictionary<string, object> scope = new(StringComparer.OrdinalIgnoreCase)
+        Dictionary<string, object?> scope = new(StringComparer.OrdinalIgnoreCase)
         {
             ["userInfo"] = user,
             ["everRecords"] = ever,
             ["currentRecords"] = current,
             ["everRating"] = everTotal,
             ["currentRating"] = currentTotal,
+            ["condition"] = condition,
             ["proberName"] = prober,
             ["tags"] = tags,
             ["mayMask"] = mayMask,
@@ -48,7 +49,7 @@ public sealed class Drawer
         List<int> countList = [.. counts];
         int totalCount = counts.Count > 0 ? counts[^1] : 0;
         bool mayMask = records.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank > Ranks.A));
-        Dictionary<string, object> scope = new(StringComparer.OrdinalIgnoreCase)
+        Dictionary<string, object?> scope = new(StringComparer.OrdinalIgnoreCase)
         {
             ["userInfo"] = user,
             ["pageRecords"] = records,
@@ -66,7 +67,7 @@ public sealed class Drawer
         return await DrawAsync(scope, xmlPath);
     }
 
-    private async Task<Image> DrawAsync(IDictionary<string, object> scope, string xmlPath)
+    private async Task<Image> DrawAsync(IDictionary<string, object?> scope, string xmlPath)
     {
         AsyncNCalcEngine expr = new();
         RegisterFunctions(expr);

@@ -20,15 +20,17 @@ message LxnsBestsRequest {
   string devToken = 1;
   google.protobuf.StringValue personalToken = 2;
   google.protobuf.UInt32Value qq = 3;
-  repeated string tags = 4;
+  google.protobuf.StringValue condition = 4;
+  repeated string tags = 5;
 }
 
 message DivingFishBestsRequest {
   uint32 qq = 1;
-  sint32 frame = 2;
-  sint32 plate = 3;
-  sint32 icon = 4;
-  repeated string tags = 5;
+  google.protobuf.StringValue condition = 2;
+  sint32 frame = 3;
+  sint32 plate = 4;
+  sint32 icon = 5;
+  repeated string tags = 6;
 }
 
 message LxnsListRequest {

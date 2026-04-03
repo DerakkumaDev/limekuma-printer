@@ -94,7 +94,8 @@ public partial class BestsService
         (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
         using Image bestsImage =
-            await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal, "lxns", request.Tags);
+            await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal, request.Condition,
+                "lxns", request.Tags);
 
         await responseStream.WriteToResponseAsync(bestsImage);
     }
