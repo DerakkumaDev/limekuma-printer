@@ -13,7 +13,7 @@ public static partial class NodeRenderer
                 ? desired
                 : fallback;
 
-    private static List<List<(Node Node, Size Size)>> ResolveStackLines(List<(Node Node, Size Size)> items, bool isRow,
+    private static List<List<(Node Node, Size Size)>> ResolveStackLines(IEnumerable<(Node Node, Size Size)> items, bool isRow,
         bool wrap, float spacing, float containerMain)
     {
         List<List<(Node Node, Size Size)>> lines = [];
@@ -43,11 +43,11 @@ public static partial class NodeRenderer
         return lines;
     }
 
-    private static List<(float Main, int Cross)> ResolveStackLineSizes(List<List<(Node Node, Size Size)>> lines, bool isRow,
+    private static List<(float Main, int Cross)> ResolveStackLineSizes(IEnumerable<IReadOnlyList<(Node Node, Size Size)>> lines, bool isRow,
         float spacing)
     {
         List<(float Main, int Cross)> lineSizes = [];
-        foreach (List<(Node Node, Size Size)> line in lines)
+        foreach (IReadOnlyList<(Node Node, Size Size)> line in lines)
         {
             float lineMain = line.Sum(i => isRow ? i.Size.Width : i.Size.Height);
             if (line.Count > 1)

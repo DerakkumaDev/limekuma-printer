@@ -259,7 +259,7 @@ public sealed partial class TemplateReader
         return children;
     }
 
-    private async Task<(Node Node, int LastConsumedIndex)> ParseConditionalChainAsync(IReadOnlyList<XElement> siblings,
+    private async Task<(Node Node, int LastConsumedIndex)> ParseConditionalChainAsync(List<XElement> siblings,
         int index, object? scope)
     {
         XElement ifElement = siblings[index];
@@ -400,7 +400,7 @@ public sealed partial class TemplateReader
         return result;
     }
 
-    private static void CopyParentScope(object? parent, IDictionary<string, object?> target)
+    private static void CopyParentScope(object? parent, Dictionary<string, object?> target)
     {
         if (parent is not IDictionary dictionary)
         {

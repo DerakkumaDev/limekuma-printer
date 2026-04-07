@@ -8,12 +8,12 @@ namespace Limekuma.Render;
 
 public sealed class Drawer
 {
-    public async Task<Image> DrawBestsAsync(CommonUser user, IList<CommonRecord> ever,
-        IList<CommonRecord> current, int everTotal, int currentTotal, string? condition, string prober, IList<string> tags) =>
+    public async Task<Image> DrawBestsAsync(CommonUser user, IReadOnlyList<CommonRecord> ever,
+        IReadOnlyList<CommonRecord> current, int everTotal, int currentTotal, string? condition, string prober, IEnumerable<string> tags) =>
         await DrawBestsAsync(user, ever, current, everTotal, currentTotal, condition, prober, tags, "./Resources/Layouts/bests.xml");
 
-    public async Task<Image> DrawBestsAsync(CommonUser user, IList<CommonRecord> ever,
-        IList<CommonRecord> current, int everTotal, int currentTotal, string? condition, string prober, IList<string> tags, string xmlPath)
+    public async Task<Image> DrawBestsAsync(CommonUser user, IReadOnlyList<CommonRecord> ever,
+        IReadOnlyList<CommonRecord> current, int everTotal, int currentTotal, string? condition, string prober, IEnumerable<string> tags, string xmlPath)
     {
         int everMax = ever.Count > 0 ? ever[0].DXRating : 0;
         int everMin = ever.Count > 0 ? ever[^1].DXRating : 0;
@@ -39,14 +39,13 @@ public sealed class Drawer
         return await DrawAsync(scope, xmlPath);
     }
 
-    public async Task<Image> DrawListAsync(CommonUser user, IList<CommonRecord> records, int page, int total,
-        IList<int> counts, int startIndex, string condition, string prober, IList<string> tags) =>
+    public async Task<Image> DrawListAsync(CommonUser user, IReadOnlyList<CommonRecord> records, int page, int total,
+        List<int> counts, int startIndex, string condition, string prober, IEnumerable<string> tags) =>
         await DrawListAsync(user, records, page, total, counts, startIndex, condition, prober, tags, "./Resources/Layouts/list.xml");
 
-    public async Task<Image> DrawListAsync(CommonUser user, IList<CommonRecord> records, int page, int total,
-        IList<int> counts, int startIndex, string condition, string prober, IList<string> tags, string xmlPath)
+    public async Task<Image> DrawListAsync(CommonUser user, IReadOnlyList<CommonRecord> records, int page, int total,
+        List<int> counts, int startIndex, string condition, string prober, IEnumerable<string> tags, string xmlPath)
     {
-        List<int> countList = [.. counts];
         int totalCount = counts.Count > 0 ? counts[^1] : 0;
         bool mayMask = records.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank > Ranks.A));
         Dictionary<string, object?> scope = new(StringComparer.OrdinalIgnoreCase)
@@ -55,8 +54,8 @@ public sealed class Drawer
             ["pageRecords"] = records,
             ["pageNumber"] = page,
             ["totalPages"] = total,
-            ["rankCounts"] = countList[..7],
-            ["comboCounts"] = countList[7..^1],
+            ["rankCounts"] = counts[..7],
+            ["comboCounts"] = counts[7..^1],
             ["totalCount"] = totalCount,
             ["startIndex"] = startIndex,
             ["condition"] = condition,
@@ -67,7 +66,7 @@ public sealed class Drawer
         return await DrawAsync(scope, xmlPath);
     }
 
-    private async Task<Image> DrawAsync(IDictionary<string, object?> scope, string xmlPath)
+    private static async Task<Image> DrawAsync(IDictionary<string, object?> scope, string xmlPath)
     {
         AsyncNCalcEngine expr = new();
         RegisterFunctions(expr);
@@ -77,7 +76,7 @@ public sealed class Drawer
         return NodeRenderer.Render((CanvasNode)tree, assets, assets);
     }
 
-    private void RegisterFunctions(AsyncNCalcEngine expr)
+    private static void RegisterFunctions(AsyncNCalcEngine expr)
     {
         expr.RegisterFunction("ToString", (object x) => Convert.ToString(x));
         expr.RegisterFunction("Count", (IList x) => x.Count);
