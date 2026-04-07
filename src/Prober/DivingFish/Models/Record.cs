@@ -49,9 +49,9 @@ public class Record
     [JsonPropertyName("type")]
     public required SongTypes Type { get; init; }
 
-    public string AudioUrl => $"https://assets2.lxns.net/maimai/music/{Id % 10000}.mp3";
+    public string AudioUrl => $"https://assets2.lxns.net/maimai/music/{(Id is > 10000 and < 100000 ? Id % 10000 : Id)}.mp3";
 
-    public string JacketUrl => $"https://assets2.lxns.net/maimai/jacket/{Id % 10000}.png";
+    public string JacketUrl => $"https://maimai.diving-fish.com/covers/{Id}.png";
 
     public Song Song
     {
@@ -114,6 +114,8 @@ public class Record
             DXScore = record.DXScore,
             TotalDXScore = record.TotalDXScore,
             LevelValue = record.LevelValue,
-            InCurrentVersion = record.Song.BasicInfo.InCurrentVersion
+            InCurrentVersion = record.Song.BasicInfo.InCurrentVersion,
+            AudioUrl = record.AudioUrl,
+            JacketUrl = record.JacketUrl
         };
 }

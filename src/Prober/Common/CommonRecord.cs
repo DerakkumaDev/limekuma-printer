@@ -30,9 +30,9 @@ public record CommonRecord : IComparer<CommonRecord>
 
     public required bool InCurrentVersion { get; init; }
 
-    public string AudioUrl => $"https://assets2.lxns.net/maimai/music/{Id % 10000}.mp3";
+    public required string AudioUrl { get; init; }
 
-    public string JacketUrl => $"https://assets2.lxns.net/maimai/jacket/{Id % 10000}.png";
+    public required string JacketUrl { get; init; }
 
     public int Compare(CommonRecord? x, CommonRecord? y)
     {

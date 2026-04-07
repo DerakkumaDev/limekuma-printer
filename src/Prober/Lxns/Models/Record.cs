@@ -118,6 +118,8 @@ public record Record : SimpleRecord
             DXScore = record.DXScore,
             TotalDXScore = record.TotalDXScore,
             LevelValue = record.LevelValue,
-            InCurrentVersion = (SongData.Shared.Versions[^1].VersionNumber / 100) == (record.Chart.Version / 100)
+            InCurrentVersion = (SongData.Shared.Versions[^1].VersionNumber / 100) == (record.Chart.Version / 100),
+            AudioUrl = record.AudioUrl,
+            JacketUrl = record.JacketUrl
         };
 }
