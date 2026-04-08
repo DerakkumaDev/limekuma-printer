@@ -16,8 +16,18 @@ service ListApi {
   rpc GetFromDivingFish (DivingFishListRequest) returns (stream ImageResponse);
 }
 
+service RecordApi {
+  rpc GetFromLxns (LxnsRecordRequest) returns (stream ImageResponse);
+  rpc GetFromDivingFish (DivingFishRecordRequest) returns (stream ImageResponse);
+}
+
+service InfoApi {
+  rpc GetChartInfo (ChartInfoRequest) returns (stream ImageResponse);
+  rpc GetAchievementInfo (AchievementInfoRequest) returns (stream ImageResponse);
+}
+
 message LxnsBestsRequest {
-  string devToken = 1;
+  google.protobuf.StringValue devToken = 1;
   google.protobuf.StringValue personalToken = 2;
   google.protobuf.UInt32Value qq = 3;
   google.protobuf.StringValue condition = 4;
@@ -25,12 +35,13 @@ message LxnsBestsRequest {
 }
 
 message DivingFishBestsRequest {
-  uint32 qq = 1;
-  google.protobuf.StringValue condition = 2;
-  sint32 frame = 3;
-  sint32 plate = 4;
-  sint32 icon = 5;
-  repeated string tags = 6;
+  google.protobuf.StringValue token = 1;
+  google.protobuf.UInt32Value qq = 2;
+  google.protobuf.StringValue condition = 3;
+  google.protobuf.Int32Value frame = 4;
+  google.protobuf.Int32Value plate = 5;
+  google.protobuf.Int32Value icon = 6;
+  repeated string tags = 7;
 }
 
 message LxnsListRequest {
@@ -49,6 +60,29 @@ message DivingFishListRequest {
   sint32 plate = 5;
   sint32 icon = 6;
   repeated string tags = 7;
+}
+
+message LxnsRecordRequest {
+  string devToken = 1;
+  string personalToken = 2;
+  string songId = 3;
+}
+
+message DivingFishRecordRequest {
+  string token = 1;
+  uint32 qq = 2;
+  string songId = 3;
+}
+
+message ChartInfoRequest {
+  string prober = 1;
+  string songId = 2;
+}
+
+message AchievementInfoRequest {
+  string prober = 1;
+  string difficulty = 2;
+  string songId = 3;
 }
 
 message ImageResponse {
