@@ -5,7 +5,7 @@ namespace Limekuma.Prober.DivingFish.Models;
 public record ChartState
 {
     [JsonPropertyName("cnt")]
-    public required int SampleSize { get; init; }
+    public required double SampleSize { get; init; }
 
     [JsonPropertyName("diff")]
     public required string Level { get; init; }
@@ -26,5 +26,5 @@ public record ChartState
     public required List<int> RankDistribution { get; init; }
 
     [JsonPropertyName("fc_dist")]
-    public required List<int> ComboDistribution { get; init; }
+    public required List<double> ComboDistribution { get; init; }
 }

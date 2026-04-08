@@ -5,9 +5,7 @@ namespace Limekuma.Prober.Lxns.Models;
 
 public record SongData
 {
-    public SongData() => PullTime = DateTimeOffset.Now;
-
-    public DateTimeOffset PullTime { get; }
+    private readonly DateTimeOffset _pullTime = DateTimeOffset.Now;
 
     [JsonPropertyName("songs")]
     public required List<Song> Songs { get; set; }
@@ -31,7 +29,7 @@ public record SongData
     {
         get
         {
-            if (field is null || DateTimeOffset.Now.AddHours(10).Date != field.PullTime.AddHours(10).Date)
+            if (field is null || DateTimeOffset.Now.AddHours(10).Date != field._pullTime.AddHours(10).Date)
             {
                 LxnsResourceClient _resource = new();
                 field = _resource.GetSongsAsync(includeNotes: true).Result;
