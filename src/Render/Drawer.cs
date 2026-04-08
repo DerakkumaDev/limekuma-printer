@@ -39,21 +39,20 @@ public sealed class Drawer
         return await DrawAsync(scope, xmlPath);
     }
 
-    public async Task<Image> DrawListAsync(CommonUser user, IReadOnlyList<CommonRecord> records, int page, int total,
-        List<int> counts, int startIndex, string condition, string prober, IEnumerable<string> tags) =>
-        await DrawListAsync(user, records, page, total, counts, startIndex, condition, prober, tags, "./Resources/Layouts/list.xml");
+    public async Task<Image> DrawListAsync(CommonUser user, IReadOnlyList<CommonRecord> records, int page,
+        int[] counts, int totalCount, int startIndex, string condition, bool mayMask, string prober, IEnumerable<string> tags) =>
+        await DrawListAsync(user, records, page, counts, totalCount, startIndex, condition, mayMask, prober, tags, "./Resources/Layouts/list.xml");
 
-    public async Task<Image> DrawListAsync(CommonUser user, IReadOnlyList<CommonRecord> records, int page, int total,
-        List<int> counts, int startIndex, string condition, string prober, IEnumerable<string> tags, string xmlPath)
+    public async Task<Image> DrawListAsync(CommonUser user, IReadOnlyList<CommonRecord> records, int page,
+        int[] counts, int totalCount, int startIndex, string condition, bool mayMask, string prober, IEnumerable<string> tags, string xmlPath)
     {
-        int totalCount = counts.Count > 0 ? counts[^1] : 0;
-        bool mayMask = records.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank > Ranks.A));
+        int totalPages = (int)Math.Ceiling((double)totalCount / 55);
         Dictionary<string, object?> scope = new(StringComparer.OrdinalIgnoreCase)
         {
             ["userInfo"] = user,
             ["pageRecords"] = records,
             ["pageNumber"] = page,
-            ["totalPages"] = total,
+            ["totalPages"] = totalPages,
             ["rankCounts"] = counts[..7],
             ["comboCounts"] = counts[7..^1],
             ["totalCount"] = totalCount,

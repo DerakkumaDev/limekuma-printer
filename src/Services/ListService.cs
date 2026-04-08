@@ -17,103 +17,91 @@ public sealed partial class ListService : ListApi.ListApiBase
 
         await ServiceHelper.PrepareUserDataAsync(user);
 
-        int[] counts = new int[16];
-        counts[15] = count;
+        int[] counts = new int[15];
 
         int end = Math.Min(i + 55, count);
         await ServiceHelper.PrepareRecordDataAsync(records[i..end]);
 
-        Parallel.ForEach(records, () => new int[15], (record, _, local) =>
+        Parallel.ForEach(records, record =>
         {
             if (record.Rank >= Ranks.SSSPlus)
             {
-                ++local[0];
+                Interlocked.Increment(ref counts[0]);
             }
 
             if (record.Rank >= Ranks.SSS)
             {
-                ++local[1];
+                Interlocked.Increment(ref counts[1]);
             }
 
             if (record.Rank >= Ranks.SSPlus)
             {
-                ++local[2];
+                Interlocked.Increment(ref counts[2]);
             }
 
             if (record.Rank >= Ranks.SS)
             {
-                ++local[3];
+                Interlocked.Increment(ref counts[3]);
             }
 
             if (record.Rank >= Ranks.SPlus)
             {
-                ++local[4];
+                Interlocked.Increment(ref counts[4]);
             }
 
             if (record.Rank >= Ranks.S)
             {
-                ++local[5];
+                Interlocked.Increment(ref counts[5]);
             }
 
             if (record.Rank >= Ranks.A)
             {
-                ++local[6];
+                Interlocked.Increment(ref counts[6]);
             }
 
             if (record.ComboFlag >= ComboFlags.AllPerfectPlus)
             {
-                ++local[7];
+                Interlocked.Increment(ref counts[7]);
             }
 
             if (record.ComboFlag >= ComboFlags.AllPerfect)
             {
-                ++local[8];
+                Interlocked.Increment(ref counts[8]);
             }
 
             if (record.ComboFlag >= ComboFlags.FullComboPlus)
             {
-                ++local[9];
+                Interlocked.Increment(ref counts[9]);
             }
 
             if (record.ComboFlag >= ComboFlags.FullCombo)
             {
-                ++local[10];
+                Interlocked.Increment(ref counts[10]);
             }
 
             if (record.SyncFlag is SyncFlags.SyncPlay)
             {
-                return local;
+                return;
             }
 
             if (record.SyncFlag >= SyncFlags.FullSyncDXPlus)
             {
-                ++local[11];
+                Interlocked.Increment(ref counts[11]);
             }
 
             if (record.SyncFlag >= SyncFlags.FullSyncDX)
             {
-                ++local[12];
+                Interlocked.Increment(ref counts[12]);
             }
 
             if (record.SyncFlag >= SyncFlags.FullSyncPlus)
             {
-                ++local[13];
+                Interlocked.Increment(ref counts[13]);
             }
 
             if (record.SyncFlag >= SyncFlags.FullSync)
             {
-                ++local[14];
-            }
-
-            return local;
-        }, local =>
-        {
-            for (int idx = 0; idx < local.Length; ++idx)
-            {
-                if (idx < counts.Length)
-                {
-                    Interlocked.Add(ref counts[idx], local[idx]);
-                }
+                Interlocked.Increment(ref counts[14]);
             }
         });
 
