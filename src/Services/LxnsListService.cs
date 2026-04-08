@@ -3,7 +3,6 @@ using Limekuma.Prober.Common;
 using Limekuma.Prober.Lxns;
 using Limekuma.Prober.Lxns.Models;
 using Limekuma.Render;
-using Limekuma.ScoreFilter;
 using Limekuma.Utils;
 using SixLabors.ImageSharp;
 using System.Collections.Immutable;
@@ -51,14 +50,14 @@ public partial class ListService
             throw new RpcException(new(StatusCode.Unauthenticated, ex.Message, ex));
         }
 
-        IScoreFilter filter = ScoreFilterHelper.GetFilterByTags(request.Tags) ?? throw new RpcException(new(StatusCode.InvalidArgument, "Invalid filter tags"));
+        (Func<CommonRecord, bool> predicate, bool maskMutex) = ScoreFilterHelper.GetPredicateByTags(request.Tags, request.Condition);
         bool mayMask = records.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank > Ranks.A));
-        if (mayMask && filter.MaskMutex)
+        if (mayMask && maskMutex)
         {
             throw new RpcException(new(StatusCode.PermissionDenied, "Mask enabled"));
         }
 
-        ImmutableArray<CommonRecord> cRecords = [.. records.ConvertAll<CommonRecord>(_ => _).Where(filter.GetFilter(request.Condition)).SortRecordForList()];
+        ImmutableArray<CommonRecord> cRecords = [.. records.ConvertAll<CommonRecord>(_ => _).Where(predicate).SortRecordForList()];
         (ImmutableArray<int> counts, int startIndex, int endIndex) = await PrepareDataAsync(player, cRecords, request.Page);
 
         using Image listImage = await new Drawer().DrawListAsync(player, cRecords[startIndex..endIndex], request.Page, counts,

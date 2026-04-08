@@ -5,7 +5,11 @@ public sealed class ScoreFilterTagAttribute : Attribute
 {
     public string Tag { get; }
 
-    public ScoreFilterTagAttribute(string tag)
+    public bool MaskMutex { get; }
+
+    public ScoreFilterTagAttribute(string tag) : this(tag, false) { }
+
+    public ScoreFilterTagAttribute(string tag, bool maskMutex)
     {
         if (string.IsNullOrWhiteSpace(tag))
         {
@@ -13,5 +17,6 @@ public sealed class ScoreFilterTagAttribute : Attribute
         }
 
         Tag = tag;
+        MaskMutex = maskMutex;
     }
 }

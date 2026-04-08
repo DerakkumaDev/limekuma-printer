@@ -7,8 +7,6 @@ namespace Limekuma.ScoreFilter;
 [ScoreFilterTag("version")]
 public sealed class VersionScoreFilter : IScoreFilter
 {
-    public bool MaskMutex => false;
-
     public Func<CommonRecord, bool> GetFilter(string? condition)
     {
         if (string.IsNullOrWhiteSpace(condition))

@@ -3,11 +3,9 @@ using Limekuma.Utils;
 
 namespace Limekuma.ScoreFilter;
 
-[ScoreFilterTag("lock")]
+[ScoreFilterTag("lock", true)]
 public sealed class LockScoreFilter : IScoreFilter
 {
-    public bool MaskMutex => true;
-
     public Func<CommonRecord, bool> GetFilter(string? condition) => x =>
     {
         float sumScore = 0;
