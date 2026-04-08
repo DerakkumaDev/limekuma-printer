@@ -17,4 +17,6 @@ public record CommonRecord
     public required int DXStar { get; init; }
 
     public required int DXRating { get; init; }
+
+    public float ExtraInfo { get; internal set; }
 }
