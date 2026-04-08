@@ -1,3 +1,4 @@
+using Limekuma.Prober.Common;
 using System.Text.Json.Serialization;
 
 namespace Limekuma.Prober.Lxns.Models;

@@ -6,6 +6,17 @@ namespace Limekuma.Prober.Lxns.Models;
 
 public record Record : SimpleRecord
 {
+    private static CommonDifficulties MapDifficulty(Difficulties difficulty) => difficulty switch
+    {
+        Difficulties.Dummy => CommonDifficulties.Dummy,
+        Difficulties.Basic => CommonDifficulties.Basic,
+        Difficulties.Advanced => CommonDifficulties.Advanced,
+        Difficulties.Expert => CommonDifficulties.Expert,
+        Difficulties.Master => CommonDifficulties.Master,
+        Difficulties.ReMaster => CommonDifficulties.ReMaster,
+        _ => throw new InvalidDataException()
+    };
+
     [JsonPropertyName("achievements")]
     public required double Achievements { get; init; }
 
@@ -34,92 +45,71 @@ public record Record : SimpleRecord
 
     public string JacketUrl => $"https://assets2.lxns.net/maimai/jacket/{Id}.png";
 
-    public Chart Chart
+    private Lazy<Chart>? _chart;
+
+    public Chart Chart => (_chart ??= new(() =>
     {
-        get
+        SongData songData = SongData.Shared;
+        if (!songData.SongsById.TryGetValue(Id, out Song? song))
         {
-            if (field is null)
+            throw new InvalidDataException();
+        }
+
+        return (Type switch
+        {
+            SongTypes.Standard => song.Charts.Standard,
+            SongTypes.DX => song.Charts.DX,
+            _ => throw new InvalidDataException()
+        })[(int)Difficulty];
+    })).Value;
+
+    private Lazy<int>? _totalDXScore;
+
+    public int TotalDXScore => (_totalDXScore ??= new(() => Chart.Notes!.Total * 3)).Value;
+
+    private Lazy<double>? _levelValue;
+
+    public double LevelValue => (_levelValue ??= new(() => Chart.LevelValue)).Value;
+
+    public static implicit operator CommonRecord(Record record)
+    {
+        Chart chart = record.Chart;
+        SongData songData = SongData.Shared;
+        int versionGroup = chart.Version / 100;
+        if (!songData.VersionsByGroup.TryGetValue(versionGroup, out Version? version))
+        {
+            throw new InvalidDataException();
+        }
+
+        bool inCurrentGenre = (songData.Versions[^1].VersionNumber / 100) == versionGroup;
+
+        return new()
+        {
+            Chart = new()
             {
-                Song? song = SongData.Shared.Songs.FirstOrDefault(x => x.Id == Id);
-                if (song is null)
+                Song = new()
                 {
-                    field = new()
-                    {
-                        Type = Type,
-                        Difficulty = Difficulty,
-                        Level = Level,
-                        LevelValue = 0.4,
-                        Charter = string.Empty,
-                        Version = 0,
-                        Notes = new()
-                        {
-                            Break = 0,
-                            Hold = 0,
-                            Slide = 0,
-                            Tap = 0,
-                            Total = 0,
-                            Touch = 0
-                        }
-                    };
-                    return field;
-                }
-
-                field = (Type switch
-                {
-                    SongTypes.Standard => song.Charts.Standard,
-                    SongTypes.DX => song.Charts.DX,
-                    _ => throw new InvalidDataException()
-                })[(int)Difficulty];
-            }
-
-            return field;
-        }
-    }
-
-    public int TotalDXScore
-    {
-        get
-        {
-            if (field is 0)
-            {
-                field = Chart.Notes!.Total * 3;
-            }
-
-            return field;
-        }
-    }
-
-    public double LevelValue
-    {
-        get
-        {
-            if (field is 0)
-            {
-                field = Chart.LevelValue;
-            }
-
-            return field;
-        }
-    }
-
-    public static implicit operator CommonRecord(Record record) =>
-        new()
-        {
-            Id = record.Type is SongTypes.Standard ? record.Id : record.Id + 10000,
-            Title = record.Title,
-            Difficulty = (CommonDifficulties)(record.Difficulty + 1),
+                    Id = record.Type is SongTypes.Standard ? record.Id : record.Id + 10000,
+                    Title = record.Title,
+                    Type = (CommonSongTypes)record.Type,
+                    Genre = version.Title,
+                    InCurrentGenre = inCurrentGenre,
+                    AudioUrl = record.AudioUrl,
+                    JacketUrl = record.JacketUrl
+                },
+                Difficulty = MapDifficulty(record.Difficulty),
+                TotalDXScore = record.TotalDXScore,
+                Level = record.Level,
+                LevelValue = record.LevelValue,
+                Notes = chart.Notes!
+            },
             ComboFlag = record.ComboFlag ?? ComboFlags.None,
             SyncFlag = record.SyncFlag ?? SyncFlags.None,
             Rank = record.Rank ?? Ranks.D,
-            Type = (CommonSongTypes)record.Type,
             Achievements = record.Achievements,
             DXRating = (int)(record.DXRating ?? 0),
             DXStar = record.DXStar,
-            DXScore = record.DXScore,
-            TotalDXScore = record.TotalDXScore,
-            LevelValue = record.LevelValue,
-            InCurrentVersion = (SongData.Shared.Versions[^1].VersionNumber / 100) == (record.Chart.Version / 100),
-            AudioUrl = record.AudioUrl,
-            JacketUrl = record.JacketUrl
+            DXScore = record.DXScore
         };
+    }
 }

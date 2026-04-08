@@ -17,7 +17,7 @@ internal static class ServiceHelper
         await Parallel.ForEachAsync(records, async (record, _) => await PrepareRecordDataAsync(record));
 
     internal static async Task PrepareRecordDataAsync(CommonRecord record) =>
-        await PrepareImageAsset("Jacket", record.Id % 10000, record.JacketUrl);
+        await PrepareImageAsset("Jacket", record.Chart.Song.Id % 10000, record.Chart.Song.JacketUrl);
 
     private static async Task PrepareImageAsset(string assetKey, int id, string url)
     {

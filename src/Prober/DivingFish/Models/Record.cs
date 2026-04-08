@@ -7,6 +7,17 @@ namespace Limekuma.Prober.DivingFish.Models;
 
 public class Record
 {
+    private static CommonDifficulties MapDifficulty(Difficulties difficulty) => difficulty switch
+    {
+        Difficulties.Dummy => CommonDifficulties.Dummy,
+        Difficulties.Basic => CommonDifficulties.Basic,
+        Difficulties.Advanced => CommonDifficulties.Advanced,
+        Difficulties.Expert => CommonDifficulties.Expert,
+        Difficulties.Master => CommonDifficulties.Master,
+        Difficulties.ReMaster => CommonDifficulties.ReMaster,
+        _ => throw new InvalidDataException()
+    };
+
     [JsonPropertyName("achievements")]
     public required double Achievements { get; init; }
 
@@ -53,69 +64,59 @@ public class Record
 
     public string JacketUrl => $"https://maimai.diving-fish.com/covers/{Id}.png";
 
-    public Song Song
+    private Lazy<Song>? _song;
+
+    public Song Song => (_song ??= new(() => Songs.GetById(Id.ToString()))).Value;
+
+    private Lazy<int>? _totalDXScore;
+
+    public int TotalDXScore => (_totalDXScore ??= new(() => Song.Charts[DifficultyIndex].Notes.Total * 3)).Value;
+
+    private Lazy<int>? _dxStar;
+
+    public int DXStar => (_dxStar ??= new(() => ((double)DXScore / TotalDXScore) switch
     {
-        get
-        {
-            field ??= Songs.Shared.First(x => x.Id == Id.ToString());
-            return field;
-        }
-    }
+        < 0.9 => 1,
+        < 0.93 => 2,
+        < 0.95 => 3,
+        < 0.97 => 4,
+        <= 1 => 5,
+        _ => throw new InvalidDataException()
+    })).Value;
 
-    public int TotalDXScore
+    public static implicit operator CommonRecord(Record record)
     {
-        get
+        Song song = record.Song;
+        Chart chart = song.Charts[record.DifficultyIndex];
+        BasicInfo basicInfo = song.BasicInfo;
+
+        return new()
         {
-            if (field is 0)
+            Chart = new()
             {
-                field = Song.Charts[DifficultyIndex].Notes.Sum() * 3;
-            }
-
-            return field;
-        }
-    }
-
-    public int DXStar
-    {
-        get
-        {
-            if (field is not 0)
-            {
-                return field;
-            }
-
-            double dxScorePersent = (double)DXScore / TotalDXScore;
-            field = dxScorePersent switch
-            {
-                < 0.9 => 1,
-                < 0.93 => 2,
-                < 0.95 => 3,
-                < 0.97 => 4,
-                <= 1 => 5,
-                _ => throw new InvalidDataException()
-            };
-            return field;
-        }
-    }
-
-    public static implicit operator CommonRecord(Record record) =>
-        new()
-        {
-            Id = record.Id,
-            Title = record.Title,
-            Difficulty = (CommonDifficulties)record.Difficulty,
+                Song = new()
+                {
+                    Id = record.Id,
+                    Title = record.Title,
+                    Type = (CommonSongTypes)record.Type,
+                    Genre = basicInfo.Genre,
+                    InCurrentGenre = basicInfo.InCurrentVersion,
+                    AudioUrl = record.AudioUrl,
+                    JacketUrl = record.JacketUrl
+                },
+                Difficulty = MapDifficulty(record.Difficulty),
+                TotalDXScore = record.TotalDXScore,
+                Level = record.Level,
+                LevelValue = record.LevelValue,
+                Notes = chart.Notes
+            },
             ComboFlag = record.ComboFlag,
             SyncFlag = record.SyncFlag,
             Rank = record.Rank,
-            Type = (CommonSongTypes)record.Type,
             Achievements = record.Achievements,
             DXRating = record.DXRating,
             DXStar = record.DXStar,
-            DXScore = record.DXScore,
-            TotalDXScore = record.TotalDXScore,
-            LevelValue = record.LevelValue,
-            InCurrentVersion = record.Song.BasicInfo.InCurrentVersion,
-            AudioUrl = record.AudioUrl,
-            JacketUrl = record.JacketUrl
+            DXScore = record.DXScore
         };
+    }
 }

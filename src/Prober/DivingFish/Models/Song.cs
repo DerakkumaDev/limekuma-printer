@@ -36,14 +36,16 @@ internal record Songs
 
     private readonly DateTimeOffset _pullTime;
     private readonly List<Song> _songs;
+    private readonly Dictionary<string, Song> _songsById;
 
     private Songs(List<Song> songs)
     {
         _pullTime = DateTimeOffset.Now;
         _songs = songs;
+        _songsById = songs.ToDictionary(x => x.Id);
     }
 
-    public static List<Song> Shared
+    private static Songs SharedSongs
     {
         get
         {
@@ -56,6 +58,11 @@ internal record Songs
             return _shared;
         }
     }
+
+    public static List<Song> Shared => SharedSongs;
+
+    public static Song GetById(string id) =>
+        SharedSongs._songsById.TryGetValue(id, out Song? song) ? song : throw new InvalidDataException();
 
     public static implicit operator Songs(List<Song> songs) => new(songs);
 

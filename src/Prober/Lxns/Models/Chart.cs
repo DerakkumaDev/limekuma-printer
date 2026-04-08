@@ -1,3 +1,4 @@
+using Limekuma.Prober.Common;
 using Limekuma.Prober.Lxns.Enums;
 using System.Text.Json.Serialization;
 

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Limekuma.Prober.Lxns.Models;
+namespace Limekuma.Prober.Common;
 
 public record Notes
 {

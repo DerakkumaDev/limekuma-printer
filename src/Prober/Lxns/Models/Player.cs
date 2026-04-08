@@ -6,6 +6,34 @@ namespace Limekuma.Prober.Lxns.Models;
 
 public record Player
 {
+    private static CommonCourseRank MapCourseRank(CourseRank courseRank) => courseRank switch
+    {
+        CourseRank.Shoshinsha => CommonCourseRank.Shoshinsha,
+        CourseRank.Shodan => CommonCourseRank.Shodan,
+        CourseRank.Nidan => CommonCourseRank.Nidan,
+        CourseRank.Sandan => CommonCourseRank.Sandan,
+        CourseRank.Yondan => CommonCourseRank.Yondan,
+        CourseRank.Godan => CommonCourseRank.Godan,
+        CourseRank.Rokudan => CommonCourseRank.Rokudan,
+        CourseRank.Shichidan => CommonCourseRank.Shichidan,
+        CourseRank.Hachidan => CommonCourseRank.Hachidan,
+        CourseRank.Kyudan => CommonCourseRank.Kyudan,
+        CourseRank.Judan => CommonCourseRank.Judan,
+        CourseRank.Shinshodan => CommonCourseRank.Shinshodan,
+        CourseRank.Shinnidan => CommonCourseRank.Shinnidan,
+        CourseRank.Shinsandan => CommonCourseRank.Shinsandan,
+        CourseRank.Shinyondan => CommonCourseRank.Shinyondan,
+        CourseRank.Shingodan => CommonCourseRank.Shingodan,
+        CourseRank.Shinrokudan => CommonCourseRank.Shinrokudan,
+        CourseRank.Shinshichidan => CommonCourseRank.Shinshichidan,
+        CourseRank.Shinhachidan => CommonCourseRank.Shinhachidan,
+        CourseRank.Shinkyudan => CommonCourseRank.Shinkyudan,
+        CourseRank.Shinjudan => CommonCourseRank.Shinjudan,
+        CourseRank.Shinkaiden => CommonCourseRank.Shinkaiden,
+        CourseRank.Urakaiden => CommonCourseRank.Urakaiden,
+        _ => throw new InvalidDataException()
+    };
+
     public LxnsDeveloperClient? Client { get; internal set; }
 
     [JsonPropertyName("name")]
@@ -64,9 +92,7 @@ public record Player
             TrophyColor = player.Trophy?.Color ?? TrophyColor.Normal,
             TrophyText = player.Trophy?.Name ?? "なかよしmai友～！",
             ClassRank = player.ClassRank,
-            CourseRank = (CommonCourseRank)(player.CourseRank < CourseRank.Shinshodan
-                ? player.CourseRank
-                : player.CourseRank - 1),
+            CourseRank = MapCourseRank(player.CourseRank),
             IconId = player.Icon?.Id ?? 458001,
             FrameId = player.Frame?.Id ?? 558001,
             PlateId = player.NamePlate?.Id ?? 458001

@@ -14,7 +14,7 @@ internal static class SortExtensions
                 return compare;
             }
 
-            compare = y.LevelValue.CompareTo(x.LevelValue);
+            compare = y.Chart.LevelValue.CompareTo(x.Chart.LevelValue);
             if (compare is not 0)
             {
                 return compare;
@@ -43,7 +43,7 @@ internal static class SortExtensions
                 return compare;
             }
 
-            compare = y.LevelValue.CompareTo(x.LevelValue);
+            compare = y.Chart.LevelValue.CompareTo(x.Chart.LevelValue);
             if (compare is not 0)
             {
                 return compare;
