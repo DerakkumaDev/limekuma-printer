@@ -5,13 +5,14 @@ using Limekuma.Prober.DivingFish.Models;
 using Limekuma.Render;
 using Limekuma.Utils;
 using SixLabors.ImageSharp;
+using System.Collections.Immutable;
 using System.Net;
 
 namespace Limekuma.Services;
 
 public partial class BestsService
 {
-    private static async Task<(CommonUser, List<CommonRecord>, List<CommonRecord>, int, int)> PrepareDfDataAsync(
+    private static async Task<(CommonUser, ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>, int, int)> PrepareDfDataAsync(
         uint qq, int frame, int plate, int icon)
     {
         DfResourceClient df = new();
@@ -34,12 +35,10 @@ public partial class BestsService
         user.PlateId = plate;
         user.IconId = icon;
 
-        List<CommonRecord> bestEver = player.Bests.Ever.ConvertAll<CommonRecord>(_ => _);
-        bestEver.SortRecordForBests();
+        ImmutableArray<CommonRecord> bestEver = [.. player.Bests.Ever.ConvertAll<CommonRecord>(_ => _).SortRecordForBests()];
         int everTotal = bestEver.Sum(x => x.DXRating);
 
-        List<CommonRecord> bestCurrent = player.Bests.Current.ConvertAll<CommonRecord>(_ => _);
-        bestCurrent.SortRecordForBests();
+        ImmutableArray<CommonRecord> bestCurrent = [..player.Bests.Current.ConvertAll<CommonRecord>(_ => _).SortRecordForBests()];
         int currentTotal = bestCurrent.Sum(x => x.DXRating);
 
         await PrepareDataAsync(user, bestEver, bestCurrent);
@@ -50,7 +49,7 @@ public partial class BestsService
     public override async Task GetFromDivingFish(DivingFishBestsRequest request,
         IServerStreamWriter<ImageResponse> responseStream, ServerCallContext context)
     {
-        (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
+        (CommonUser user, ImmutableArray<CommonRecord> bestEver, ImmutableArray<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
         using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
             request.Condition, "divingfish", request.Tags);

@@ -5,13 +5,14 @@ using Limekuma.Prober.Lxns.Models;
 using Limekuma.Render;
 using Limekuma.Utils;
 using SixLabors.ImageSharp;
+using System.Collections.Immutable;
 using System.Net;
 
 namespace Limekuma.Services;
 
 public partial class BestsService
 {
-    private static async Task<(CommonUser, List<CommonRecord>, List<CommonRecord>, int, int)> PrepareLxnsDataAsync(
+    private static async Task<(CommonUser, ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>, int, int)> PrepareLxnsDataAsync(
         string devToken, uint? qq, string? personalToken)
     {
         Player player;
@@ -77,12 +78,8 @@ public partial class BestsService
 
         CommonUser user = player;
 
-        List<CommonRecord> bestEver = bests.Ever.ConvertAll<CommonRecord>(_ => _);
-        bestEver.SortRecordForBests();
-
-        List<CommonRecord> bestCurrent = bests.Current.ConvertAll<CommonRecord>(_ => _);
-        bestCurrent.SortRecordForBests();
-
+        ImmutableArray<CommonRecord> bestEver = [.. bests.Ever.ConvertAll<CommonRecord>(_ => _).SortRecordForBests()];
+        ImmutableArray<CommonRecord> bestCurrent = [.. bests.Current.ConvertAll<CommonRecord>(_ => _).SortRecordForBests()];
         await PrepareDataAsync(user, bestEver, bestCurrent);
 
         return (user, bestEver, bestCurrent, bests.EverTotal, bests.CurrentTotal);
@@ -91,7 +88,7 @@ public partial class BestsService
     public override async Task GetFromLxns(LxnsBestsRequest request, IServerStreamWriter<ImageResponse> responseStream,
         ServerCallContext context)
     {
-        (CommonUser user, List<CommonRecord> bestEver, List<CommonRecord> bestCurrent, int everTotal,
+        (CommonUser user, ImmutableArray<CommonRecord> bestEver, ImmutableArray<CommonRecord> bestCurrent, int everTotal,
             int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
         using Image bestsImage =
             await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal, request.Condition,

@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Text.Json.Serialization;
 
 namespace Limekuma.Prober.Lxns.Models;
@@ -17,14 +18,14 @@ public record SongData
     [JsonPropertyName("versions")]
     public required List<Version> Versions { get; set; }
 
-    private Dictionary<int, Song>? _songsById;
+    private FrozenDictionary<int, Song>? _songsById;
 
-    public Dictionary<int, Song> SongsById => _songsById ??= Songs.ToDictionary(x => x.Id);
+    public FrozenDictionary<int, Song> SongsById => _songsById ??= Songs.ToFrozenDictionary(x => x.Id);
 
-    private Dictionary<int, Version>? _versionsByGroup;
+    private FrozenDictionary<int, Version>? _versionsByGroup;
 
-    public Dictionary<int, Version> VersionsByGroup => _versionsByGroup ??=
-        Versions.GroupBy(x => x.VersionNumber / 100).ToDictionary(x => x.Key, x => x.First());
+    public FrozenDictionary<int, Version> VersionsByGroup => _versionsByGroup ??=
+        Versions.GroupBy(x => x.VersionNumber / 100).ToFrozenDictionary(x => x.Key, x => x.First());
 
     public static SongData Shared
     {

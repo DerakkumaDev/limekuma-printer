@@ -3,6 +3,7 @@ using Limekuma.Render.ExpressionEngine;
 using Limekuma.Render.Nodes;
 using SixLabors.ImageSharp;
 using System.Collections;
+using System.Collections.Immutable;
 
 namespace Limekuma.Render;
 
@@ -40,11 +41,11 @@ public sealed class Drawer
     }
 
     public async Task<Image> DrawListAsync(CommonUser user, IReadOnlyList<CommonRecord> records, int page,
-        int[] counts, int totalCount, int startIndex, string condition, bool mayMask, string prober, IEnumerable<string> tags) =>
+        ImmutableArray<int> counts, int totalCount, int startIndex, string condition, bool mayMask, string prober, IEnumerable<string> tags) =>
         await DrawListAsync(user, records, page, counts, totalCount, startIndex, condition, mayMask, prober, tags, "./Resources/Layouts/list.xml");
 
     public async Task<Image> DrawListAsync(CommonUser user, IReadOnlyList<CommonRecord> records, int page,
-        int[] counts, int totalCount, int startIndex, string condition, bool mayMask, string prober, IEnumerable<string> tags, string xmlPath)
+        ImmutableArray<int> counts, int totalCount, int startIndex, string condition, bool mayMask, string prober, IEnumerable<string> tags, string xmlPath)
     {
         int totalPages = (int)Math.Ceiling((double)totalCount / 55);
         Dictionary<string, object?> scope = new(StringComparer.OrdinalIgnoreCase)

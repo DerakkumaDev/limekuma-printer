@@ -6,6 +6,7 @@ using Limekuma.Render;
 using Limekuma.ScoreFilter;
 using Limekuma.Utils;
 using SixLabors.ImageSharp;
+using System.Collections.Immutable;
 using System.Net;
 
 namespace Limekuma.Services;
@@ -57,12 +58,11 @@ public partial class ListService
             throw new RpcException(new(StatusCode.PermissionDenied, "Mask enabled"));
         }
 
-        List<CommonRecord> cRecords = [.. records.ConvertAll<CommonRecord>(_ => _).Where(filter.GetFilter(request.Condition))];
-        cRecords.SortRecordForList();
-        (int[] counts, int startIndex, int endIndex) = await PrepareDataAsync(player, cRecords, request.Page);
+        ImmutableArray<CommonRecord> cRecords = [.. records.ConvertAll<CommonRecord>(_ => _).Where(filter.GetFilter(request.Condition)).SortRecordForList()];
+        (ImmutableArray<int> counts, int startIndex, int endIndex) = await PrepareDataAsync(player, cRecords, request.Page);
 
         using Image listImage = await new Drawer().DrawListAsync(player, cRecords[startIndex..endIndex], request.Page, counts,
-            cRecords.Count, startIndex, request.Condition, mayMask, "lxns", request.Tags);
+            cRecords.Length, startIndex, request.Condition, mayMask, "lxns", request.Tags);
 
         await responseStream.WriteToResponseAsync(listImage);
     }

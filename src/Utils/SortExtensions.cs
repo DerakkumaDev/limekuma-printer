@@ -4,52 +4,12 @@ namespace Limekuma.Utils;
 
 internal static class SortExtensions
 {
-    extension(List<CommonRecord> records)
+    extension(IEnumerable<CommonRecord> records)
     {
-        internal void SortRecordForBests() => records.Sort((x, y) =>
-        {
-            int compare = y.DXRating.CompareTo(x.DXRating);
-            if (compare is not 0)
-            {
-                return compare;
-            }
+        internal IOrderedEnumerable<CommonRecord> SortRecordForBests() =>
+            records.OrderByDescending(x => x.DXRating).ThenByDescending(x => x.Chart.LevelValue).ThenByDescending(x => x.Achievements);
 
-            compare = y.Chart.LevelValue.CompareTo(x.Chart.LevelValue);
-            if (compare is not 0)
-            {
-                return compare;
-            }
-
-            compare = y.Achievements.CompareTo(x.Achievements);
-            if (compare is not 0)
-            {
-                return compare;
-            }
-
-            return 0;
-        });
-
-        internal void SortRecordForList() => records.Sort((x, y) =>
-        {
-            int compare = y.Achievements.CompareTo(x.Achievements);
-            if (compare is not 0)
-            {
-                return compare;
-            }
-
-            compare = y.DXRating.CompareTo(x.DXRating);
-            if (compare is not 0)
-            {
-                return compare;
-            }
-
-            compare = y.Chart.LevelValue.CompareTo(x.Chart.LevelValue);
-            if (compare is not 0)
-            {
-                return compare;
-            }
-
-            return 0;
-        });
+        internal IOrderedEnumerable<CommonRecord> SortRecordForList() =>
+            records.OrderByDescending(x => x.Achievements).ThenByDescending(x => x.DXRating).ThenByDescending(x => x.Chart.LevelValue);
     }
 }
