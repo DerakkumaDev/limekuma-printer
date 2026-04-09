@@ -11,10 +11,14 @@ public sealed class Drawer
 {
     public async Task<Image> DrawBestsAsync(CommonUser user, IReadOnlyList<CommonRecord> ever,
         IReadOnlyList<CommonRecord> current, int everTotal, int currentTotal, string? condition, string prober, IEnumerable<string> tags) =>
-        await DrawBestsAsync(user, ever, current, everTotal, currentTotal, condition, prober, tags, "./Resources/Layouts/bests.xml");
+        await DrawBestsAsync(user, ever, current, everTotal, currentTotal, condition, prober, tags, null, "./Resources/Layouts/bests.xml");
 
     public async Task<Image> DrawBestsAsync(CommonUser user, IReadOnlyList<CommonRecord> ever,
-        IReadOnlyList<CommonRecord> current, int everTotal, int currentTotal, string? condition, string prober, IEnumerable<string> tags, string xmlPath)
+        IReadOnlyList<CommonRecord> current, int everTotal, int currentTotal, string? condition, string prober, IEnumerable<string> tags, CommonUser? user2p) =>
+        await DrawBestsAsync(user, ever, current, everTotal, currentTotal, condition, prober, tags, user2p, "./Resources/Layouts/bests.xml");
+
+    public async Task<Image> DrawBestsAsync(CommonUser user, IReadOnlyList<CommonRecord> ever,
+        IReadOnlyList<CommonRecord> current, int everTotal, int currentTotal, string? condition, string prober, IEnumerable<string> tags, CommonUser? user2p, string xmlPath)
     {
         int everMax = ever.Count > 0 ? ever[0].DXRating : 0;
         int everMin = ever.Count > 0 ? ever[^1].DXRating : 0;
@@ -32,6 +36,7 @@ public sealed class Drawer
             ["proberName"] = prober,
             ["tags"] = tags,
             ["mayMask"] = mayMask,
+            ["2pUserInfo"] = user2p,
             ["everMax"] = everMax,
             ["everMin"] = everMin,
             ["currentMax"] = currentMax,

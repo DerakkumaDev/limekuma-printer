@@ -21,7 +21,7 @@ public sealed class FitLevelScoreProcesser : IScoreProcesser
         foreach (CommonRecord record in records.SortRecordForBests())
         {
             double fitLevel = record.Chart.LevelValue;
-            if (Limekuma.Prober.DivingFish.Models.Status.Shared.ChartStatus.TryGetValue(record.Chart.Song.Id.ToString(), out List<ChartState>? chartState))
+            if (Prober.DivingFish.Models.Status.Shared.ChartStatus.TryGetValue(record.Chart.Song.Id.ToString(), out List<ChartState>? chartState))
             {
                 fitLevel = chartState[(int)record.Chart.Difficulty - 1].FitLevel;
             }
@@ -46,7 +46,8 @@ public sealed class FitLevelScoreProcesser : IScoreProcesser
                 DXScore = record.DXScore,
                 DXScoreRank = record.DXScoreRank,
                 Rank = record.Rank,
-                SyncFlag = record.SyncFlag
+                SyncFlag = record.SyncFlag,
+                ExtraInfo = (float)fitLevel
             };
 
             (record.Chart.Song.InCurrentGenre switch

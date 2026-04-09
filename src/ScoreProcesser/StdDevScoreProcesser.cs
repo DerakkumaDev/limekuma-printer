@@ -22,6 +22,7 @@ public sealed class StdDevScoreProcesser : IScoreProcesser
                 fitLevel = chart.FitLevel;
             }
 
+            x.ExtraInfo = (float)stdDev;
             return x.DXRating * (1 + (stdDev / 10)) * (1 + (fitLevel / (fitLevel > 0 ? 10 : 1)));
         }).ThenByDescending(x => x.Chart.LevelValue).ThenByDescending(x => x.Achievements))
         {
