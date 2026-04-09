@@ -9,11 +9,13 @@ namespace Limekuma.Render;
 public sealed partial class TemplateReader
 {
     private static readonly SmartFormatter Formatter = Smart.CreateDefaultSmartFormat();
-    private readonly AsyncNCalcEngine _expressionEngine;
     private readonly Stack<string> _baseDirs = new();
-    private readonly Stack<string> _loadingPathStack = new();
+    private readonly AsyncNCalcEngine _expressionEngine;
+
     private readonly HashSet<string> _loadingPathSet =
         new(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+
+    private readonly Stack<string> _loadingPathStack = new();
     private readonly Dictionary<string, Func<XElement, object?, Task<Node>>> _nodeParsers;
 
     public TemplateReader(AsyncNCalcEngine expressionEngine)
@@ -45,14 +47,14 @@ public sealed partial class TemplateReader
     {
         string fullPath = Path.GetFullPath(xmlPath);
         Node root = await LoadNodeFromPathAsync(fullPath, scope);
-        if (root is not CanvasNode)
+        if (root is CanvasNode)
         {
-            string actualRoot = root.GetType().Name.Replace("Node", string.Empty, StringComparison.Ordinal);
-            throw new InvalidOperationException(
-                $"DSL[ParseRoot] Invalid layout root node. Context: expected='Canvas', actual='{actualRoot}', path='{GetDisplayPath(fullPath)}'");
+            return root;
         }
 
-        return root;
+        string actualRoot = root.GetType().Name.Replace("Node", string.Empty, StringComparison.Ordinal);
+        throw new InvalidOperationException(
+            $"DSL[ParseRoot] Invalid layout root node. Context: expected='Canvas', actual='{actualRoot}', path='{GetDisplayPath(fullPath)}'");
     }
 
     private async Task<Node> LoadNodeFromPathAsync(string xmlPath, object? scope)
@@ -61,7 +63,8 @@ public sealed partial class TemplateReader
         if (!_loadingPathSet.Add(fullPath))
         {
             string fromPath = _loadingPathStack.Count > 0 ? _loadingPathStack.Peek() : fullPath;
-            List<string> chain = [.. _loadingPathStack.Reverse().Select(path => GetDisplayPath(path)), GetDisplayPath(fullPath)];
+            List<string> chain =
+                [.. _loadingPathStack.Reverse().Select(path => GetDisplayPath(path)), GetDisplayPath(fullPath)];
             throw new InvalidOperationException(
                 $"DSL[IncludeCircular] Circular include detected. Context: include='{GetDisplayPath(fullPath)}', from='{GetDisplayPath(fromPath)}', chain='{string.Join(" -> ", chain)}'");
         }
@@ -85,7 +88,7 @@ public sealed partial class TemplateReader
     private async Task<Node> ParseRootAsync(XDocument document, object? scope)
     {
         XElement root = document.Root ??
-            throw new InvalidOperationException("DSL[XmlRoot] Missing XML root node. Context: root='null'");
+                        throw new InvalidOperationException("DSL[XmlRoot] Missing XML root node. Context: root='null'");
         return await ParseElementAsync(root, scope);
     }
 
@@ -121,8 +124,8 @@ public sealed partial class TemplateReader
         return await parser(element, scope);
     }
 
-    private static string GetRequiredAttributeValue(XElement element, string name) =>
-        element.Attribute(name)?.Value ?? throw new InvalidOperationException(
+    private static string GetRequiredAttributeValue(XElement element, string name) => element.Attribute(name)?.Value ??
+        throw new InvalidOperationException(
             $"DSL[MissingAttribute] Missing required attribute. Context: element='{element.Name.LocalName}', attribute='{name}'");
 
     private static string GetAttributeValueOrDefault(XElement element, string name, string defaultValue) =>
@@ -137,14 +140,14 @@ public sealed partial class TemplateReader
             root = _baseDirs.ToArray()[^1];
         }
 
-        if (!string.IsNullOrWhiteSpace(root))
+        if (string.IsNullOrWhiteSpace(root))
         {
-            string fullRoot = Path.GetFullPath(root);
-            string relativePath = Path.GetRelativePath(fullRoot, fullPath);
-            return NormalizePathForDisplay(relativePath);
+            return NormalizePathForDisplay(fullPath);
         }
 
-        return NormalizePathForDisplay(fullPath);
+        string fullRoot = Path.GetFullPath(root);
+        string relativePath = Path.GetRelativePath(fullRoot, fullPath);
+        return NormalizePathForDisplay(relativePath);
     }
 
     private static string NormalizePathForDisplay(string path) => path.Replace('\\', '/');

@@ -29,8 +29,7 @@ internal static class ServiceExecutionHelper
     internal static T DeserializeOrThrow<T>(string payload, string message) where T : class =>
         JsonSerializer.Deserialize<T>(payload) ?? throw new RpcException(new(StatusCode.InvalidArgument, message));
 
-    internal static async Task<T> ExecuteWithHttpMappingAsync<T>(
-        Func<Task<T>> action,
+    internal static async Task<T> ExecuteWithHttpMappingAsync<T>(Func<Task<T>> action,
         params (HttpStatusCode HttpStatus, StatusCode RpcStatus)[] mappings)
     {
         try
@@ -43,10 +42,8 @@ internal static class ServiceExecutionHelper
         }
     }
 
-    private static bool TryMapHttpStatus(
-        HttpStatusCode? statusCode,
-        (HttpStatusCode HttpStatus, StatusCode RpcStatus)[] mappings,
-        out StatusCode rpcStatus)
+    private static bool TryMapHttpStatus(HttpStatusCode? statusCode,
+        (HttpStatusCode HttpStatus, StatusCode RpcStatus)[] mappings, out StatusCode rpcStatus)
     {
         if (!statusCode.HasValue)
         {
@@ -56,11 +53,13 @@ internal static class ServiceExecutionHelper
 
         foreach ((HttpStatusCode httpStatus, StatusCode grpcStatus) in mappings)
         {
-            if (httpStatus == statusCode.Value)
+            if (httpStatus != statusCode.Value)
             {
-                rpcStatus = grpcStatus;
-                return true;
+                continue;
             }
+
+            rpcStatus = grpcStatus;
+            return true;
         }
 
         rpcStatus = default;

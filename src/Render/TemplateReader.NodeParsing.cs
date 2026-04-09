@@ -1,7 +1,6 @@
 using Limekuma.Render.Nodes;
 using Limekuma.Render.Types;
 using SixLabors.Fonts;
-using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Collections;
 using System.Globalization;
@@ -27,7 +26,7 @@ public sealed partial class TemplateReader
 
     private async Task<Node> ParsePositionedNodeAsync(XElement element, object? scope) =>
         new PositionedNode(
-            new Point(
+            new(
                 await EvaluateRequiredExpressionAttributeAsync<int>(element, "x", scope),
                 await EvaluateRequiredExpressionAttributeAsync<int>(element, "y", scope)),
             await EvaluateExpressionAttributeOrAsync(element, "anchorX", PositionAnchor.Start, scope),
@@ -91,7 +90,8 @@ public sealed partial class TemplateReader
             await EvaluateRequiredTemplateAttributeAsync(element, "namespace", scope),
             await EvaluateRequiredTemplateAttributeAsync(element, "id", scope),
             await EvaluateExpressionAttributeOrAsync(element, "colorBlending", PixelColorBlendingMode.Normal, scope),
-            await EvaluateExpressionAttributeOrAsync(element, "alphaComposition", PixelAlphaCompositionMode.SrcOver, scope),
+            await EvaluateExpressionAttributeOrAsync(element, "alphaComposition", PixelAlphaCompositionMode.SrcOver,
+                scope),
             await EvaluateExpressionAttributeOrAsync(element, "repeat", 0, scope),
             await EvaluateOptionalTemplateAttributeAsync(element, "key", scope));
 
@@ -123,13 +123,11 @@ public sealed partial class TemplateReader
         return new LayerNode(1f, children, null);
     }
 
-    private Task<Node> ParseElseIfNodeAsync(XElement element, object? scope) =>
-        throw new InvalidOperationException(
-            $"DSL[ConditionalOrphan] ElseIf must follow an If or ElseIf at the same level. Context: parent='{element.Parent?.Name.LocalName ?? "null"}'");
+    private Task<Node> ParseElseIfNodeAsync(XElement element, object? scope) => throw new InvalidOperationException(
+        $"DSL[ConditionalOrphan] ElseIf must follow an If or ElseIf at the same level. Context: parent='{element.Parent?.Name.LocalName ?? "null"}'");
 
-    private Task<Node> ParseElseNodeAsync(XElement element, object? scope) =>
-        throw new InvalidOperationException(
-            $"DSL[ConditionalOrphan] Else must follow an If or ElseIf at the same level. Context: parent='{element.Parent?.Name.LocalName ?? "null"}'");
+    private Task<Node> ParseElseNodeAsync(XElement element, object? scope) => throw new InvalidOperationException(
+        $"DSL[ConditionalOrphan] Else must follow an If or ElseIf at the same level. Context: parent='{element.Parent?.Name.LocalName ?? "null"}'");
 
     private async Task<Node> ParseForNodeAsync(XElement element, object? scope)
     {
@@ -153,7 +151,8 @@ public sealed partial class TemplateReader
 
     private async Task<Node> ParseIncludeNodeAsync(XElement element, object? scope)
     {
-        (string src, string includePath, string currentPath, string rootPath) = await ResolveIncludePathAsync(element, scope);
+        (string src, string includePath, string currentPath, string rootPath) =
+            await ResolveIncludePathAsync(element, scope);
         if (!File.Exists(includePath))
         {
             throw new InvalidOperationException(
@@ -171,7 +170,8 @@ public sealed partial class TemplateReader
 
             return includeNode;
         }
-        catch (InvalidOperationException ex) when (ex.Message.StartsWith("DSL[IncludeCircular]", StringComparison.Ordinal))
+        catch (InvalidOperationException ex) when (ex.Message.StartsWith("DSL[IncludeCircular]",
+                                                       StringComparison.Ordinal))
         {
             throw new InvalidOperationException(
                 $"DSL[IncludeCircular] Circular include detected while resolving include. Context: src='{src}', from='{GetDisplayPath(currentPath, rootPath)}'. Cause: {ex.Message}",
@@ -179,7 +179,8 @@ public sealed partial class TemplateReader
         }
     }
 
-    private async Task<(string Src, string FullPath, string CurrentPath, string RootPath)> ResolveIncludePathAsync(XElement element, object? scope)
+    private async Task<(string Src, string FullPath, string CurrentPath, string RootPath)> ResolveIncludePathAsync(
+        XElement element, object? scope)
     {
         string relativePath = await EvaluateTemplateAsync(GetRequiredAttributeValue(element, "src"), scope);
         if (_baseDirs.Count is 0)
@@ -191,29 +192,26 @@ public sealed partial class TemplateReader
         string currentBaseDir = _baseDirs.Peek();
         string rootBaseDir = _baseDirs.ToArray()[^1];
         string currentPath = _loadingPathStack.Count > 0 ? _loadingPathStack.Peek() : currentBaseDir;
-        string candidatePath = Path.IsPathRooted(relativePath)
-            ? relativePath
-            : Path.Combine(currentBaseDir, relativePath);
+        string candidatePath =
+            Path.IsPathRooted(relativePath) ? relativePath : Path.Combine(currentBaseDir, relativePath);
         string fullIncludePath = Path.GetFullPath(candidatePath);
         string fullRootPath = Path.GetFullPath(rootBaseDir);
-        if (!IsPathUnderRoot(fullIncludePath, fullRootPath))
+        if (IsPathUnderRoot(fullIncludePath, fullRootPath))
         {
-            string resolvedRelativeToRoot = NormalizePathForDisplay(Path.GetRelativePath(fullRootPath, fullIncludePath));
-            throw new InvalidOperationException(
-                $"DSL[IncludeOutsideRoot] Include path is outside layout root. Context: src='{relativePath}', from='{GetDisplayPath(currentPath, fullRootPath)}', candidate='{NormalizePathForDisplay(candidatePath)}', resolved='{resolvedRelativeToRoot}', root='{GetDisplayPath(fullRootPath, fullRootPath)}'");
+            return (relativePath, fullIncludePath, currentPath, fullRootPath);
         }
 
-        return (relativePath, fullIncludePath, currentPath, fullRootPath);
+        string resolvedRelativeToRoot =
+            NormalizePathForDisplay(Path.GetRelativePath(fullRootPath, fullIncludePath));
+        throw new InvalidOperationException(
+            $"DSL[IncludeOutsideRoot] Include path is outside layout root. Context: src='{relativePath}', from='{GetDisplayPath(currentPath, fullRootPath)}', candidate='{NormalizePathForDisplay(candidatePath)}', resolved='{resolvedRelativeToRoot}', root='{GetDisplayPath(fullRootPath, fullRootPath)}'");
     }
 
     private static bool IsPathUnderRoot(string path, string root)
     {
-        StringComparison comparison = OperatingSystem.IsWindows()
-            ? StringComparison.OrdinalIgnoreCase
-            : StringComparison.Ordinal;
-        string normalizedRoot = root.EndsWith(Path.DirectorySeparatorChar)
-            ? root
-            : root + Path.DirectorySeparatorChar;
+        StringComparison comparison =
+            OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        string normalizedRoot = root.EndsWith(Path.DirectorySeparatorChar) ? root : root + Path.DirectorySeparatorChar;
         return path.Equals(root, comparison) || path.StartsWith(normalizedRoot, comparison);
     }
 
@@ -236,11 +234,15 @@ public sealed partial class TemplateReader
             {
                 (node, i) = await ParseConditionalChainAsync(childElements, i, currentScope);
             }
-            else if (child.Name.LocalName.Equals("ElseIf", StringComparison.Ordinal) ||
-                     child.Name.LocalName.Equals("Else", StringComparison.Ordinal))
+            else if (child.Name.LocalName.Equals("ElseIf", StringComparison.Ordinal))
             {
                 throw new InvalidOperationException(
-                    $"DSL[ConditionalOrphan] {child.Name.LocalName} must follow an If or ElseIf at the same level. Context: parent='{element.Name.LocalName}'");
+                    $"DSL[ConditionalOrphan] ElseIf must follow an If or ElseIf at the same level. Context: parent='{element.Name.LocalName}'");
+            }
+            else if (child.Name.LocalName.Equals("Else", StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    $"DSL[ConditionalOrphan] Else must follow an If or ElseIf at the same level. Context: parent='{element.Name.LocalName}'");
             }
             else
             {
@@ -263,7 +265,8 @@ public sealed partial class TemplateReader
         int index, object? scope)
     {
         XElement ifElement = siblings[index];
-        bool branchMatched = await EvaluateRequiredExpressionAsAsync<bool>(GetRequiredAttributeValue(ifElement, "rule"), scope);
+        bool branchMatched =
+            await EvaluateRequiredExpressionAsAsync<bool>(GetRequiredAttributeValue(ifElement, "rule"), scope);
         List<Node> selectedChildren = branchMatched ? await ParseChildrenAsync(ifElement, scope) : [];
         bool hasElse = false;
 
@@ -282,8 +285,9 @@ public sealed partial class TemplateReader
 
                 if (!branchMatched)
                 {
-                    bool elseIfPass = await EvaluateRequiredExpressionAsAsync<bool>(
-                        GetRequiredAttributeValue(branchElement, "rule"), scope);
+                    bool elseIfPass =
+                        await EvaluateRequiredExpressionAsAsync<bool>(GetRequiredAttributeValue(branchElement, "rule"),
+                            scope);
                     if (elseIfPass)
                     {
                         branchMatched = true;
@@ -357,8 +361,7 @@ public sealed partial class TemplateReader
 
         if (decimal.Truncate(numericValue) != numericValue)
         {
-            throw BuildInvalidForItemsException(expression, value,
-                "must be an integer when used as loop count");
+            throw BuildInvalidForItemsException(expression, value, "must be an integer when used as loop count");
         }
 
         if (numericValue > int.MaxValue)
@@ -371,17 +374,19 @@ public sealed partial class TemplateReader
         return Enumerable.Range(0, count).Cast<object>();
     }
 
-    private static InvalidOperationException BuildInvalidForItemsException(string expression, object? value, string reason,
+    private static InvalidOperationException BuildInvalidForItemsException(string expression, object? value,
+        string reason,
         Exception? innerException = null)
     {
         string typeName = value?.GetType().FullName ?? "null";
         string valueText = Convert.ToString(value, CultureInfo.InvariantCulture) ?? "null";
-        return new InvalidOperationException(
+        return new(
             $"DSL[ForItems] Invalid For.items expression. Context: expression='{expression}', reason='{reason}', actualType='{typeName}', actualValue='{valueText}', expected='IEnumerable or non-negative integer'",
             innerException);
     }
 
-    private static Dictionary<string, object?> MergeScope(object? parent, string variableName, object item, string indexName, int index)
+    private static Dictionary<string, object?> MergeScope(object? parent, string variableName, object item,
+        string indexName, int index)
     {
         Dictionary<string, object?> result = new(StringComparer.OrdinalIgnoreCase);
         CopyParentScope(parent, result);

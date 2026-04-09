@@ -3,6 +3,7 @@ using Limekuma.Prober.Common;
 using Limekuma.Prober.DivingFish.Models;
 using Limekuma.Utils;
 using System.Collections.Immutable;
+using Status = Limekuma.Prober.DivingFish.Models.Status;
 
 namespace Limekuma.ScoreProcesser;
 
@@ -21,14 +22,15 @@ public sealed class FitLevelScoreProcesser : IScoreProcesser
         foreach (CommonRecord record in records.SortRecordForBests())
         {
             double fitLevel = record.Chart.LevelValue;
-            if (Prober.DivingFish.Models.Status.Shared.ChartStatus.TryGetValue(record.Chart.Song.Id.ToString(), out List<ChartState>? chartState))
+            if (Status.Shared.ChartStatus.TryGetValue(record.Chart.Song.Id.ToString(),
+                    out List<ChartState>? chartState))
             {
                 fitLevel = chartState[(int)record.Chart.Difficulty - 1].FitLevel;
             }
 
             (_, float coefficient, _) = ConstantMap.RatingMap[record.Rank];
             int rating = (int)(fitLevel * (record.Achievements > 100.5 ? 100.5 : record.Achievements) * coefficient);
-            float level = ((int)(fitLevel * 100)) / 100f;
+            float level = (int)(fitLevel * 100) / 100f;
             CommonRecord newRecord = new()
             {
                 Achievements = record.Achievements,

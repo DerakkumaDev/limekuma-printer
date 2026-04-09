@@ -19,13 +19,14 @@ public partial class ListService
         user.PlateId = request.Plate;
         user.IconId = request.Icon;
 
-        (ImmutableArray<CommonRecord> records, bool mayMask) =
-            BuildListRecords(request.Tags, request.Condition, player.Records.ConvertAll<CommonRecord>(_ => _));
+        (ImmutableArray<CommonRecord> records, bool mayMask) = BuildListRecords(request.Tags, request.Condition,
+            player.Records.ConvertAll<CommonRecord>(_ => _));
 
-        (ImmutableArray<int> counts, int startIndex, int endIndex) = await PrepareDataAsync(user, records, request.Page);
+        (ImmutableArray<int> counts, int startIndex, int endIndex) =
+            await PrepareDataAsync(user, records, request.Page);
 
-        using Image listImage = await new Drawer().DrawListAsync(user, records[startIndex..endIndex], request.Page, counts,
-            records.Length, startIndex, request.Condition, mayMask, "divingfish", request.Tags);
+        using Image listImage = await new Drawer().DrawListAsync(user, records[startIndex..endIndex], request.Page,
+            counts, records.Length, startIndex, request.Condition, mayMask, "divingfish", request.Tags);
 
         await responseStream.WriteToResponseAsync(listImage);
     }

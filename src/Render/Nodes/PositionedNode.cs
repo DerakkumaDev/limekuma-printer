@@ -1,5 +1,5 @@
-using SixLabors.ImageSharp;
 using Limekuma.Render.Types;
+using SixLabors.ImageSharp;
 
 namespace Limekuma.Render.Nodes;
 

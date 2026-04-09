@@ -18,6 +18,6 @@ public record Chart
         Hold = NotesNumber[1],
         Slide = NotesNumber[2],
         Touch = NotesNumber.Count > 4 ? NotesNumber[3] : 0,
-        Break = NotesNumber.Count < 5 ? NotesNumber[3] : NotesNumber[4],
+        Break = NotesNumber.Count < 5 ? NotesNumber[3] : NotesNumber[4]
     };
 }

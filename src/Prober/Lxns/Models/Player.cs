@@ -6,34 +6,6 @@ namespace Limekuma.Prober.Lxns.Models;
 
 public record Player
 {
-    private static CommonCourseRank MapCourseRank(CourseRank courseRank) => courseRank switch
-    {
-        CourseRank.Shoshinsha => CommonCourseRank.Shoshinsha,
-        CourseRank.Shodan => CommonCourseRank.Shodan,
-        CourseRank.Nidan => CommonCourseRank.Nidan,
-        CourseRank.Sandan => CommonCourseRank.Sandan,
-        CourseRank.Yondan => CommonCourseRank.Yondan,
-        CourseRank.Godan => CommonCourseRank.Godan,
-        CourseRank.Rokudan => CommonCourseRank.Rokudan,
-        CourseRank.Shichidan => CommonCourseRank.Shichidan,
-        CourseRank.Hachidan => CommonCourseRank.Hachidan,
-        CourseRank.Kyudan => CommonCourseRank.Kyudan,
-        CourseRank.Judan => CommonCourseRank.Judan,
-        CourseRank.Shinshodan => CommonCourseRank.Shinshodan,
-        CourseRank.Shinnidan => CommonCourseRank.Shinnidan,
-        CourseRank.Shinsandan => CommonCourseRank.Shinsandan,
-        CourseRank.Shinyondan => CommonCourseRank.Shinyondan,
-        CourseRank.Shingodan => CommonCourseRank.Shingodan,
-        CourseRank.Shinrokudan => CommonCourseRank.Shinrokudan,
-        CourseRank.Shinshichidan => CommonCourseRank.Shinshichidan,
-        CourseRank.Shinhachidan => CommonCourseRank.Shinhachidan,
-        CourseRank.Shinkyudan => CommonCourseRank.Shinkyudan,
-        CourseRank.Shinjudan => CommonCourseRank.Shinjudan,
-        CourseRank.Shinkaiden => CommonCourseRank.Shinkaiden,
-        CourseRank.Urakaiden => CommonCourseRank.Urakaiden,
-        _ => throw new InvalidDataException()
-    };
-
     public LxnsDeveloperClient? Client { get; internal set; }
 
     [JsonPropertyName("name")]
@@ -82,6 +54,34 @@ public record Player
         < 14500 => 9,
         < 15000 => 10,
         > 14999 => 11
+    };
+
+    private static CommonCourseRank MapCourseRank(CourseRank courseRank) => courseRank switch
+    {
+        CourseRank.Shoshinsha => CommonCourseRank.Shoshinsha,
+        CourseRank.Shodan => CommonCourseRank.Shodan,
+        CourseRank.Nidan => CommonCourseRank.Nidan,
+        CourseRank.Sandan => CommonCourseRank.Sandan,
+        CourseRank.Yondan => CommonCourseRank.Yondan,
+        CourseRank.Godan => CommonCourseRank.Godan,
+        CourseRank.Rokudan => CommonCourseRank.Rokudan,
+        CourseRank.Shichidan => CommonCourseRank.Shichidan,
+        CourseRank.Hachidan => CommonCourseRank.Hachidan,
+        CourseRank.Kyudan => CommonCourseRank.Kyudan,
+        CourseRank.Judan => CommonCourseRank.Judan,
+        CourseRank.Shinshodan => CommonCourseRank.Shinshodan,
+        CourseRank.Shinnidan => CommonCourseRank.Shinnidan,
+        CourseRank.Shinsandan => CommonCourseRank.Shinsandan,
+        CourseRank.Shinyondan => CommonCourseRank.Shinyondan,
+        CourseRank.Shingodan => CommonCourseRank.Shingodan,
+        CourseRank.Shinrokudan => CommonCourseRank.Shinrokudan,
+        CourseRank.Shinshichidan => CommonCourseRank.Shinshichidan,
+        CourseRank.Shinhachidan => CommonCourseRank.Shinhachidan,
+        CourseRank.Shinkyudan => CommonCourseRank.Shinkyudan,
+        CourseRank.Shinjudan => CommonCourseRank.Shinjudan,
+        CourseRank.Shinkaiden => CommonCourseRank.Shinkaiden,
+        CourseRank.Urakaiden => CommonCourseRank.Urakaiden,
+        _ => throw new InvalidDataException()
     };
 
     public static implicit operator CommonUser(Player player) =>

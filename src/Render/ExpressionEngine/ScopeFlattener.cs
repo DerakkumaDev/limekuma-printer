@@ -26,6 +26,7 @@ internal static class ScopeFlattener
             {
                 output[prefix] = value;
             }
+
             return;
         }
 
@@ -40,8 +41,12 @@ internal static class ScopeFlattener
         }
 
         Type type = value.GetType();
-        if (type.IsPrimitive || value is string || value is decimal || value is DateTime || value is DateTimeOffset ||
-            value is TimeSpan || value is Guid || value is Enum)
+        if (type.IsPrimitive)
+        {
+            return;
+        }
+
+        if (value is string or decimal or DateTime or DateTimeOffset or TimeSpan or Guid or Enum)
         {
             return;
         }
@@ -50,19 +55,15 @@ internal static class ScopeFlattener
         {
             foreach (DictionaryEntry entry in dictionary)
             {
-                if (entry.Key is null)
-                {
-                    continue;
-                }
-
                 string key = Convert.ToString(entry.Key, CultureInfo.InvariantCulture) ?? string.Empty;
                 string childPrefix = string.IsNullOrEmpty(prefix) ? key : $"{prefix}.{key}";
                 FlattenObject(output, childPrefix, entry.Value, depth + 1);
             }
+
             return;
         }
 
-        if (value is IEnumerable && value is not string)
+        if (value is IEnumerable and not string)
         {
             return;
         }
@@ -70,7 +71,12 @@ internal static class ScopeFlattener
         PropertyInfo[] properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
         foreach (PropertyInfo property in properties)
         {
-            if (!property.CanRead || property.GetIndexParameters().Length > 0)
+            if (!property.CanRead)
+            {
+                continue;
+            }
+
+            if (property.GetIndexParameters().Length > 0)
             {
                 continue;
             }

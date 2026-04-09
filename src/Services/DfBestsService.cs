@@ -12,7 +12,8 @@ namespace Limekuma.Services;
 
 public partial class BestsService
 {
-    private static async Task<(CommonUser, ImmutableArray<CommonRecord>)> PrepareDfRecordsForProcessAsync(string token, uint? qq, int? frame, int? plate, int? icon)
+    private static async Task<(CommonUser, ImmutableArray<CommonRecord>)> PrepareDfRecordsForProcessAsync(string token,
+        uint? qq, int? frame, int? plate, int? icon)
     {
         ServiceExecutionHelper.EnsureArgument(qq.HasValue && frame.HasValue && plate.HasValue && icon.HasValue);
         PlayerData player = await DfGatewayService.GetPlayerDataAsync(token, qq!.Value);
@@ -24,8 +25,8 @@ public partial class BestsService
         return (user, [.. player.Records.ConvertAll<CommonRecord>(_ => _)]);
     }
 
-    private static async Task<(CommonUser, ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>, int, int)> PrepareDfDataAsync(
-        uint? qq, int? frame, int? plate, int? icon)
+    private static async Task<(CommonUser, ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>, int, int)>
+        PrepareDfDataAsync(uint? qq, int? frame, int? plate, int? icon)
     {
         ServiceExecutionHelper.EnsureArgument(qq.HasValue && frame.HasValue && plate.HasValue && icon.HasValue);
         Player player = await DfGatewayService.GetPlayerAsync(qq!.Value);
@@ -35,10 +36,12 @@ public partial class BestsService
         user.PlateId = plate!.Value;
         user.IconId = icon!.Value;
 
-        ImmutableArray<CommonRecord> bestEver = [.. player.Bests.Ever.ConvertAll<CommonRecord>(_ => _).SortRecordForBests()];
+        ImmutableArray<CommonRecord> bestEver =
+            [.. player.Bests.Ever.ConvertAll<CommonRecord>(_ => _).SortRecordForBests()];
         int everTotal = bestEver.Sum(x => x.DXRating);
 
-        ImmutableArray<CommonRecord> bestCurrent = [..player.Bests.Current.ConvertAll<CommonRecord>(_ => _).SortRecordForBests()];
+        ImmutableArray<CommonRecord> bestCurrent =
+            [..player.Bests.Current.ConvertAll<CommonRecord>(_ => _).SortRecordForBests()];
         int currentTotal = bestCurrent.Sum(x => x.DXRating);
 
         await PrepareDataAsync(user, bestEver, bestCurrent);
@@ -46,7 +49,8 @@ public partial class BestsService
         return (user, bestEver, bestCurrent, everTotal, currentTotal);
     }
 
-    private static async Task<(CommonUser, ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>, int, int)> PrepareRiRenDfDataAsync()
+    private static async Task<(CommonUser, ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>, int, int)>
+        PrepareRiRenDfDataAsync()
     {
         List<CommonRecord> allRecords = [];
         foreach (Song song in Songs.Shared)
@@ -59,7 +63,7 @@ public partial class BestsService
             int chartCount = Math.Min(song.Charts.Count, Math.Min(song.LevelValues.Count, song.Levels.Count));
             for (int i = 0; i < chartCount; i++)
             {
-                allRecords.Add(new Record()
+                allRecords.Add(new Record
                 {
                     Achievements = 101,
                     ComboFlag = ComboFlags.AllPerfectPlus,
@@ -79,8 +83,10 @@ public partial class BestsService
         }
 
         IEnumerable<CommonRecord> sortedRecords = allRecords.SortRecordForBests();
-        ImmutableArray<CommonRecord> bestEver = [.. sortedRecords.Where(record => !record.Chart.Song.InCurrentGenre).Take(35)];
-        ImmutableArray<CommonRecord> bestCurrent = [.. sortedRecords.Where(record => record.Chart.Song.InCurrentGenre).Take(15)];
+        ImmutableArray<CommonRecord> bestEver =
+            [.. sortedRecords.Where(record => !record.Chart.Song.InCurrentGenre).Take(35)];
+        ImmutableArray<CommonRecord> bestCurrent =
+            [.. sortedRecords.Where(record => record.Chart.Song.InCurrentGenre).Take(15)];
         int everTotal = bestEver.Sum(x => x.DXRating);
         int currentTotal = bestCurrent.Sum(x => x.DXRating);
         CommonUser user = new()
@@ -111,20 +117,21 @@ public partial class BestsService
         int currentTotal;
         if (ScoreProcesserHelper.GetProcesserByTags(request.Tags) is not null)
         {
-            (user, ImmutableArray<CommonRecord> records) = await PrepareDfRecordsForProcessAsync(request.Token, request.Qq, request.Frame, request.Plate, request.Icon);
-            (bestEver, bestCurrent, everTotal, currentTotal, user2p) = await ProcessBestsByTagsAsync(
-                request.Tags,
-                request.Condition,
-                records,
-                async condition =>
+            (user, ImmutableArray<CommonRecord> records) = await PrepareDfRecordsForProcessAsync(request.Token,
+                request.Qq, request.Frame, request.Plate, request.Icon);
+            (bestEver, bestCurrent, everTotal, currentTotal, user2p) = await ProcessBestsByTagsAsync(request.Tags,
+                request.Condition, records, async condition =>
                 {
-                    CoopExtraInfo extraInfo = ServiceExecutionHelper.DeserializeOrThrow<CoopExtraInfo>(condition, "Invalid arguments");
-                    return await PrepareDfRecordsForProcessAsync(request.Token, extraInfo.Qq, extraInfo.Frame, extraInfo.Plate, extraInfo.Icon);
+                    CoopExtraInfo extraInfo =
+                        ServiceExecutionHelper.DeserializeOrThrow<CoopExtraInfo>(condition, "Invalid arguments");
+                    return await PrepareDfRecordsForProcessAsync(request.Token, extraInfo.Qq, extraInfo.Frame,
+                        extraInfo.Plate, extraInfo.Icon);
                 });
         }
         else if (request.Tags.Contains("common"))
         {
-            (user, bestEver, bestCurrent, everTotal, currentTotal) = await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
+            (user, bestEver, bestCurrent, everTotal, currentTotal) =
+                await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
         }
         else if (request.Tags.Contains("riren"))
         {
@@ -141,5 +148,13 @@ public partial class BestsService
         await responseStream.WriteToResponseAsync(bestsImage);
     }
 
-    public record CoopExtraInfo([property: JsonPropertyName("qq")] uint Qq, [property: JsonPropertyName("frame")] int Frame, [property: JsonPropertyName("plate")] int Plate, [property: JsonPropertyName("icon")] int Icon);
+    public record CoopExtraInfo(
+        [property: JsonPropertyName("qq")]
+        uint Qq,
+        [property: JsonPropertyName("frame")]
+        int Frame,
+        [property: JsonPropertyName("plate")]
+        int Plate,
+        [property: JsonPropertyName("icon")]
+        int Icon);
 }

@@ -15,10 +15,9 @@ public sealed partial class BestsService : BestsApi.BestsApiBase
         await ServiceHelper.PrepareRecordDataAsync(bestsCurrent);
     }
 
-    private static async Task<(ImmutableArray<CommonRecord> BestEver, ImmutableArray<CommonRecord> BestCurrent, int EverTotal, int CurrentTotal, CommonUser?)>
-        ProcessBestsByTagsAsync(
-            IReadOnlyList<string> tags,
-            string condition,
+    private static async
+        Task<(ImmutableArray<CommonRecord> BestEver, ImmutableArray<CommonRecord> BestCurrent, int EverTotal, int
+            CurrentTotal, CommonUser?)> ProcessBestsByTagsAsync(IReadOnlyList<string> tags, string condition,
             ImmutableArray<CommonRecord> records,
             Func<string, Task<(CommonUser, ImmutableArray<CommonRecord>)>> secondDataProvider)
     {
@@ -40,7 +39,8 @@ public sealed partial class BestsService : BestsApi.BestsApiBase
         }
         else
         {
-            (Func<CommonRecord, bool> predicate, bool maskMutex) = ScoreFilterHelper.GetPredicateByTags(tags, condition);
+            (Func<CommonRecord, bool> predicate, bool maskMutex) =
+                ScoreFilterHelper.GetPredicateByTags(tags, condition);
             ServiceExecutionHelper.EnsurePermission(!(mayMask && maskMutex), "Mask enabled");
 
             ImmutableArray<CommonRecord> filteredRecords = [.. records.Where(predicate).SortRecordForBests()];

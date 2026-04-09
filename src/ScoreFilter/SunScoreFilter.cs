@@ -25,7 +25,8 @@ public sealed class SunScoreFilter : IScoreFilter
         }
 
         sumScore *= 5;
-        float minScore = Math.Min((1 - ((sumScore - 1) / sumScore)) * 100, x.Chart.Notes.Break > 0 ? 1 / x.Chart.Notes.Break / 2 : 101);
+        float minScore = Math.Min((1 - (sumScore - 1) / sumScore) * 100,
+            x.Chart.Notes.Break > 0 ? 1f / x.Chart.Notes.Break / 2 : 101);
         (float maxAcc, _, _) = ConstantMap.RatingMap[x.Rank];
         float minAcc = maxAcc - minScore;
         return x.Achievements >= minAcc && x.Achievements < maxAcc;

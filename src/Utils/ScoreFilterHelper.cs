@@ -17,12 +17,14 @@ internal static class ScoreFilterHelper
         {
             foreach (string tag in tags)
             {
-                if (Filters.TryGetValue(tag, out (IScoreFilter, bool) filter_maskMutex))
+                if (!Filters.TryGetValue(tag, out (IScoreFilter, bool) filter_maskMutex))
                 {
-                    (IScoreFilter filter, bool maskMutexL) = filter_maskMutex;
-                    selectedFilters.Add(filter);
-                    maskMutex |= maskMutexL;
+                    continue;
                 }
+
+                (IScoreFilter filter, bool maskMutexL) = filter_maskMutex;
+                selectedFilters.Add(filter);
+                maskMutex |= maskMutexL;
             }
         }
 
@@ -35,8 +37,7 @@ internal static class ScoreFilterHelper
         Dictionary<string, (IScoreFilter, bool)> filters = new(StringComparer.OrdinalIgnoreCase);
 
         IEnumerable<Type> filterTypes = typeof(IScoreFilter).Assembly.GetTypes().Where(type =>
-            type is { IsInterface: false, IsAbstract: false } &&
-            typeof(IScoreFilter).IsAssignableFrom(type));
+            type is { IsInterface: false, IsAbstract: false } && typeof(IScoreFilter).IsAssignableFrom(type));
 
         foreach (Type type in filterTypes)
         {

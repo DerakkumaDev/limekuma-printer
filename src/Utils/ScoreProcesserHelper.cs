@@ -6,8 +6,6 @@ namespace Limekuma.Utils;
 
 internal static class ScoreProcesserHelper
 {
-    internal sealed record SelectedProcesser(IScoreProcesser Processer, bool MaskMutex, bool RequireSecondData);
-
     private static readonly FrozenDictionary<string, SelectedProcesser> Processers = BuildProcessers();
 
     internal static SelectedProcesser? GetProcesserByTags(IEnumerable<string>? tags)
@@ -19,9 +17,9 @@ internal static class ScoreProcesserHelper
 
         foreach (string tag in tags)
         {
-            if (Processers.TryGetValue(tag, out SelectedProcesser? Processer))
+            if (Processers.TryGetValue(tag, out SelectedProcesser? processer))
             {
-                return Processer;
+                return processer;
             }
         }
 
@@ -30,15 +28,14 @@ internal static class ScoreProcesserHelper
 
     private static FrozenDictionary<string, SelectedProcesser> BuildProcessers()
     {
-        Dictionary<string, SelectedProcesser> Processers = new(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, SelectedProcesser> processers = new(StringComparer.OrdinalIgnoreCase);
 
-        IEnumerable<Type> ProcesserTypes = typeof(IScoreProcesser).Assembly.GetTypes().Where(type =>
-            type is { IsInterface: false, IsAbstract: false } &&
-            typeof(IScoreProcesser).IsAssignableFrom(type));
+        IEnumerable<Type> processerTypes = typeof(IScoreProcesser).Assembly.GetTypes().Where(type =>
+            type is { IsInterface: false, IsAbstract: false } && typeof(IScoreProcesser).IsAssignableFrom(type));
 
-        foreach (Type type in ProcesserTypes)
+        foreach (Type type in processerTypes)
         {
-            if (Activator.CreateInstance(type) is not IScoreProcesser Processer)
+            if (Activator.CreateInstance(type) is not IScoreProcesser processer)
             {
                 continue;
             }
@@ -51,9 +48,12 @@ internal static class ScoreProcesserHelper
                 continue;
             }
 
-            Processers[tag] = new(Processer, tagAttribute?.MaskMutex ?? false, tagAttribute?.RequireSecondData ?? false);
+            processers[tag] = new(processer, tagAttribute?.MaskMutex ?? false,
+                tagAttribute?.RequireSecondData ?? false);
         }
 
-        return Processers.ToFrozenDictionary();
+        return processers.ToFrozenDictionary();
     }
+
+    internal sealed record SelectedProcesser(IScoreProcesser Processer, bool MaskMutex, bool RequireSecondData);
 }

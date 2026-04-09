@@ -34,8 +34,8 @@ public abstract class DfClient
     protected async Task<T> GetAsync<T>(string path, CancellationToken cancellationToken = default)
     {
         Union<T, StatusResponse> response =
-            await _httpClient.GetFromJsonAsync<Union<T, StatusResponse>>(path, _jsonOptions, cancellationToken)
-            ?? throw new InvalidOperationException("Failed to deserialize response");
+            await _httpClient.GetFromJsonAsync<Union<T, StatusResponse>>(path, _jsonOptions, cancellationToken) ??
+            throw new InvalidOperationException("Failed to deserialize response");
         if (response is StatusResponse status)
         {
             throw new InvalidOperationException(status.Message);
@@ -58,8 +58,7 @@ public abstract class DfClient
         using HttpResponseMessage responseMessage = await PostAsync(path, value, cancellationToken);
         Union<TResult, StatusResponse> response =
             await responseMessage.Content.ReadFromJsonAsync<Union<TResult, StatusResponse>>(_jsonOptions,
-                cancellationToken)
-            ?? throw new InvalidOperationException("Failed to deserialize response");
+                cancellationToken) ?? throw new InvalidOperationException("Failed to deserialize response");
         if (response is StatusResponse status)
         {
             throw new InvalidOperationException(status.Message);

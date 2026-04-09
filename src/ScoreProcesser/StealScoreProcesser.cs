@@ -7,7 +7,8 @@ namespace Limekuma.ScoreProcesser;
 [ScoreProcesserTag("steal", false, true)]
 public sealed class StealScoreProcesser : IScoreProcesser
 {
-    public (ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>) Process(IReadOnlyList<CommonRecord> records1p, IReadOnlyList<CommonRecord> records2p)
+    public (ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>) Process(IReadOnlyList<CommonRecord> records1p,
+        IReadOnlyList<CommonRecord> records2p)
     {
         List<CommonRecord> everRecords = [];
         List<CommonRecord> currentRecords = [];
@@ -49,7 +50,8 @@ public sealed class StealScoreProcesser : IScoreProcesser
                 continue;
             }
 
-            CommonRecord? controlRecord = controlRecords.FirstOrDefault(x => x.Chart.Song.Id == processRecord.Chart.Song.Id && x.Chart.Difficulty == processRecord.Chart.Difficulty);
+            CommonRecord? controlRecord = controlRecords.FirstOrDefault(x =>
+                x.Chart.Song.Id == processRecord.Chart.Song.Id && x.Chart.Difficulty == processRecord.Chart.Difficulty);
             if (controlRecord is null)
             {
                 continue;
@@ -65,8 +67,17 @@ public sealed class StealScoreProcesser : IScoreProcesser
             }).Add(record);
         }
 
-        ImmutableArray<CommonRecord> current = [.. currentRecords.OrderByDescending(x => x.DXRating > currentMin).ThenByDescending(x => x.DXRating - x.ExtraInfo).ThenByDescending(x => x.Chart.LevelValue).ThenByDescending(x => x.Achievements).Take(15)];
-        ImmutableArray<CommonRecord> ever = [.. everRecords.OrderByDescending(x => x.DXRating > everMin).ThenByDescending(x => x.DXRating - x.ExtraInfo).ThenByDescending(x => x.Chart.LevelValue).ThenByDescending(x => x.Achievements).Take(35)];
+        ImmutableArray<CommonRecord> current =
+        [
+            .. currentRecords.OrderByDescending(x => x.DXRating > currentMin)
+                .ThenByDescending(x => x.DXRating - x.ExtraInfo).ThenByDescending(x => x.Chart.LevelValue)
+                .ThenByDescending(x => x.Achievements).Take(15)
+        ];
+        ImmutableArray<CommonRecord> ever =
+        [
+            .. everRecords.OrderByDescending(x => x.DXRating > everMin).ThenByDescending(x => x.DXRating - x.ExtraInfo)
+                .ThenByDescending(x => x.Chart.LevelValue).ThenByDescending(x => x.Achievements).Take(35)
+        ];
 
         return (ever, current);
     }

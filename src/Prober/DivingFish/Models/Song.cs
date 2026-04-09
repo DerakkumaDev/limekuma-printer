@@ -51,11 +51,13 @@ internal record Songs
     {
         get
         {
-            if (_shared is null || DateTimeOffset.Now.AddHours(10).Date != _shared._pullTime.AddHours(10).Date)
+            if (_shared is not null && DateTimeOffset.Now.AddHours(10).Date == _shared._pullTime.AddHours(10).Date)
             {
-                DfResourceClient _resource = new();
-                _shared = (Songs)_resource.GetSongsAsync().Result;
+                return _shared;
             }
+
+            DfResourceClient resource = new();
+            _shared = (Songs)resource.GetSongsAsync().Result;
 
             return _shared;
         }
@@ -63,8 +65,9 @@ internal record Songs
 
     public static ImmutableArray<Song> Shared => SharedSongs;
 
-    public static Song GetById(string id) =>
-        SharedSongs._songsById.TryGetValue(id, out Song? song) ? song : throw new InvalidDataException();
+    public static Song GetById(string id) => SharedSongs._songsById.TryGetValue(id, out Song? song)
+        ? song
+        : throw new InvalidDataException();
 
     public static explicit operator Songs(List<Song> songs) => new(songs);
 

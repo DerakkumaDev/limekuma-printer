@@ -32,6 +32,7 @@ public sealed class DxScoreScoreProcesser : IScoreProcesser
                 rank = rankKey;
                 coefficient = coefficientValue;
             }
+
             int rating = (int)(record.Chart.LevelValue * achievements * coefficient);
             CommonRecord newRecord = new()
             {

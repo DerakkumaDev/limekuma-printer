@@ -32,6 +32,7 @@ internal static class ServiceHelper
         {
             return;
         }
+
         Directory.CreateDirectory(basePath);
 
         using HttpClient http = new();

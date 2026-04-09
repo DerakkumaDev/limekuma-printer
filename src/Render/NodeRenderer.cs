@@ -55,8 +55,8 @@ public static partial class NodeRenderer
         }
     }
 
-    private static void RenderNode(Image canvas, Node node, AssetProvider assets, AssetProvider measurer,
-        Point origin, float inheritedOpacity, Size? desiredSize, float scale, ResamplerType resampler,
+    private static void RenderNode(Image canvas, Node node, AssetProvider assets, AssetProvider measurer, Point origin,
+        float inheritedOpacity, Size? desiredSize, float scale, ResamplerType resampler,
         Dictionary<Node, Size> measurementCache)
     {
         switch (node)

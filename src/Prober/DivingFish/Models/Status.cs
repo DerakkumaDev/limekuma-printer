@@ -16,11 +16,13 @@ public record Status
     {
         get
         {
-            if (field is null || DateTimeOffset.Now.AddHours(10).Date != field._pullTime.AddHours(10).Date)
+            if (field is not null && DateTimeOffset.Now.AddHours(10).Date == field._pullTime.AddHours(10).Date)
             {
-                DfResourceClient _resource = new();
-                field = _resource.GetChartStstusAsync().Result;
+                return field;
             }
+
+            DfResourceClient resource = new();
+            field = resource.GetChartStstusAsync().Result;
 
             return field;
         }

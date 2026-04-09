@@ -18,8 +18,9 @@ public abstract class LxnsDataClient : LxnsClient
     protected new async Task PostAsync<T>(string path, T value, CancellationToken cancellationToken = default)
     {
         using HttpResponseMessage responseMessage = await base.PostAsync(path, value, cancellationToken);
-        Response response = await responseMessage.Content.ReadFromJsonAsync<Response>(_jsonOptions, cancellationToken)
-                            ?? throw new InvalidOperationException("Failed to deserialize response");
+        Response response =
+            await responseMessage.Content.ReadFromJsonAsync<Response>(_jsonOptions, cancellationToken) ??
+            throw new InvalidOperationException("Failed to deserialize response");
         if (!response.Success || response.Code is not 200)
         {
             throw new InvalidOperationException($"{response.Code}: {response.Message}");

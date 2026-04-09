@@ -7,10 +7,8 @@ namespace Limekuma.Services;
 
 public sealed partial class ListService : ListApi.ListApiBase
 {
-    private static (ImmutableArray<CommonRecord> Records, bool MayMask) BuildListRecords(
-        IReadOnlyList<string> tags,
-        string condition,
-        IEnumerable<CommonRecord> records)
+    private static (ImmutableArray<CommonRecord> Records, bool MayMask) BuildListRecords(IReadOnlyList<string> tags,
+        string condition, IEnumerable<CommonRecord> records)
     {
         (Func<CommonRecord, bool> predicate, bool maskMutex) = ScoreFilterHelper.GetPredicateByTags(tags, condition);
         bool mayMask = ServiceExecutionHelper.HasMaskedScores(records);
@@ -20,7 +18,8 @@ public sealed partial class ListService : ListApi.ListApiBase
         return (filteredRecords, mayMask);
     }
 
-    private static async Task<(ImmutableArray<int>, int, int)> PrepareDataAsync(CommonUser user, ImmutableArray<CommonRecord> records, int page)
+    private static async Task<(ImmutableArray<int>, int, int)> PrepareDataAsync(CommonUser user,
+        ImmutableArray<CommonRecord> records, int page)
     {
         int i = (page - 1) * 55;
         int count = records.Length;

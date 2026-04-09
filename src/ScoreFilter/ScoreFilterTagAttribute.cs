@@ -3,11 +3,9 @@ namespace Limekuma.ScoreFilter;
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class ScoreFilterTagAttribute : Attribute
 {
-    public string Tag { get; }
-
-    public bool MaskMutex { get; }
-
-    public ScoreFilterTagAttribute(string tag) : this(tag, false) { }
+    public ScoreFilterTagAttribute(string tag) : this(tag, false)
+    {
+    }
 
     public ScoreFilterTagAttribute(string tag, bool maskMutex)
     {
@@ -19,4 +17,8 @@ public sealed class ScoreFilterTagAttribute : Attribute
         Tag = tag;
         MaskMutex = maskMutex;
     }
+
+    public string Tag { get; }
+
+    public bool MaskMutex { get; }
 }

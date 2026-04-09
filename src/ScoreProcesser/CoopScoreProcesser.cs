@@ -7,7 +7,8 @@ namespace Limekuma.ScoreProcesser;
 [ScoreProcesserTag("coop", false, true)]
 public sealed class CoopScoreProcesser : IScoreProcesser
 {
-    public (ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>) Process(IReadOnlyList<CommonRecord> records1p, IReadOnlyList<CommonRecord> records2p)
+    public (ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>) Process(IReadOnlyList<CommonRecord> records1p,
+        IReadOnlyList<CommonRecord> records2p)
     {
         IEnumerable<CommonRecord> records = records1p.Select(x =>
         {
@@ -25,8 +26,8 @@ public sealed class CoopScoreProcesser : IScoreProcesser
         {
             (record.Chart.Song.InCurrentGenre switch
             {
-                true => current.Count < 15 ? current : ever,
-                false => ever.Count < 35 ? ever : ever
+                true => current,
+                false => ever
             }).Add(record);
 
             if (ever.Count >= 35 && current.Count >= 15)

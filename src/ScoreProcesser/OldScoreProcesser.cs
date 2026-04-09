@@ -20,7 +20,8 @@ public sealed class OldScoreProcesser : IScoreProcesser
         foreach (CommonRecord record in records.SortRecordForBests())
         {
             (_, _, float oldCoefficient) = ConstantMap.RatingMap[record.Rank];
-            int rating = (int)(record.Achievements * (record.Achievements > 100.5 ? 100.5 : record.Achievements) * oldCoefficient);
+            int rating = (int)(record.Achievements * (record.Achievements > 100.5 ? 100.5 : record.Achievements) *
+                               oldCoefficient);
             CommonRecord newRecord = new()
             {
                 Achievements = record.Achievements,

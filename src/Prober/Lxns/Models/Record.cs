@@ -6,16 +6,11 @@ namespace Limekuma.Prober.Lxns.Models;
 
 public record Record : SimpleRecord
 {
-    private static CommonDifficulties MapDifficulty(Difficulties difficulty) => difficulty switch
-    {
-        Difficulties.Dummy => CommonDifficulties.Dummy,
-        Difficulties.Basic => CommonDifficulties.Basic,
-        Difficulties.Advanced => CommonDifficulties.Advanced,
-        Difficulties.Expert => CommonDifficulties.Expert,
-        Difficulties.Master => CommonDifficulties.Master,
-        Difficulties.ReMaster => CommonDifficulties.ReMaster,
-        _ => throw new InvalidDataException()
-    };
+    private Lazy<Chart>? _chart;
+
+    private Lazy<double>? _levelValue;
+
+    private Lazy<int>? _totalDXScore;
 
     [JsonPropertyName("achievements")]
     public required double Achievements { get; init; }
@@ -45,8 +40,6 @@ public record Record : SimpleRecord
 
     public string JacketUrl => $"https://assets2.lxns.net/maimai/jacket/{Id}.png";
 
-    private Lazy<Chart>? _chart;
-
     public Chart Chart => (_chart ??= new(() =>
     {
         SongData songData = SongData.Shared;
@@ -63,13 +56,20 @@ public record Record : SimpleRecord
         })[(int)Difficulty];
     })).Value;
 
-    private Lazy<int>? _totalDXScore;
-
     public int TotalDXScore => (_totalDXScore ??= new(() => Chart.Notes!.Total * 3)).Value;
 
-    private Lazy<double>? _levelValue;
-
     public double LevelValue => (_levelValue ??= new(() => Chart.LevelValue)).Value;
+
+    private static CommonDifficulties MapDifficulty(Difficulties difficulty) => difficulty switch
+    {
+        Difficulties.Dummy => CommonDifficulties.Dummy,
+        Difficulties.Basic => CommonDifficulties.Basic,
+        Difficulties.Advanced => CommonDifficulties.Advanced,
+        Difficulties.Expert => CommonDifficulties.Expert,
+        Difficulties.Master => CommonDifficulties.Master,
+        Difficulties.ReMaster => CommonDifficulties.ReMaster,
+        _ => throw new InvalidDataException()
+    };
 
     public static implicit operator CommonRecord(Record record)
     {
@@ -81,7 +81,7 @@ public record Record : SimpleRecord
             throw new InvalidDataException();
         }
 
-        bool inCurrentGenre = (songData.Versions[^1].VersionNumber / 100) == versionGroup;
+        bool inCurrentGenre = songData.Versions[^1].VersionNumber / 100 == versionGroup;
 
         return new()
         {

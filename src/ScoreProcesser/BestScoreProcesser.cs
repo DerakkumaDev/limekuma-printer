@@ -16,7 +16,7 @@ public sealed class BestScoreProcesser : IScoreProcesser
             (record.Chart.Song.InCurrentGenre switch
             {
                 true => current.Count < 15 ? current : ever,
-                false => ever.Count < 35 ? ever : ever
+                false => ever.Count < 35 ? ever : current
             }).Add(record);
 
             if (ever.Count >= 35 && current.Count >= 15)

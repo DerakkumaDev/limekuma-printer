@@ -7,16 +7,11 @@ namespace Limekuma.Prober.DivingFish.Models;
 
 public class Record
 {
-    private static CommonDifficulties MapDifficulty(Difficulties difficulty) => difficulty switch
-    {
-        Difficulties.Dummy => CommonDifficulties.Dummy,
-        Difficulties.Basic => CommonDifficulties.Basic,
-        Difficulties.Advanced => CommonDifficulties.Advanced,
-        Difficulties.Expert => CommonDifficulties.Expert,
-        Difficulties.Master => CommonDifficulties.Master,
-        Difficulties.ReMaster => CommonDifficulties.ReMaster,
-        _ => throw new InvalidDataException()
-    };
+    private Lazy<int>? _dxScoreRank;
+
+    private Lazy<Song>? _song;
+
+    private Lazy<int>? _totalDXScore;
 
     [JsonPropertyName("achievements")]
     public required double Achievements { get; init; }
@@ -60,19 +55,14 @@ public class Record
     [JsonPropertyName("type")]
     public required SongTypes Type { get; init; }
 
-    public string AudioUrl => $"https://assets2.lxns.net/maimai/music/{(Id is > 10000 and < 100000 ? Id % 10000 : Id)}.mp3";
+    public string AudioUrl =>
+        $"https://assets2.lxns.net/maimai/music/{(Id is > 10000 and < 100000 ? Id % 10000 : Id)}.mp3";
 
     public string JacketUrl => $"https://maimai.diving-fish.com/covers/{Id}.png";
 
-    private Lazy<Song>? _song;
-
     public Song Song => (_song ??= new(() => Songs.GetById(Id.ToString()))).Value;
 
-    private Lazy<int>? _totalDXScore;
-
     public int TotalDXScore => (_totalDXScore ??= new(() => Song.Charts[DifficultyIndex].Notes.Total * 3)).Value;
-
-    private Lazy<int>? _dxScoreRank;
 
     public int DXScoreRank => (_dxScoreRank ??= new(() => ((double)DXScore / TotalDXScore) switch
     {
@@ -83,6 +73,17 @@ public class Record
         <= 1 => 5,
         _ => throw new InvalidDataException()
     })).Value;
+
+    private static CommonDifficulties MapDifficulty(Difficulties difficulty) => difficulty switch
+    {
+        Difficulties.Dummy => CommonDifficulties.Dummy,
+        Difficulties.Basic => CommonDifficulties.Basic,
+        Difficulties.Advanced => CommonDifficulties.Advanced,
+        Difficulties.Expert => CommonDifficulties.Expert,
+        Difficulties.Master => CommonDifficulties.Master,
+        Difficulties.ReMaster => CommonDifficulties.ReMaster,
+        _ => throw new InvalidDataException()
+    };
 
     public static implicit operator CommonRecord(Record record)
     {

@@ -7,6 +7,10 @@ public record SongData
 {
     private readonly DateTimeOffset _pullTime = DateTimeOffset.Now;
 
+    private FrozenDictionary<int, Song>? _songsById;
+
+    private FrozenDictionary<int, Version>? _versionsByGroup;
+
     [JsonPropertyName("songs")]
     public required List<Song> Songs { get; set; }
 
@@ -16,11 +20,7 @@ public record SongData
     [JsonPropertyName("versions")]
     public required List<Version> Versions { get; set; }
 
-    private FrozenDictionary<int, Song>? _songsById;
-
     public FrozenDictionary<int, Song> SongsById => _songsById ??= Songs.ToFrozenDictionary(x => x.Id);
-
-    private FrozenDictionary<int, Version>? _versionsByGroup;
 
     public FrozenDictionary<int, Version> VersionsByGroup => _versionsByGroup ??=
         Versions.GroupBy(x => x.VersionNumber / 100).ToFrozenDictionary(x => x.Key, x => x.First());
@@ -29,11 +29,13 @@ public record SongData
     {
         get
         {
-            if (field is null || DateTimeOffset.Now.AddHours(10).Date != field._pullTime.AddHours(10).Date)
+            if (field is not null && DateTimeOffset.Now.AddHours(10).Date == field._pullTime.AddHours(10).Date)
             {
-                LxnsResourceClient _resource = new();
-                field = _resource.GetSongsAsync(includeNotes: true).Result;
+                return field;
             }
+
+            LxnsResourceClient resource = new();
+            field = resource.GetSongsAsync(includeNotes: true).Result;
 
             return field;
         }

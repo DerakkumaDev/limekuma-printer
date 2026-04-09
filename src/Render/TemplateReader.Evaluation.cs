@@ -3,6 +3,7 @@ using Limekuma.Render.Types;
 using SixLabors.ImageSharp;
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace Limekuma.Render;
@@ -12,7 +13,8 @@ public sealed partial class TemplateReader
     private async Task<string> EvaluateRequiredTemplateAttributeAsync(XElement element, string name, object? scope) =>
         await EvaluateTemplateAsync(GetRequiredAttributeValue(element, name), scope);
 
-    private async Task<string> EvaluateTemplateAttributeOrAsync(XElement element, string name, string defaultValue, object? scope)
+    private async Task<string> EvaluateTemplateAttributeOrAsync(XElement element, string name, string defaultValue,
+        object? scope)
     {
         XAttribute? attribute = element.Attribute(name);
         if (attribute is null)
@@ -37,12 +39,13 @@ public sealed partial class TemplateReader
     private async Task<T> EvaluateRequiredExpressionAttributeAsync<T>(XElement element, string name, object? scope)
     {
         string raw = GetRequiredAttributeValue(element, name);
-        T? value = await EvaluateExpressionAsAsync<T>(raw, scope) ?? throw new InvalidOperationException(
+        T value = await EvaluateExpressionAsAsync<T>(raw, scope) ?? throw new InvalidOperationException(
             $"DSL[AttributeNull] Required attribute evaluated to null. Context: element='{element.Name.LocalName}', attribute='{name}', expression='{raw}'");
         return value;
     }
 
-    private async Task<T> EvaluateExpressionAttributeOrAsync<T>(XElement element, string name, T defaultValue, object? scope)
+    private async Task<T> EvaluateExpressionAttributeOrAsync<T>(XElement element, string name, T defaultValue,
+        object? scope)
     {
         XAttribute? attribute = element.Attribute(name);
         if (attribute is null)
@@ -56,22 +59,19 @@ public sealed partial class TemplateReader
         }
 
         T? value = await EvaluateExpressionAsAsync<T>(attribute.Value, scope);
-        if (value is null)
-        {
-            return defaultValue;
-        }
-
-        return value;
+        return value ?? defaultValue;
     }
 
     private async Task<T> EvaluateRequiredExpressionAsAsync<T>(string raw, object? scope)
     {
-        T? value = await EvaluateExpressionAsAsync<T>(raw, scope) ?? throw new InvalidOperationException(
-            $"DSL[ExpressionEval] Can not evaluate expression. Context: expression='{raw}'");
+        T value = await EvaluateExpressionAsAsync<T>(raw, scope) ??
+                  throw new InvalidOperationException(
+                      $"DSL[ExpressionEval] Can not evaluate expression. Context: expression='{raw}'");
         return value;
     }
 
-    private async Task<Color> ParseColorAttributeOrAsync(XElement element, string name, string defaultRaw, object? scope)
+    private async Task<Color> ParseColorAttributeOrAsync(XElement element, string name, string defaultRaw,
+        object? scope)
     {
         string raw = GetAttributeValueOrDefault(element, name, defaultRaw);
         string colorText = await EvaluateTemplateAsync(raw, scope);
@@ -90,8 +90,8 @@ public sealed partial class TemplateReader
         return Color.Parse(colorText);
     }
 
-    private async Task<ResamplerType> ParseResamplerTypeAsync(XElement element, object? scope)
-        => await EvaluateExpressionAttributeOrAsync(element, "resampler", ResamplerType.Lanczos3, scope);
+    private async Task<ResamplerType> ParseResamplerTypeAsync(XElement element, object? scope) =>
+        await EvaluateExpressionAttributeOrAsync(element, "resampler", ResamplerType.Lanczos3, scope);
 
     private async Task<string> EvaluateTemplateAsync(string? template, object? scope)
     {
@@ -104,7 +104,7 @@ public sealed partial class TemplateReader
         StringBuilder safeTemplateBuilder = new();
         int templateOffset = 0;
         int tokenIndex = 0;
-        foreach (System.Text.RegularExpressions.Match match in ExprSegmentRegex().Matches(template))
+        foreach (Match match in ExprSegmentRegex().Matches(template))
         {
             safeTemplateBuilder.Append(template, templateOffset, match.Index - templateOffset);
             string token = $"__EXPR_TOKEN_{tokenIndex}__";
@@ -113,6 +113,7 @@ public sealed partial class TemplateReader
             templateOffset = match.Index + match.Length;
             tokenIndex++;
         }
+
         safeTemplateBuilder.Append(template, templateOffset, template.Length - templateOffset);
         string safeTemplate = safeTemplateBuilder.ToString();
 
@@ -185,9 +186,9 @@ public sealed partial class TemplateReader
         return (T?)Convert.ChangeType(expressionValue, nonNullableType, CultureInfo.InvariantCulture);
     }
 
-    private static InvalidOperationException BuildInvalidEnumException(Type enumType, object? rawValue, string expression) =>
-        new(
-            $"DSL[Enum] Invalid enum value. Context: enum='{enumType.Name}', value='{Convert.ToString(rawValue, CultureInfo.InvariantCulture)}', expression='{expression}', allowed='{string.Join(", ", Enum.GetNames(enumType))}'");
+    private static InvalidOperationException
+        BuildInvalidEnumException(Type enumType, object? rawValue, string expression) => new(
+        $"DSL[Enum] Invalid enum value. Context: enum='{enumType.Name}', value='{Convert.ToString(rawValue, CultureInfo.InvariantCulture)}', expression='{expression}', allowed='{string.Join(", ", Enum.GetNames(enumType))}'");
 
     private static bool TryConvert(object? value, Type targetType, out object? converted)
     {
@@ -224,7 +225,8 @@ public sealed partial class TemplateReader
             return true;
         }
 
-        if (targetType == typeof(bool) && bool.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture), out bool boolValue))
+        if (targetType == typeof(bool) &&
+            bool.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture), out bool boolValue))
         {
             converted = boolValue;
             return true;

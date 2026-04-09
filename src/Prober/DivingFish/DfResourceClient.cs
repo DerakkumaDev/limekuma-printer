@@ -13,15 +13,14 @@ public class DfResourceClient : DfClient
             cancellationToken);
 
     public async Task<Player> GetPlayerAsync(uint qq, bool best50, CancellationToken cancellationToken = default) =>
-        await PostAsync<object, Player>("/api/maimaidxprober/query/player",
-            new { qq = qq.ToString(), b50 = best50 }, cancellationToken);
+        await PostAsync<object, Player>("/api/maimaidxprober/query/player", new { qq = qq.ToString(), b50 = best50 },
+            cancellationToken);
 
     public async Task<Player> GetPlayerAsync(string name, CancellationToken cancellationToken = default) =>
         await PostAsync<object, Player>("/api/maimaidxprober/query/player", new { username = name, b50 = true },
             cancellationToken);
 
-    public async Task<Player> GetPlayerAsync(string name, bool best50,
-        CancellationToken cancellationToken = default) =>
+    public async Task<Player> GetPlayerAsync(string name, bool best50, CancellationToken cancellationToken = default) =>
         await PostAsync<object, Player>("/api/maimaidxprober/query/player", new { username = name, b50 = best50 },
             cancellationToken);
 

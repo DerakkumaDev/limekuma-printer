@@ -80,16 +80,10 @@ public static partial class NodeRenderer
     {
         List<Node> flowChildren = ExpandFlowChildren(stack.Children);
         List<(Node Node, Size Size)> items =
-        [
-            .. flowChildren.Select(c => (c, Measure(c, assets, measurer, measurementCache)))
-        ];
+            [.. flowChildren.Select(c => (c, Measure(c, assets, measurer, measurementCache)))];
         bool isRow = stack.Direction is StackDirection.Row;
-        float wrapMain = ResolveMainAxisContainerSize(
-            isRow ? stack.Width : stack.Height,
-            null,
-            int.MaxValue);
-        List<List<(Node Node, Size Size)>> lines =
-            ResolveStackLines(items, isRow, stack.Wrap, stack.Spacing, wrapMain);
+        float wrapMain = ResolveMainAxisContainerSize(isRow ? stack.Width : stack.Height, null, int.MaxValue);
+        List<List<(Node Node, Size Size)>> lines = ResolveStackLines(items, isRow, stack.Wrap, stack.Spacing, wrapMain);
         List<(float Main, int Cross)> lineSizes = ResolveStackLineSizes(lines, isRow, stack.Spacing);
         (float contentMain, float contentCross) = ResolveStackContentSize(lineSizes, stack.RunSpacing);
 
@@ -135,8 +129,7 @@ public static partial class NodeRenderer
     }
 
     private static Size MeasureLayerNode(LayerNode layer, AssetProvider assets, AssetProvider measurer,
-        Dictionary<Node, Size> measurementCache) =>
-        MeasureChildren(layer.Children, assets, measurer, measurementCache);
+        Dictionary<Node, Size> measurementCache) => MeasureChildren(layer.Children, assets, measurer, measurementCache);
 
     private static Size MeasureChildren(IEnumerable<Node> children, AssetProvider assets, AssetProvider measurer,
         Dictionary<Node, Size> measurementCache)

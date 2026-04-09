@@ -15,7 +15,9 @@ public sealed class AssetProvider
 
     static AssetProvider() => Shared = new();
 
-    public AssetProvider() : this("./Resources/Resources.xml") { }
+    public AssetProvider() : this("./Resources/Resources.xml")
+    {
+    }
 
     public AssetProvider(string resourcePath)
     {
@@ -133,17 +135,12 @@ public sealed class AssetProvider
         }
 
         (string path, string? rule) = pathRule;
-        if (rule is null)
-        {
-            return Path.Combine(path, key);
-        }
-
-        return Path.Combine(path, Smart.Format(rule, new { key }));
+        return Path.Combine(path, rule is null ? key : Smart.Format(rule, new { key }));
     }
 
     private Image LoadImage(string path)
     {
-        Image loaded = _assets.GetOrAdd(path, p =>
+        Image loaded = _assets.GetOrAdd(path, _ =>
         {
             Image image = Image.Load(path);
             return image;

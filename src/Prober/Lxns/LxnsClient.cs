@@ -24,8 +24,8 @@ public abstract class LxnsClient
     }
 
     protected async Task<T> GetAsync<T>(string path, CancellationToken cancellationToken = default) =>
-        await _httpClient.GetFromJsonAsync<T>(path, _jsonOptions, cancellationToken)
-        ?? throw new InvalidOperationException("Failed to deserialize response");
+        await _httpClient.GetFromJsonAsync<T>(path, _jsonOptions, cancellationToken) ??
+        throw new InvalidOperationException("Failed to deserialize response");
 
     protected async Task<HttpResponseMessage> PostAsync<T>(string path, T value,
         CancellationToken cancellationToken = default)

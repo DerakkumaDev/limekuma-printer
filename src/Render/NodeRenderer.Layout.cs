@@ -7,14 +7,10 @@ namespace Limekuma.Render;
 public static partial class NodeRenderer
 {
     private static float ResolveMainAxisContainerSize(int? explicitSize, int? desiredSize, float fallback) =>
-        explicitSize is { } value
-            ? value
-            : desiredSize is { } desired
-                ? desired
-                : fallback;
+        explicitSize ?? desiredSize ?? fallback;
 
-    private static List<List<(Node Node, Size Size)>> ResolveStackLines(IEnumerable<(Node Node, Size Size)> items, bool isRow,
-        bool wrap, float spacing, float containerMain)
+    private static List<List<(Node Node, Size Size)>> ResolveStackLines(IEnumerable<(Node Node, Size Size)> items,
+        bool isRow, bool wrap, float spacing, float containerMain)
     {
         List<List<(Node Node, Size Size)>> lines = [];
         List<(Node Node, Size Size)> currentLine = [];
@@ -43,8 +39,8 @@ public static partial class NodeRenderer
         return lines;
     }
 
-    private static List<(float Main, int Cross)> ResolveStackLineSizes(IEnumerable<IReadOnlyList<(Node Node, Size Size)>> lines, bool isRow,
-        float spacing)
+    private static List<(float Main, int Cross)> ResolveStackLineSizes(
+        IEnumerable<IReadOnlyList<(Node Node, Size Size)>> lines, bool isRow, float spacing)
     {
         List<(float Main, int Cross)> lineSizes = [];
         foreach (IReadOnlyList<(Node Node, Size Size)> line in lines)
@@ -86,10 +82,10 @@ public static partial class NodeRenderer
             StackJustifyContent.Center => (remaining / 2, baseSpacing),
             StackJustifyContent.End => (remaining, baseSpacing),
             StackJustifyContent.SpaceBetween when itemCount > 1 => (0, baseSpacing + distributable / (itemCount - 1)),
-            StackJustifyContent.SpaceAround when itemCount > 0 =>
-                (distributable / (itemCount * 2), baseSpacing + distributable / itemCount),
-            StackJustifyContent.SpaceEvenly when itemCount > 0 =>
-                (distributable / (itemCount + 1), baseSpacing + distributable / (itemCount + 1)),
+            StackJustifyContent.SpaceAround when itemCount > 0 => (distributable / (itemCount * 2),
+                baseSpacing + distributable / itemCount),
+            StackJustifyContent.SpaceEvenly when itemCount > 0 => (distributable / (itemCount + 1),
+                baseSpacing + distributable / (itemCount + 1)),
             _ => (0, baseSpacing)
         };
     }

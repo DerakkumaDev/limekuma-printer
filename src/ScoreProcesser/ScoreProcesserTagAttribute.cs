@@ -3,15 +3,13 @@ namespace Limekuma.ScoreProcesser;
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class ScoreProcesserTagAttribute : Attribute
 {
-    public string Tag { get; }
+    public ScoreProcesserTagAttribute(string tag) : this(tag, false, false)
+    {
+    }
 
-    public bool MaskMutex { get; }
-
-    public bool RequireSecondData { get; }
-
-    public ScoreProcesserTagAttribute(string tag) : this(tag, false, false) { }
-
-    public ScoreProcesserTagAttribute(string tag, bool maskMutex) : this(tag, maskMutex, false) { }
+    public ScoreProcesserTagAttribute(string tag, bool maskMutex) : this(tag, maskMutex, false)
+    {
+    }
 
     public ScoreProcesserTagAttribute(string tag, bool maskMutex, bool requireSecondData)
     {
@@ -24,4 +22,10 @@ public sealed class ScoreProcesserTagAttribute : Attribute
         MaskMutex = maskMutex;
         RequireSecondData = requireSecondData;
     }
+
+    public string Tag { get; }
+
+    public bool MaskMutex { get; }
+
+    public bool RequireSecondData { get; }
 }

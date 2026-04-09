@@ -12,19 +12,20 @@ public sealed class StdDevScoreProcesser : IScoreProcesser
         ImmutableArray<CommonRecord>.Builder ever = ImmutableArray.CreateBuilder<CommonRecord>(35);
         ImmutableArray<CommonRecord>.Builder current = ImmutableArray.CreateBuilder<CommonRecord>(15);
         foreach (CommonRecord record in records.OrderByDescending(x =>
-        {
-            double stdDev = 0;
-            double fitLevel = x.Chart.LevelValue;
-            if (Status.Shared.ChartStatus.TryGetValue(x.Chart.Song.Id.ToString(), out List<ChartState>? chartState))
-            {
-                ChartState chart = chartState[(int)x.Chart.Difficulty - 1];
-                stdDev = chart.StandardDeviation;
-                fitLevel = chart.FitLevel;
-            }
+                 {
+                     double stdDev = 0;
+                     double fitLevel = x.Chart.LevelValue;
+                     if (Status.Shared.ChartStatus.TryGetValue(x.Chart.Song.Id.ToString(),
+                             out List<ChartState>? chartState))
+                     {
+                         ChartState chart = chartState[(int)x.Chart.Difficulty - 1];
+                         stdDev = chart.StandardDeviation;
+                         fitLevel = chart.FitLevel;
+                     }
 
-            x.ExtraInfo = (float)stdDev;
-            return x.DXRating * (1 + (stdDev / 10)) * (1 + (fitLevel / (fitLevel > 0 ? 10 : 1)));
-        }).ThenByDescending(x => x.Chart.LevelValue).ThenByDescending(x => x.Achievements))
+                     x.ExtraInfo = (float)stdDev;
+                     return x.DXRating * (1 + stdDev / 10) * (1 + fitLevel / (fitLevel > 0 ? 10 : 1));
+                 }).ThenByDescending(x => x.Chart.LevelValue).ThenByDescending(x => x.Achievements))
         {
             (record.Chart.Song.InCurrentGenre switch
             {

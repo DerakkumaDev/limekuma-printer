@@ -25,21 +25,20 @@ public sealed class AsyncNCalcEngine
             return default;
         }
 
-        if (typeof(T) == typeof(IEnumerable<object>) && result is IEnumerable enumerable)
+        if (typeof(T) != typeof(IEnumerable<object>))
         {
-            List<object> list = [];
-            foreach (object? item in enumerable)
-            {
-                if (item is not null)
-                {
-                    list.Add(item);
-                }
-            }
-
-            return (T)(object)list;
+            return (T?)ConvertValue(result, typeof(T));
         }
 
-        return (T?)ConvertValue(result, typeof(T));
+        if (result is not IEnumerable enumerable)
+        {
+            return (T?)ConvertValue(result, typeof(T));
+        }
+
+        List<object> list = [];
+        list.AddRange(enumerable.OfType<object>());
+
+        return (T)(object)list;
     }
 
     public async Task<object?> EvalAsync(string expr, object? scope)
@@ -50,6 +49,7 @@ public sealed class AsyncNCalcEngine
         {
             expression.Parameters[key] = value is Enum e ? Convert.ToInt32(e, CultureInfo.InvariantCulture) : value;
         }
+
         expression.EvaluateFunctionAsync += async (name, args) =>
         {
             if (!_functions.TryGetValue(name, out Delegate? func))
@@ -93,7 +93,8 @@ public sealed class AsyncNCalcEngine
                 return Enum.Parse(finalTarget, enumText, true);
             }
 
-            object enumValue = Convert.ChangeType(value, Enum.GetUnderlyingType(finalTarget), CultureInfo.InvariantCulture);
+            object enumValue =
+                Convert.ChangeType(value, Enum.GetUnderlyingType(finalTarget), CultureInfo.InvariantCulture);
             return Enum.ToObject(finalTarget, enumValue);
         }
 
@@ -130,12 +131,7 @@ public sealed class AsyncNCalcEngine
     {
         if (value is null)
         {
-            if (targetType.IsValueType)
-            {
-                return Activator.CreateInstance(targetType);
-            }
-
-            return value;
+            return targetType.IsValueType ? Activator.CreateInstance(targetType) : value;
         }
 
         if (targetType.IsInstanceOfType(value))
