@@ -6,75 +6,36 @@ using Limekuma.Render;
 using Limekuma.Utils;
 using SixLabors.ImageSharp;
 using System.Collections.Immutable;
-using System.Net;
 
 namespace Limekuma.Services;
 
 public partial class BestsService
 {
+    private static async Task<(CommonUser, ImmutableArray<CommonRecord>)> PrepareLxnsRecordsForProcessAsync(string devToken, string personalToken)
+    {
+        Player player = await LxnsGatewayService.GetPlayerByPersonalTokenAsync(devToken, personalToken);
+        List<Record> records = await LxnsGatewayService.GetRecordsAsync(personalToken);
+        return (player, [.. records.ConvertAll<CommonRecord>(_ => _)]);
+    }
+
     private static async Task<(CommonUser, ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>, int, int)> PrepareLxnsDataAsync(
         string devToken, uint? qq, string? personalToken)
     {
         Player player;
-        LxnsDeveloperClient lxnsDev = new(devToken);
         if (qq.HasValue)
         {
-            try
-            {
-                player = await lxnsDev.GetPlayerByQQAsync(qq.Value);
-            }
-            catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.NotFound)
-            {
-                throw new RpcException(new(StatusCode.NotFound, ex.Message, ex));
-            }
-            catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Forbidden)
-            {
-                throw new RpcException(new(StatusCode.PermissionDenied, ex.Message, ex));
-            }
+            player = await LxnsGatewayService.GetPlayerByQqAsync(devToken, qq.Value);
         }
         else if (!string.IsNullOrEmpty(personalToken))
         {
-            LxnsPersonalClient lxns = new(personalToken);
-            try
-            {
-                player = await lxns.GetPlayerAsync(lxnsDev);
-            }
-            catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized)
-            {
-                throw new RpcException(new(StatusCode.Unauthenticated, ex.Message, ex));
-            }
-
-            try
-            {
-                player = await lxnsDev.GetPlayerAsync(player.FriendCode);
-            }
-            catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.NotFound)
-            {
-                throw new RpcException(new(StatusCode.NotFound, ex.Message, ex));
-            }
-            catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Forbidden)
-            {
-                throw new RpcException(new(StatusCode.PermissionDenied, ex.Message, ex));
-            }
+            player = await LxnsGatewayService.GetPlayerByPersonalTokenAsync(devToken, personalToken);
         }
         else
         {
             throw new RpcException(new(StatusCode.InvalidArgument, "QQ or token is required."));
         }
 
-        Bests bests;
-        try
-        {
-            bests = await player.GetBestsAsync();
-        }
-        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.BadRequest)
-        {
-            throw new RpcException(new(StatusCode.NotFound, ex.Message, ex));
-        }
-        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Forbidden)
-        {
-            throw new RpcException(new(StatusCode.PermissionDenied, ex.Message, ex));
-        }
+        Bests bests = await LxnsGatewayService.GetBestsAsync(player);
 
         CommonUser user = player;
 
@@ -85,11 +46,91 @@ public partial class BestsService
         return (user, bestEver, bestCurrent, bests.EverTotal, bests.CurrentTotal);
     }
 
+    private static async Task<(CommonUser, ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>, int, int)> PrepareRiRenLxnsDataAsync()
+    {
+        LxnsResourceClient resource = new();
+        SongData songData = await resource.GetSongsAsync(includeNotes: true);
+        List<CommonRecord> allRecords = [];
+        foreach (Song song in songData.Songs)
+        {
+            foreach (Chart chart in song.Charts.Standard.Concat(song.Charts.DX))
+            {
+                if (chart.Notes is null)
+                {
+                    continue;
+                }
+
+                allRecords.Add(new Record()
+                {
+                    Achievements = 101,
+                    Difficulty = chart.Difficulty,
+                    Id = song.Id,
+                    DXScore = chart.Notes.Total * 3,
+                    DXScoreRank = 5,
+                    Level = chart.Level,
+                    Title = song.Title,
+                    Type = chart.Type,
+                    ComboFlag = ComboFlags.AllPerfectPlus,
+                    DXRating = (int)(chart.LevelValue * 22.512),
+                    Rank = Ranks.SSSPlus,
+                    SyncFlag = SyncFlags.FullSyncDXPlus,
+                });
+            }
+        }
+
+        IEnumerable<CommonRecord> sortedRecords = allRecords.SortRecordForBests();
+        ImmutableArray<CommonRecord> bestEver = [.. sortedRecords.Where(record => !record.Chart.Song.InCurrentGenre).Take(35)];
+        ImmutableArray<CommonRecord> bestCurrent = [.. sortedRecords.Where(record => record.Chart.Song.InCurrentGenre).Take(15)];
+        int everTotal = bestEver.Sum(x => x.DXRating);
+        int currentTotal = bestCurrent.Sum(x => x.DXRating);
+        CommonUser user = new()
+        {
+            Name = "ＤＸＫｕｍａ",
+            Rating = everTotal + currentTotal,
+            TrophyColor = TrophyColor.Rainbow,
+            TrophyText = "でらっくま",
+            CourseRank = CommonCourseRank.Urakaiden,
+            ClassRank = ClassRank.LEGEND,
+            IconId = 1,
+            PlateId = 1,
+            FrameId = 1
+        };
+
+        await PrepareDataAsync(user, bestEver, bestCurrent);
+        return (user, bestEver, bestCurrent, everTotal, currentTotal);
+    }
+
     public override async Task GetFromLxns(LxnsBestsRequest request, IServerStreamWriter<ImageResponse> responseStream,
         ServerCallContext context)
     {
-        (CommonUser user, ImmutableArray<CommonRecord> bestEver, ImmutableArray<CommonRecord> bestCurrent, int everTotal,
-            int currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
+        CommonUser user;
+        CommonUser? user2p = null;
+        ImmutableArray<CommonRecord> bestEver;
+        ImmutableArray<CommonRecord> bestCurrent;
+        int everTotal;
+        int currentTotal;
+        if (ScoreProcesserHelper.GetProcesserByTags(request.Tags) is not null)
+        {
+            (user, ImmutableArray<CommonRecord> records) = await PrepareLxnsRecordsForProcessAsync(request.DevToken, request.PersonalToken);
+            (bestEver, bestCurrent, everTotal, currentTotal, user2p) = await ProcessBestsByTagsAsync(
+                request.Tags,
+                request.Condition,
+                records,
+                async condition => await PrepareLxnsRecordsForProcessAsync(request.DevToken, condition));
+        }
+        else if (request.Tags.Contains("common"))
+        {
+            (user, bestEver, bestCurrent, everTotal, currentTotal) = await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
+        }
+        else if (request.Tags.Contains("riren"))
+        {
+            (user, bestEver, bestCurrent, everTotal, currentTotal) = await PrepareRiRenLxnsDataAsync();
+        }
+        else
+        {
+            throw new RpcException(new(StatusCode.InvalidArgument, "Invalid arguments"));
+        }
+
         using Image bestsImage =
             await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal, request.Condition,
                 "lxns", request.Tags);

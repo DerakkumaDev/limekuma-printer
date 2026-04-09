@@ -7,6 +7,19 @@ namespace Limekuma.Services;
 
 public sealed partial class ListService : ListApi.ListApiBase
 {
+    private static (ImmutableArray<CommonRecord> Records, bool MayMask) BuildListRecords(
+        IReadOnlyList<string> tags,
+        string condition,
+        IEnumerable<CommonRecord> records)
+    {
+        (Func<CommonRecord, bool> predicate, bool maskMutex) = ScoreFilterHelper.GetPredicateByTags(tags, condition);
+        bool mayMask = ServiceExecutionHelper.HasMaskedScores(records);
+        ServiceExecutionHelper.EnsurePermission(!(mayMask && maskMutex), "Mask enabled");
+
+        ImmutableArray<CommonRecord> filteredRecords = [.. records.Where(predicate).SortRecordForList()];
+        return (filteredRecords, mayMask);
+    }
+
     private static async Task<(ImmutableArray<int>, int, int)> PrepareDataAsync(CommonUser user, ImmutableArray<CommonRecord> records, int page)
     {
         int i = (page - 1) * 55;
@@ -18,7 +31,7 @@ public sealed partial class ListService : ListApi.ListApiBase
 
         await ServiceHelper.PrepareUserDataAsync(user);
 
-        ImmutableArray<int>.Builder counts = ImmutableArray.CreateBuilder<int>(15);
+        int[] counts = new int[15];
 
         int end = Math.Min(i + 55, count);
         await ServiceHelper.PrepareRecordDataAsync(records[i..end]);
@@ -27,57 +40,57 @@ public sealed partial class ListService : ListApi.ListApiBase
         {
             if (record.Rank >= Ranks.SSSPlus)
             {
-                ++counts[0];
+                Interlocked.Increment(ref counts[0]);
             }
 
             if (record.Rank >= Ranks.SSS)
             {
-                ++counts[1];
+                Interlocked.Increment(ref counts[1]);
             }
 
             if (record.Rank >= Ranks.SSPlus)
             {
-                ++counts[2];
+                Interlocked.Increment(ref counts[2]);
             }
 
             if (record.Rank >= Ranks.SS)
             {
-                ++counts[3];
+                Interlocked.Increment(ref counts[3]);
             }
 
             if (record.Rank >= Ranks.SPlus)
             {
-                ++counts[4];
+                Interlocked.Increment(ref counts[4]);
             }
 
             if (record.Rank >= Ranks.S)
             {
-                ++counts[5];
+                Interlocked.Increment(ref counts[5]);
             }
 
             if (record.Rank >= Ranks.A)
             {
-                ++counts[6];
+                Interlocked.Increment(ref counts[6]);
             }
 
             if (record.ComboFlag >= ComboFlags.AllPerfectPlus)
             {
-                ++counts[7];
+                Interlocked.Increment(ref counts[7]);
             }
 
             if (record.ComboFlag >= ComboFlags.AllPerfect)
             {
-                ++counts[8];
+                Interlocked.Increment(ref counts[8]);
             }
 
             if (record.ComboFlag >= ComboFlags.FullComboPlus)
             {
-                ++counts[9];
+                Interlocked.Increment(ref counts[9]);
             }
 
             if (record.ComboFlag >= ComboFlags.FullCombo)
             {
-                ++counts[10];
+                Interlocked.Increment(ref counts[10]);
             }
 
             if (record.SyncFlag is SyncFlags.SyncPlay)
@@ -87,25 +100,25 @@ public sealed partial class ListService : ListApi.ListApiBase
 
             if (record.SyncFlag >= SyncFlags.FullSyncDXPlus)
             {
-                ++counts[11];
+                Interlocked.Increment(ref counts[11]);
             }
 
             if (record.SyncFlag >= SyncFlags.FullSyncDX)
             {
-                ++counts[12];
+                Interlocked.Increment(ref counts[12]);
             }
 
             if (record.SyncFlag >= SyncFlags.FullSyncPlus)
             {
-                ++counts[13];
+                Interlocked.Increment(ref counts[13]);
             }
 
             if (record.SyncFlag >= SyncFlags.FullSync)
             {
-                ++counts[14];
+                Interlocked.Increment(ref counts[14]);
             }
         });
 
-        return (counts.ToImmutable(), i, end);
+        return ([.. counts], i, end);
     }
 }
