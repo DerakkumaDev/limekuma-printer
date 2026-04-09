@@ -3,15 +3,15 @@ using Limekuma.Prober.Common;
 namespace Limekuma.ScoreFilter;
 
 [ScoreFilterTag("dx_star")]
-public sealed class DXStarScoreFilter : IScoreFilter
+public sealed class DXScoreRankScoreFilter : IScoreFilter
 {
     public Func<CommonRecord, bool> GetFilter(string? condition)
     {
-        if (!int.TryParse(condition, out int dxStar))
+        if (!int.TryParse(condition, out int dxScoreRank))
         {
             return _ => true;
         }
 
-        return x => x.DXStar >= dxStar;
+        return x => x.DXScoreRank >= dxScoreRank;
     }
 }

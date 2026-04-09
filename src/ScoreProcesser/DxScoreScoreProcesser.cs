@@ -10,7 +10,7 @@ public sealed class DxScoreScoreProcesser : IScoreProcesser
 {
     public (ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>) Process(IReadOnlyList<CommonRecord> records)
     {
-        if (records.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank > Ranks.A)))
+        if (records.Any(r => r.DXScore is 0 && (r.DXScoreRank > 0 || r.Rank > Ranks.A)))
         {
             throw new RpcException(new(StatusCode.PermissionDenied, "Mask enabled"));
         }
@@ -40,7 +40,7 @@ public sealed class DxScoreScoreProcesser : IScoreProcesser
                 Chart = record.Chart,
                 ComboFlag = record.ComboFlag,
                 DXScore = record.DXScore,
-                DXStar = record.DXStar,
+                DXScoreRank = record.DXScoreRank,
                 Rank = rank,
                 SyncFlag = record.SyncFlag
             };

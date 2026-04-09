@@ -35,7 +35,7 @@ public partial class ListService
         user.IconId = request.Icon;
 
         (Func<CommonRecord, bool> predicate, bool maskMutex) = ScoreFilterHelper.GetPredicateByTags(request.Tags, request.Condition);
-        bool mayMask = player.Records.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank > Ranks.A));
+        bool mayMask = player.Records.Any(r => r.DXScore is 0 && (r.DXScoreRank > 0 || r.Rank > Ranks.A));
         if (mayMask && maskMutex)
         {
             throw new RpcException(new(StatusCode.PermissionDenied, "Mask enabled"));

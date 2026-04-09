@@ -24,7 +24,7 @@ public record Record : SimpleRecord
     public required int DXScore { get; init; }
 
     [JsonPropertyName("dx_star")]
-    public required int DXStar { get; init; }
+    public required int DXScoreRank { get; init; }
 
     [JsonPropertyName("dx_rating")]
     public double? DXRating { get; init; }
@@ -108,7 +108,7 @@ public record Record : SimpleRecord
             Rank = record.Rank ?? Ranks.D,
             Achievements = record.Achievements,
             DXRating = (int)(record.DXRating ?? 0),
-            DXStar = record.DXStar,
+            DXScoreRank = record.DXScoreRank,
             DXScore = record.DXScore
         };
     }

@@ -72,9 +72,9 @@ public class Record
 
     public int TotalDXScore => (_totalDXScore ??= new(() => Song.Charts[DifficultyIndex].Notes.Total * 3)).Value;
 
-    private Lazy<int>? _dxStar;
+    private Lazy<int>? _dxScoreRank;
 
-    public int DXStar => (_dxStar ??= new(() => ((double)DXScore / TotalDXScore) switch
+    public int DXScoreRank => (_dxScoreRank ??= new(() => ((double)DXScore / TotalDXScore) switch
     {
         < 0.9 => 1,
         < 0.93 => 2,
@@ -115,7 +115,7 @@ public class Record
             Rank = record.Rank,
             Achievements = record.Achievements,
             DXRating = record.DXRating,
-            DXStar = record.DXStar,
+            DXScoreRank = record.DXScoreRank,
             DXScore = record.DXScore
         };
     }

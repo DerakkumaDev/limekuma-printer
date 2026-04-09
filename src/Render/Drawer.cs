@@ -20,7 +20,7 @@ public sealed class Drawer
         int everMin = ever.Count > 0 ? ever[^1].DXRating : 0;
         int currentMax = current.Count > 0 ? current[0].DXRating : 0;
         int currentMin = current.Count > 0 ? current[^1].DXRating : 0;
-        bool mayMask = ever.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank > Ranks.A)) || current.Any(r => r.DXScore is 0 && (r.DXStar > 0 || r.Rank > Ranks.A));
+        bool mayMask = ever.Any(r => r.DXScore is 0 && (r.DXScoreRank > 0 || r.Rank > Ranks.A)) || current.Any(r => r.DXScore is 0 && (r.DXScoreRank > 0 || r.Rank > Ranks.A));
         Dictionary<string, object?> scope = new(StringComparer.OrdinalIgnoreCase)
         {
             ["userInfo"] = user,
