@@ -7,10 +7,6 @@ public record SongData
 {
     private readonly DateTimeOffset _pullTime = DateTimeOffset.Now;
 
-    private FrozenDictionary<int, Song>? _songsById;
-
-    private FrozenDictionary<int, Version>? _versionsByGroup;
-
     [JsonPropertyName("songs")]
     public required List<Song> Songs { get; set; }
 
@@ -20,9 +16,9 @@ public record SongData
     [JsonPropertyName("versions")]
     public required List<Version> Versions { get; set; }
 
-    public FrozenDictionary<int, Song> SongsById => _songsById ??= Songs.ToFrozenDictionary(x => x.Id);
+    public FrozenDictionary<int, Song> SongsById => field ??= Songs.ToFrozenDictionary(x => x.Id);
 
-    public FrozenDictionary<int, Version> VersionsByGroup => _versionsByGroup ??=
+    public FrozenDictionary<int, Version> VersionsByGroup => field ??=
         Versions.GroupBy(x => x.VersionNumber / 100).ToFrozenDictionary(x => x.Key, x => x.First());
 
     public static SongData Shared

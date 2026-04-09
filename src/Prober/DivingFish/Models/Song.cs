@@ -32,10 +32,8 @@ public record Song
     public required BasicInfo BasicInfo { get; init; }
 }
 
-internal record Songs
+internal class Songs
 {
-    private static Songs? _shared;
-
     private readonly DateTimeOffset _pullTime;
     private readonly ImmutableArray<Song> _songs;
     private readonly FrozenDictionary<string, Song> _songsById;
@@ -51,15 +49,15 @@ internal record Songs
     {
         get
         {
-            if (_shared is not null && DateTimeOffset.Now.AddHours(10).Date == _shared._pullTime.AddHours(10).Date)
+            if (field is not null && DateTimeOffset.Now.AddHours(10).Date == field._pullTime.AddHours(10).Date)
             {
-                return _shared;
+                return field;
             }
 
             DfResourceClient resource = new();
-            _shared = (Songs)resource.GetSongsAsync().Result;
+            field = (Songs)resource.GetSongsAsync().Result;
 
-            return _shared;
+            return field;
         }
     }
 
