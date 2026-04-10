@@ -8,27 +8,27 @@ namespace Limekuma.Prober.DivingFish;
 
 public abstract class DfClient
 {
+    private static readonly HttpClientHandler SharedHandler = new()
+    {
+        CheckCertificateRevocationList = false
+    };
+    private static readonly JsonSerializerOptions SharedJsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+    private static readonly string? UserAgentVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+
     protected HttpClient _httpClient;
     protected JsonSerializerOptions _jsonOptions;
 
     protected DfClient()
     {
-        HttpClientHandler handler = new()
-        {
-            CheckCertificateRevocationList = false
-        };
-
-        _httpClient = new(handler)
+        _httpClient = new(SharedHandler, false)
         {
             BaseAddress = new("https://www.diving-fish.com/")
         };
-        _httpClient.DefaultRequestHeaders.UserAgent.Add(new("limekuma",
-            Assembly.GetExecutingAssembly().GetName().Version?.ToString()));
-
-        _jsonOptions = new()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
+        _httpClient.DefaultRequestHeaders.UserAgent.Add(new("limekuma", UserAgentVersion));
+        _jsonOptions = SharedJsonOptions;
     }
 
     protected async Task<T> GetAsync<T>(string path, CancellationToken cancellationToken = default)

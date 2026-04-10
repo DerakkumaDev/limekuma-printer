@@ -683,8 +683,8 @@ public sealed class UnionJsonConverter : JsonConverterFactory
             }
 
             return (from i in t.GetInterfaces()
-                where i.IsGenericType && i.GetGenericTypeDefinition() is IEnumerable
-                select i.GetGenericArguments()[0]).FirstOrDefault();
+                    where i.IsGenericType && i.GetGenericTypeDefinition() is IEnumerable
+                    select i.GetGenericArguments()[0]).FirstOrDefault();
         }
     }
 }

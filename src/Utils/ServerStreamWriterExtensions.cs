@@ -1,6 +1,7 @@
 using Google.Protobuf;
 using Grpc.Core;
 using SixLabors.ImageSharp;
+using System.Buffers;
 #if RELEASE
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Gif;
@@ -17,7 +18,7 @@ internal static class ServerStreamWriterExtensions
     {
         internal async Task WriteToResponseAsync(Image image)
         {
-            MemoryStream outStream = new();
+            await using MemoryStream outStream = new();
 #if RELEASE
             if (image.Frames.Count > 1)
             {
@@ -37,20 +38,27 @@ internal static class ServerStreamWriterExtensions
             await image.SaveAsPngAsync(outStream);
 #endif
             outStream.Seek(0, SeekOrigin.Begin);
-            byte[] buffer = new byte[ChunkSize];
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(ChunkSize);
 
-            while (true)
+            try
             {
-                int numBytesRead = await outStream.ReadAsync(buffer);
-                if (numBytesRead is 0)
+                while (true)
                 {
-                    break;
-                }
+                    int numBytesRead = await outStream.ReadAsync(buffer.AsMemory(0, ChunkSize));
+                    if (numBytesRead is 0)
+                    {
+                        break;
+                    }
 
-                await responseStream.WriteAsync(new()
-                {
-                    Data = UnsafeByteOperations.UnsafeWrap(buffer.AsMemory(0, numBytesRead))
-                });
+                    await responseStream.WriteAsync(new()
+                    {
+                        Data = UnsafeByteOperations.UnsafeWrap(buffer.AsMemory(0, numBytesRead))
+                    });
+                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
             }
         }
     }

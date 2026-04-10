@@ -33,14 +33,17 @@ public sealed partial class ListService : ListApi.ListApiBase
         int end = Math.Min(i + 55, count);
         await ServiceHelper.PrepareRecordDataAsync(records[i..end]);
 
-        int[] counts = records.AsParallel().Select(CountRecordStats).Aggregate(MergeCounts);
+        int[] counts = new int[15];
+        foreach (CommonRecord record in records)
+        {
+            AccumulateRecordStats(record, counts);
+        }
 
         return ([.. counts], i, end);
     }
 
-    private static int[] CountRecordStats(CommonRecord record)
+    private static void AccumulateRecordStats(CommonRecord record, int[] counts)
     {
-        int[] counts = new int[15];
         if (record.Rank >= Ranks.SSSPlus)
         {
             counts[0]++;
@@ -98,7 +101,7 @@ public sealed partial class ListService : ListApi.ListApiBase
 
         if (record.SyncFlag is SyncFlags.SyncPlay)
         {
-            return counts;
+            return;
         }
 
         if (record.SyncFlag >= SyncFlags.FullSyncDXPlus)
@@ -120,9 +123,5 @@ public sealed partial class ListService : ListApi.ListApiBase
         {
             counts[14]++;
         }
-
-        return counts;
     }
-
-    private static int[] MergeCounts(int[] left, int[] right) => [.. left.Zip(right, static (x, y) => x + y)];
 }
