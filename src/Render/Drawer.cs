@@ -9,6 +9,8 @@ namespace Limekuma.Render;
 
 public sealed class Drawer
 {
+    private static readonly AsyncNCalcEngine ExpressionEngine = CreateExpressionEngine();
+
     public async Task<Image> DrawBestsAsync(CommonUser user, IReadOnlyList<CommonRecord> ever,
         IReadOnlyList<CommonRecord> current, int everTotal, int currentTotal, string? condition, string prober,
         IEnumerable<string> tags) => await DrawBestsAsync(user, ever, current, everTotal, currentTotal, condition,
@@ -79,17 +81,17 @@ public sealed class Drawer
 
     private static async Task<Image> DrawAsync(IDictionary<string, object?> scope, string xmlPath)
     {
-        AsyncNCalcEngine expr = new();
-        RegisterFunctions(expr);
-        TemplateReader loader = new(expr);
+        TemplateReader loader = new(ExpressionEngine);
         Node tree = await loader.LoadAsync(xmlPath, scope);
         AssetProvider assets = AssetProvider.Shared;
         return NodeRenderer.Render((CanvasNode)tree, assets, assets);
     }
 
-    private static void RegisterFunctions(AsyncNCalcEngine expr)
+    private static AsyncNCalcEngine CreateExpressionEngine()
     {
+        AsyncNCalcEngine expr = new();
         expr.RegisterFunction("ToString", (object x) => Convert.ToString(x));
         expr.RegisterFunction("Count", (IList x) => x.Count);
+        return expr;
     }
 }

@@ -5,6 +5,25 @@ namespace Limekuma.Utils;
 
 public static class ConstantMap
 {
+    private static readonly (float, float, float)[] RatingFactors =
+    [
+        (0, 0.64f, 4),
+        (50, 0.8f, 5),
+        (60, 0.96f, 6),
+        (70, 0.112f, 7),
+        (75, 0.12f, 7.5f),
+        (80, 0.136f, 8),
+        (90, 0.152f, 9),
+        (94, 0.168f, 9.4f),
+        (97, 0.2f, 10),
+        (98, 0.203f, 11),
+        (99, 0.208f, 12),
+        (99.5f, 0.211f, 13),
+        (100, 0.216f, 14),
+        (100.5f, 0.224f, 15),
+        (101, 0.224f, 15)
+    ];
+
     public static readonly FrozenDictionary<string, FrozenSet<string>> VersionMap =
         new Dictionary<string, FrozenSet<string>>
         {
@@ -88,23 +107,24 @@ public static class ConstantMap
             ]
         }.ToFrozenDictionary();
 
-    public static readonly FrozenDictionary<Ranks, (float, float, float)> RatingMap =
-        new Dictionary<Ranks, (float, float, float)>
-        {
-            [(Ranks)14] = (101, 0.224f, 15),
-            [Ranks.SSSPlus] = (100.5f, 0.224f, 15),
-            [Ranks.SSS] = (100, 0.216f, 14),
-            [Ranks.SSPlus] = (99.5f, 0.211f, 13),
-            [Ranks.SS] = (99, 0.208f, 12),
-            [Ranks.SPlus] = (98, 0.203f, 11),
-            [Ranks.S] = (97, 0.2f, 10),
-            [Ranks.AAA] = (94, 0.168f, 9.4f),
-            [Ranks.AA] = (90, 0.152f, 9),
-            [Ranks.A] = (80, 0.136f, 8),
-            [Ranks.BBB] = (75, 0.12f, 7.5f),
-            [Ranks.BB] = (70, 0.112f, 7),
-            [Ranks.B] = (60, 0.96f, 6),
-            [Ranks.C] = (50, 0.8f, 5),
-            [Ranks.D] = (0, 0.64f, 4)
-        }.ToFrozenDictionary();
+    public static (float, float, float) GetRatingFactors(Ranks rank) => RatingFactors[(int)rank];
+
+    public static (Ranks, float) ResolveRankAndCoefficient(float achievements) => achievements switch
+    {
+        >= 101f => ((Ranks)14, 0.224f),
+        >= 100.5f => (Ranks.SSSPlus, 0.224f),
+        >= 100f => (Ranks.SSS, 0.216f),
+        >= 99.5f => (Ranks.SSPlus, 0.211f),
+        >= 99f => (Ranks.SS, 0.208f),
+        >= 98f => (Ranks.SPlus, 0.203f),
+        >= 97f => (Ranks.S, 0.2f),
+        >= 94f => (Ranks.AAA, 0.168f),
+        >= 90f => (Ranks.AA, 0.152f),
+        >= 80f => (Ranks.A, 0.136f),
+        >= 75f => (Ranks.BBB, 0.12f),
+        >= 70f => (Ranks.BB, 0.112f),
+        >= 60f => (Ranks.B, 0.96f),
+        >= 50f => (Ranks.C, 0.8f),
+        _ => (Ranks.D, 0.64f)
+    };
 }

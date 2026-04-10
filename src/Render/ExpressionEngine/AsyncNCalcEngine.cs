@@ -8,9 +8,14 @@ namespace Limekuma.Render.ExpressionEngine;
 
 public sealed class AsyncNCalcEngine
 {
+    private readonly ConcurrentDictionary<string, ParameterInfo[]> _functionParameters = new();
     private readonly ConcurrentDictionary<string, Delegate> _functions = new();
 
-    public void RegisterFunction(string name, Delegate func) => _functions[name] = func;
+    public void RegisterFunction(string name, Delegate func)
+    {
+        _functions[name] = func;
+        _functionParameters[name] = func.Method.GetParameters();
+    }
 
     public async Task<T?> EvalAsync<T>(string expr, object? scope)
     {
@@ -35,20 +40,14 @@ public sealed class AsyncNCalcEngine
             return (T?)ConvertValue(result, typeof(T));
         }
 
-        List<object> list = [];
-        list.AddRange(enumerable.OfType<object>());
-
-        return (T)(object)list;
+        return (T)(object)enumerable.Cast<object?>().Where(item => item is not null).Cast<object>().ToArray();
     }
 
     public async Task<object?> EvalAsync(string expr, object? scope)
     {
         AsyncExpression expression = new(expr);
         Dictionary<string, object?> flattened = ScopeFlattener.Flatten(scope);
-        foreach ((string key, object? value) in flattened)
-        {
-            expression.Parameters[key] = value is Enum e ? Convert.ToInt32(e, CultureInfo.InvariantCulture) : value;
-        }
+        AddScopeParameters(expression, flattened);
 
         expression.EvaluateFunctionAsync += async (name, args) =>
         {
@@ -57,7 +56,7 @@ public sealed class AsyncNCalcEngine
                 return;
             }
 
-            ParameterInfo[] parameters = func.Method.GetParameters();
+            ParameterInfo[] parameters = _functionParameters.GetOrAdd(name, _ => func.Method.GetParameters());
             object?[] funcArgs = new object[args.Parameters.Length];
             for (int i = 0; i < args.Parameters.Length; ++i)
             {
@@ -71,6 +70,14 @@ public sealed class AsyncNCalcEngine
         };
 
         return await expression.EvaluateAsync();
+    }
+
+    private static void AddScopeParameters(AsyncExpression expression, Dictionary<string, object?> flattened)
+    {
+        foreach ((string key, object? value) in flattened)
+        {
+            expression.Parameters[key] = value is Enum e ? Convert.ToInt32(e, CultureInfo.InvariantCulture) : value;
+        }
     }
 
     private static object? ConvertValue(object? value, Type targetType)

@@ -1,5 +1,6 @@
 using Grpc.Core;
 using Limekuma.Prober.Common;
+using System.Collections.Frozen;
 using System.Net;
 using System.Text.Json;
 
@@ -51,14 +52,10 @@ internal static class ServiceExecutionHelper
             return false;
         }
 
-        foreach ((HttpStatusCode httpStatus, StatusCode grpcStatus) in mappings)
+        FrozenDictionary<HttpStatusCode, StatusCode> mapping =
+            mappings.ToFrozenDictionary(x => x.HttpStatus, x => x.RpcStatus);
+        if (mapping.TryGetValue(statusCode.Value, out rpcStatus))
         {
-            if (httpStatus != statusCode.Value)
-            {
-                continue;
-            }
-
-            rpcStatus = grpcStatus;
             return true;
         }
 

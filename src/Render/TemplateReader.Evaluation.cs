@@ -100,16 +100,17 @@ public sealed partial class TemplateReader
             return string.Empty;
         }
 
-        List<(string Token, string Expression)> expressionTokens = [];
-        StringBuilder safeTemplateBuilder = new();
+        List<string> expressionTexts = [];
+        StringBuilder safeTemplateBuilder = new(template.Length);
         int templateOffset = 0;
         int tokenIndex = 0;
         foreach (Match match in ExprSegmentRegex().Matches(template))
         {
             safeTemplateBuilder.Append(template, templateOffset, match.Index - templateOffset);
-            string token = $"__EXPR_TOKEN_{tokenIndex}__";
-            safeTemplateBuilder.Append(token);
-            expressionTokens.Add((token, match.Groups[1].Value));
+            safeTemplateBuilder.Append("__EXPR_TOKEN_");
+            safeTemplateBuilder.Append(tokenIndex);
+            safeTemplateBuilder.Append("__");
+            expressionTexts.Add(match.Groups[1].Value);
             templateOffset = match.Index + match.Length;
             tokenIndex++;
         }
@@ -119,29 +120,31 @@ public sealed partial class TemplateReader
 
         IDictionary<string, object?> values = ScopeFlattener.Flatten(scope);
         string formatted = Formatter.Format(safeTemplate, values);
-        if (expressionTokens.Count is 0)
+        if (expressionTexts.Count is 0)
         {
             return formatted;
         }
 
-        StringBuilder output = new();
-        int offset = 0;
+        StringBuilder output = new(formatted.Length);
+        int formattedOffset = 0;
 
-        foreach ((string token, string expressionText) in expressionTokens)
+        foreach (Match match in ExprTokenRegex().Matches(formatted))
         {
-            int tokenPosition = formatted.IndexOf(token, offset, StringComparison.Ordinal);
-            if (tokenPosition < 0)
+            output.Append(formatted, formattedOffset, match.Index - formattedOffset);
+            if (!int.TryParse(match.Groups[1].Value, NumberStyles.None, CultureInfo.InvariantCulture,
+                    out int exprIndex) || exprIndex < 0 || exprIndex >= expressionTexts.Count)
             {
+                output.Append(match.Value);
+                formattedOffset = match.Index + match.Length;
                 continue;
             }
 
-            output.Append(formatted, offset, tokenPosition - offset);
-            object? value = await _expressionEngine.EvalAsync(expressionText, scope);
+            object? value = await _expressionEngine.EvalAsync(expressionTexts[exprIndex], scope);
             output.Append(Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty);
-            offset = tokenPosition + token.Length;
+            formattedOffset = match.Index + match.Length;
         }
 
-        output.Append(formatted, offset, formatted.Length - offset);
+        output.Append(formatted, formattedOffset, formatted.Length - formattedOffset);
         return output.ToString();
     }
 
@@ -242,4 +245,7 @@ public sealed partial class TemplateReader
         converted = null;
         return false;
     }
+
+    [GeneratedRegex("__EXPR_TOKEN_(\\d+)__")]
+    private static partial Regex ExprTokenRegex();
 }

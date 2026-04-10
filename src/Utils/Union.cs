@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.Json;
@@ -139,6 +141,10 @@ public sealed class UnionJsonConverter : JsonConverterFactory
 
     private sealed class UnionJsonConverterInner<T1, T2> : JsonConverter<Union<T1, T2>>
     {
+        private static readonly
+            ConcurrentDictionary<(Type Type, bool CaseInsensitive, string? NamingPolicyType), FrozenSet<string>>
+            PropertyNameCache = new();
+
         public override Union<T1, T2> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType is JsonTokenType.Null)
@@ -210,8 +216,8 @@ public sealed class UnionJsonConverter : JsonConverterFactory
 
                         HashSet<string> jsonProps =
                             ReadObjectPropertyNames(ref reader, options.PropertyNameCaseInsensitive);
-                        HashSet<string> t1Props = GetTypeJsonPropertyNames(t1, options);
-                        HashSet<string> t2Props = GetTypeJsonPropertyNames(t2, options);
+                        IReadOnlySet<string> t1Props = GetTypeJsonPropertyNames(t1, options);
+                        IReadOnlySet<string> t2Props = GetTypeJsonPropertyNames(t2, options);
 
                         int m1 = jsonProps.Count(t1Props.Contains);
 
@@ -441,7 +447,14 @@ public sealed class UnionJsonConverter : JsonConverterFactory
         private static bool IsDictionaryLike(Type t) => typeof(IDictionary).IsAssignableFrom(t) || t.GetInterfaces()
             .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() is IDictionary);
 
-        private static HashSet<string> GetTypeJsonPropertyNames(Type t, JsonSerializerOptions options)
+        private static FrozenSet<string> GetTypeJsonPropertyNames(Type t, JsonSerializerOptions options)
+        {
+            (Type Type, bool CaseInsensitive, string? NamingPolicyType) key = (t, options.PropertyNameCaseInsensitive,
+                options.PropertyNamingPolicy?.GetType().FullName);
+            return PropertyNameCache.GetOrAdd(key, _ => BuildTypeJsonPropertyNames(t, options));
+        }
+
+        private static FrozenSet<string> BuildTypeJsonPropertyNames(Type t, JsonSerializerOptions options)
         {
             StringComparer comparer = options.PropertyNameCaseInsensitive
                 ? StringComparer.OrdinalIgnoreCase
@@ -469,7 +482,7 @@ public sealed class UnionJsonConverter : JsonConverterFactory
 
                 if (set.Count > 0)
                 {
-                    return set;
+                    return set.ToFrozenSet(comparer);
                 }
             }
 
@@ -511,7 +524,7 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                 set.Add(name);
             }
 
-            return set;
+            return set.ToFrozenSet(comparer);
         }
 
         private static HashSet<string> ReadObjectPropertyNames(ref Utf8JsonReader reader, bool caseInsensitive)

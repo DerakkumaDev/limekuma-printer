@@ -5,6 +5,7 @@ using Limekuma.Prober.DivingFish.Models;
 using Limekuma.Render;
 using Limekuma.Utils;
 using SixLabors.ImageSharp;
+using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.Text.Json.Serialization;
 
@@ -22,7 +23,7 @@ public partial class BestsService
         user.FrameId = frame!.Value;
         user.PlateId = plate!.Value;
         user.IconId = icon!.Value;
-        return (user, [.. player.Records.ConvertAll<CommonRecord>(_ => _)]);
+        return (user, [.. player.Records.Select(x => (CommonRecord)x)]);
     }
 
     private static async Task<(CommonUser, ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>, int, int)>
@@ -37,11 +38,11 @@ public partial class BestsService
         user.IconId = icon!.Value;
 
         ImmutableArray<CommonRecord> bestEver =
-            [.. player.Bests.Ever.ConvertAll<CommonRecord>(_ => _).SortRecordForBests()];
+            [.. player.Bests.Ever.Select(x => (CommonRecord)x).SortRecordForBests()];
         int everTotal = bestEver.Sum(x => x.DXRating);
 
         ImmutableArray<CommonRecord> bestCurrent =
-            [..player.Bests.Current.ConvertAll<CommonRecord>(_ => _).SortRecordForBests()];
+            [.. player.Bests.Current.Select(x => (CommonRecord)x).SortRecordForBests()];
         int currentTotal = bestCurrent.Sum(x => x.DXRating);
 
         await PrepareDataAsync(user, bestEver, bestCurrent);
@@ -52,41 +53,33 @@ public partial class BestsService
     private static async Task<(CommonUser, ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>, int, int)>
         PrepareRiRenDfDataAsync()
     {
-        List<CommonRecord> allRecords = [];
-        foreach (Song song in Songs.Shared)
+        CommonRecord[] allRecords = Songs.Shared.AsParallel().SelectMany(song =>
         {
             if (!int.TryParse(song.Id, out int id))
             {
-                continue;
+                return [];
             }
 
             int chartCount = Math.Min(song.Charts.Count, Math.Min(song.LevelValues.Count, song.Levels.Count));
-            for (int i = 0; i < chartCount; i++)
+            return Enumerable.Range(0, chartCount).Select(i => (CommonRecord)new Record
             {
-                allRecords.Add(new Record
-                {
-                    Achievements = 101,
-                    ComboFlag = ComboFlags.AllPerfectPlus,
-                    Difficulty = song.Type is SongTypes.Utage ? Difficulties.Utage : (Difficulties)(i + 1),
-                    DifficultyIndex = i,
-                    DXRating = (int)(song.LevelValues[i] * 22.512),
-                    DXScore = song.Charts[i].Notes.Total * 3,
-                    Id = id,
-                    Level = song.Levels[i],
-                    LevelValue = song.LevelValues[i],
-                    Rank = Ranks.SSSPlus,
-                    SyncFlag = SyncFlags.FullSyncDXPlus,
-                    Title = song.Title,
-                    Type = song.Type
-                });
-            }
-        }
-
-        IEnumerable<CommonRecord> sortedRecords = allRecords.SortRecordForBests();
-        ImmutableArray<CommonRecord> bestEver =
-            [.. sortedRecords.Where(record => !record.Chart.Song.InCurrentGenre).Take(35)];
-        ImmutableArray<CommonRecord> bestCurrent =
-            [.. sortedRecords.Where(record => record.Chart.Song.InCurrentGenre).Take(15)];
+                Achievements = 101,
+                ComboFlag = ComboFlags.AllPerfectPlus,
+                Difficulty = song.Type is SongTypes.Utage ? Difficulties.Utage : (Difficulties)(i + 1),
+                DifficultyIndex = i,
+                DXRating = (int)(song.LevelValues[i] * 22.512),
+                DXScore = song.Charts[i].Notes.Total * 3,
+                Id = id,
+                Level = song.Levels[i],
+                LevelValue = song.LevelValues[i],
+                Rank = Ranks.SSSPlus,
+                SyncFlag = SyncFlags.FullSyncDXPlus,
+                Title = song.Title,
+                Type = song.Type
+            });
+        }).ToArray();
+        (ImmutableArray<CommonRecord> bestEver, ImmutableArray<CommonRecord> bestCurrent) =
+            allRecords.SplitTopBestsByQuota(35, 15);
         int everTotal = bestEver.Sum(x => x.DXRating);
         int currentTotal = bestCurrent.Sum(x => x.DXRating);
         CommonUser user = new()
@@ -109,17 +102,18 @@ public partial class BestsService
     public override async Task GetFromDivingFish(DivingFishBestsRequest request,
         IServerStreamWriter<ImageResponse> responseStream, ServerCallContext context)
     {
+        FrozenSet<string> requestTags = request.Tags.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         CommonUser user;
         CommonUser? user2p = null;
         ImmutableArray<CommonRecord> bestEver;
         ImmutableArray<CommonRecord> bestCurrent;
         int everTotal;
         int currentTotal;
-        if (ScoreProcesserHelper.GetProcesserByTags(request.Tags) is not null)
+        if (ScoreProcesserHelper.GetProcesserByTags(requestTags) is not null)
         {
             (user, ImmutableArray<CommonRecord> records) = await PrepareDfRecordsForProcessAsync(request.Token,
                 request.Qq, request.Frame, request.Plate, request.Icon);
-            (bestEver, bestCurrent, everTotal, currentTotal, user2p) = await ProcessBestsByTagsAsync(request.Tags,
+            (bestEver, bestCurrent, everTotal, currentTotal, user2p) = await ProcessBestsByTagsAsync(requestTags,
                 request.Condition, records, async condition =>
                 {
                     CoopExtraInfo extraInfo =
@@ -128,12 +122,12 @@ public partial class BestsService
                         extraInfo.Plate, extraInfo.Icon);
                 });
         }
-        else if (request.Tags.Contains("common"))
+        else if (requestTags.Contains("common"))
         {
             (user, bestEver, bestCurrent, everTotal, currentTotal) =
                 await PrepareDfDataAsync(request.Qq, request.Frame, request.Plate, request.Icon);
         }
-        else if (request.Tags.Contains("riren"))
+        else if (requestTags.Contains("riren"))
         {
             (user, bestEver, bestCurrent, everTotal, currentTotal) = await PrepareRiRenDfDataAsync();
         }
@@ -143,7 +137,7 @@ public partial class BestsService
         }
 
         using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
-            request.Condition, "divingfish", request.Tags, user2p);
+            request.Condition, "divingfish", requestTags, user2p);
 
         await responseStream.WriteToResponseAsync(bestsImage);
     }

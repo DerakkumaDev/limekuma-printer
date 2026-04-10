@@ -9,6 +9,8 @@ using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
+using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Globalization;
 
 namespace Limekuma.Render;
@@ -17,12 +19,13 @@ public static partial class NodeRenderer
 {
     private static void RenderLayerNode(Image canvas, LayerNode layer, AssetProvider assets, AssetProvider measurer,
         Point origin, float inheritedOpacity, Size? desiredSize, float scale, ResamplerType resampler,
-        Dictionary<Node, Size> measurementCache) => RenderChildren(canvas, layer.Children, assets, measurer, origin,
+        ConcurrentDictionary<Node, Size> measurementCache) => RenderChildren(canvas, layer.Children, assets, measurer,
+        origin,
         inheritedOpacity * layer.Opacity, desiredSize, scale, resampler, measurementCache);
 
     private static void RenderPositionedNode(Image canvas, PositionedNode pos, AssetProvider assets,
         AssetProvider measurer, Point origin, float inheritedOpacity, Size? desiredSize, float scale,
-        ResamplerType resampler, Dictionary<Node, Size> measurementCache)
+        ResamplerType resampler, ConcurrentDictionary<Node, Size> measurementCache)
     {
         Size contentSize = MeasureChildren(pos.Children, assets, measurer, measurementCache);
         int containerWidth = pos.Width ?? contentSize.Width;
@@ -49,7 +52,7 @@ public static partial class NodeRenderer
     }
 
     private static void RenderResizedNode(Image canvas, ResizedNode resize, AssetProvider assets,
-        AssetProvider measurer, Point origin, float inheritedOpacity, Dictionary<Node, Size> measurementCache)
+        AssetProvider measurer, Point origin, float inheritedOpacity, ConcurrentDictionary<Node, Size> measurementCache)
     {
         Size naturalSize = Measure(resize.Child, assets, measurer, measurementCache);
         int baseWidth = Math.Max(1, naturalSize.Width);
@@ -74,11 +77,19 @@ public static partial class NodeRenderer
 
     private static void RenderStackNode(Image canvas, StackNode stack, AssetProvider assets, AssetProvider measurer,
         Point origin, float inheritedOpacity, Size? desiredSize, float scale, ResamplerType resampler,
-        Dictionary<Node, Size> measurementCache)
+        ConcurrentDictionary<Node, Size> measurementCache)
     {
         List<Node> flowChildren = ExpandFlowChildren(stack.Children);
-        List<(Node Node, Size Size)> items =
-            [.. flowChildren.Select(c => (c, Measure(c, assets, measurer, measurementCache)))];
+        List<(Node Node, Size Size)> items = [];
+        if (flowChildren.Count > 0)
+        {
+            Size[] sizes = new Size[flowChildren.Count];
+            Parallel.For(0, flowChildren.Count,
+                i => { sizes[i] = Measure(flowChildren[i], assets, measurer, measurementCache); });
+            items.EnsureCapacity(flowChildren.Count);
+            items.AddRange(flowChildren.Select((t, i) => (t, sizes[i])));
+        }
+
         if (items.Count is 0)
         {
             return;
@@ -176,7 +187,7 @@ public static partial class NodeRenderer
 
     private static void RenderGridNode(Image canvas, GridNode grid, AssetProvider assets, AssetProvider measurer,
         Point origin, float inheritedOpacity, Size? desiredSize, float scale, ResamplerType resampler,
-        Dictionary<Node, Size> measurementCache)
+        ConcurrentDictionary<Node, Size> measurementCache)
     {
         List<Node> flowChildren = ExpandFlowChildren(grid.Children);
         if (flowChildren.Count is 0)
@@ -186,7 +197,9 @@ public static partial class NodeRenderer
 
         int columns = Math.Max(1, grid.Columns);
         int rows = (int)Math.Ceiling(flowChildren.Count / (double)columns);
-        Size[] sizes = [.. flowChildren.Select(c => Measure(c, assets, measurer, measurementCache))];
+        Size[] sizes = new Size[flowChildren.Count];
+        Parallel.For(0, flowChildren.Count,
+            i => { sizes[i] = Measure(flowChildren[i], assets, measurer, measurementCache); });
         int[] colWidths = new int[columns];
         int[] rowHeights = new int[rows];
         for (int i = 0; i < flowChildren.Count; i++)
@@ -269,7 +282,7 @@ public static partial class NodeRenderer
     private static void RenderTextNode(Image canvas, TextNode textNode, AssetProvider assets, PointF origin,
         float inheritedOpacity)
     {
-        (FontFamily mainFont, List<FontFamily> fallbacks) = assets.ResolveFont(textNode.FontFamily);
+        (FontFamily mainFont, ImmutableArray<FontFamily> fallbacks) = assets.ResolveFont(textNode.FontFamily);
         float scaledFontSize = textNode.FontSize * 72 / 300;
         Font font = new(mainFont, scaledFontSize);
         RichTextOptions options = new(font)

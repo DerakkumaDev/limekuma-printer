@@ -6,15 +6,21 @@ namespace Limekuma.Utils;
 
 internal static class ServiceHelper
 {
-    internal static async Task PrepareUserDataAsync(CommonUser user)
+    private static readonly HttpClient Http = BuildHttpClient();
+
+    private static readonly ParallelOptions PrepareRecordParallelOptions = new()
     {
-        await PrepareImageAsset("Icon", user.IconId, user.IconUrl);
-        await PrepareImageAsset("Plate", user.PlateId, user.PlateUrl);
-        await PrepareImageAsset("Frame", user.FrameId, user.FrameUrl);
-    }
+        MaxDegreeOfParallelism = 16
+    };
+
+    internal static async Task PrepareUserDataAsync(CommonUser user) => await Task.WhenAll(
+        PrepareImageAsset("Icon", user.IconId, user.IconUrl),
+        PrepareImageAsset("Plate", user.PlateId, user.PlateUrl),
+        PrepareImageAsset("Frame", user.FrameId, user.FrameUrl));
 
     internal static async Task PrepareRecordDataAsync(IReadOnlyList<CommonRecord> records) =>
-        await Parallel.ForEachAsync(records, async (record, _) => await PrepareRecordDataAsync(record));
+        await Parallel.ForEachAsync(records, PrepareRecordParallelOptions,
+            async (record, _) => await PrepareRecordDataAsync(record));
 
     internal static async Task PrepareRecordDataAsync(CommonRecord record) =>
         await PrepareImageAsset("Jacket", record.Chart.Song.Id % 10000, record.Chart.Song.JacketUrl);
@@ -35,11 +41,16 @@ internal static class ServiceHelper
 
         Directory.CreateDirectory(basePath);
 
-        using HttpClient http = new();
-        http.DefaultRequestHeaders.UserAgent.Add(new("limekuma",
-            Assembly.GetExecutingAssembly().GetName().Version?.ToString()));
-        await using Stream stream = await http.GetStreamAsync(url);
+        await using Stream stream = await Http.GetStreamAsync(url);
         await using FileStream fileStream = File.OpenWrite(path);
         await stream.CopyToAsync(fileStream);
+    }
+
+    private static HttpClient BuildHttpClient()
+    {
+        HttpClient http = new();
+        http.DefaultRequestHeaders.UserAgent.Add(new("limekuma",
+            Assembly.GetExecutingAssembly().GetName().Version?.ToString()));
+        return http;
     }
 }

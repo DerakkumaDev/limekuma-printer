@@ -1,5 +1,6 @@
 using Limekuma.Prober.Common;
 using Limekuma.Utils;
+using System.Collections.Frozen;
 using System.Collections.Immutable;
 
 namespace Limekuma.ScoreProcesser;
@@ -10,73 +11,53 @@ public sealed class StealScoreProcesser : IScoreProcesser
     public (ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>) Process(IReadOnlyList<CommonRecord> records1p,
         IReadOnlyList<CommonRecord> records2p)
     {
-        List<CommonRecord> everRecords = [];
-        List<CommonRecord> currentRecords = [];
-        int everMin = 0, currentMin = 0, everCount = 0, currentCount = 0;
-        foreach (CommonRecord record in records1p.SortRecordForBests())
-        {
-            if (currentCount + everCount >= 50)
-            {
-                break;
-            }
-
-            if (record.Chart.Song.InCurrentGenre)
-            {
-                if (currentCount >= 15)
-                {
-                    continue;
-                }
-
-                currentMin = record.DXRating;
-                ++currentCount;
-            }
-
-            if (everCount >= 35)
-            {
-                continue;
-            }
-
-            everMin = record.DXRating;
-            ++everCount;
-        }
+        (ImmutableArray<CommonRecord> baseEver, ImmutableArray<CommonRecord> baseCurrent) =
+            records1p.SplitTopBestsByQuota(35, 15);
+        int everMin = baseEver.IsDefaultOrEmpty ? 0 : baseEver[^1].DXRating;
+        int currentMin = baseCurrent.IsDefaultOrEmpty ? 0 : baseCurrent[^1].DXRating;
 
         bool handleType = records1p.Count > records2p.Count;
         IReadOnlyList<CommonRecord> processRecords = handleType ? records2p : records1p;
         IReadOnlyList<CommonRecord> controlRecords = handleType ? records1p : records2p;
-        foreach (CommonRecord processRecord in processRecords)
-        {
-            if (processRecord.Chart.Song.Type is CommonSongTypes.Utage)
+        FrozenDictionary<(int SongId, CommonDifficulties Difficulty), CommonRecord> controlLookup =
+            controlRecords.ToFrozenDictionary(x => (x.Chart.Song.Id, x.Chart.Difficulty));
+        CommonRecord[] selectedRecords = processRecords.AsParallel()
+            .Where(processRecord => processRecord.Chart.Song.Type is not CommonSongTypes.Utage).Select(processRecord =>
             {
-                continue;
-            }
+                if (!controlLookup.TryGetValue((processRecord.Chart.Song.Id, processRecord.Chart.Difficulty),
+                        out CommonRecord? controlRecord))
+                {
+                    return null;
+                }
 
-            CommonRecord? controlRecord = controlRecords.FirstOrDefault(x =>
-                x.Chart.Song.Id == processRecord.Chart.Song.Id && x.Chart.Difficulty == processRecord.Chart.Difficulty);
-            if (controlRecord is null)
-            {
-                continue;
-            }
-
-            CommonRecord record = handleType ? processRecord : controlRecord;
-            CommonRecord anotherRecord = handleType ? controlRecord : processRecord;
-            record.ExtraInfo = anotherRecord.DXRating;
-            (record.Chart.Song.InCurrentGenre switch
-            {
-                true => currentRecords,
-                false => everRecords
-            }).Add(record);
-        }
+                CommonRecord record = handleType ? processRecord : controlRecord;
+                CommonRecord anotherRecord = handleType ? controlRecord : processRecord;
+                CommonRecord selected = new()
+                {
+                    Achievements = record.Achievements,
+                    Chart = record.Chart,
+                    ComboFlag = record.ComboFlag,
+                    DXRating = record.DXRating,
+                    DXScore = record.DXScore,
+                    DXScoreRank = record.DXScoreRank,
+                    Rank = record.Rank,
+                    SyncFlag = record.SyncFlag,
+                    ExtraInfo = anotherRecord.DXRating
+                };
+                return selected;
+            }).OfType<CommonRecord>().ToArray();
 
         ImmutableArray<CommonRecord> current =
         [
-            .. currentRecords.OrderByDescending(x => x.DXRating > currentMin)
+            .. selectedRecords.Where(x => x.Chart.Song.InCurrentGenre).OrderByDescending(x => x.DXRating > currentMin)
                 .ThenByDescending(x => x.DXRating - x.ExtraInfo).ThenByDescending(x => x.Chart.LevelValue)
                 .ThenByDescending(x => x.Achievements).Take(15)
         ];
         ImmutableArray<CommonRecord> ever =
         [
-            .. everRecords.OrderByDescending(x => x.DXRating > everMin).ThenByDescending(x => x.DXRating - x.ExtraInfo)
-                .ThenByDescending(x => x.Chart.LevelValue).ThenByDescending(x => x.Achievements).Take(35)
+            .. selectedRecords.Where(x => !x.Chart.Song.InCurrentGenre).OrderByDescending(x => x.DXRating > everMin)
+                .ThenByDescending(x => x.DXRating - x.ExtraInfo).ThenByDescending(x => x.Chart.LevelValue)
+                .ThenByDescending(x => x.Achievements).Take(35)
         ];
 
         return (ever, current);

@@ -5,6 +5,7 @@ using Limekuma.Prober.Lxns.Models;
 using Limekuma.Render;
 using Limekuma.Utils;
 using SixLabors.ImageSharp;
+using System.Collections.Frozen;
 using System.Collections.Immutable;
 
 namespace Limekuma.Services;
@@ -14,9 +15,13 @@ public partial class BestsService
     private static async Task<(CommonUser, ImmutableArray<CommonRecord>)> PrepareLxnsRecordsForProcessAsync(
         string devToken, string personalToken)
     {
-        Player player = await LxnsGatewayService.GetPlayerByPersonalTokenAsync(devToken, personalToken);
-        List<Record> records = await LxnsGatewayService.GetRecordsAsync(personalToken);
-        return (player, [.. records.ConvertAll<CommonRecord>(_ => _)]);
+        Task<Player> playerTask = LxnsGatewayService.GetPlayerByPersonalTokenAsync(devToken, personalToken);
+        Task<List<Record>> recordsTask = LxnsGatewayService.GetRecordsAsync(personalToken);
+        await Task.WhenAll(playerTask, recordsTask);
+
+        Player player = await playerTask;
+        List<Record> records = await recordsTask;
+        return (player, [.. records.Select(x => (CommonRecord)x)]);
     }
 
     private static async Task<(CommonUser, ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>, int, int)>
@@ -40,9 +45,9 @@ public partial class BestsService
 
         CommonUser user = player;
 
-        ImmutableArray<CommonRecord> bestEver = [.. bests.Ever.ConvertAll<CommonRecord>(_ => _).SortRecordForBests()];
+        ImmutableArray<CommonRecord> bestEver = [.. bests.Ever.Select(x => (CommonRecord)x).SortRecordForBests()];
         ImmutableArray<CommonRecord> bestCurrent =
-            [.. bests.Current.ConvertAll<CommonRecord>(_ => _).SortRecordForBests()];
+            [.. bests.Current.Select(x => (CommonRecord)x).SortRecordForBests()];
         await PrepareDataAsync(user, bestEver, bestCurrent);
 
         return (user, bestEver, bestCurrent, bests.EverTotal, bests.CurrentTotal);
@@ -53,39 +58,24 @@ public partial class BestsService
     {
         LxnsResourceClient resource = new();
         SongData songData = await resource.GetSongsAsync(includeNotes: true);
-        List<CommonRecord> allRecords = [];
-        foreach (Song song in songData.Songs)
-        {
-            foreach (Chart chart in song.Charts.Standard.Concat(song.Charts.DX))
+        CommonRecord[] allRecords = songData.Songs.AsParallel().SelectMany(song => song.Charts.Standard
+            .Concat(song.Charts.DX).Where(chart => chart.Notes is not null).Select(chart => (CommonRecord)new Record
             {
-                if (chart.Notes is null)
-                {
-                    continue;
-                }
-
-                allRecords.Add(new Record
-                {
-                    Achievements = 101,
-                    Difficulty = chart.Difficulty,
-                    Id = song.Id,
-                    DXScore = chart.Notes.Total * 3,
-                    DXScoreRank = 5,
-                    Level = chart.Level,
-                    Title = song.Title,
-                    Type = chart.Type,
-                    ComboFlag = ComboFlags.AllPerfectPlus,
-                    DXRating = (int)(chart.LevelValue * 22.512),
-                    Rank = Ranks.SSSPlus,
-                    SyncFlag = SyncFlags.FullSyncDXPlus
-                });
-            }
-        }
-
-        IEnumerable<CommonRecord> sortedRecords = allRecords.SortRecordForBests();
-        ImmutableArray<CommonRecord> bestEver =
-            [.. sortedRecords.Where(record => !record.Chart.Song.InCurrentGenre).Take(35)];
-        ImmutableArray<CommonRecord> bestCurrent =
-            [.. sortedRecords.Where(record => record.Chart.Song.InCurrentGenre).Take(15)];
+                Achievements = 101,
+                Difficulty = chart.Difficulty,
+                Id = song.Id,
+                DXScore = chart.Notes!.Total * 3,
+                DXScoreRank = 5,
+                Level = chart.Level,
+                Title = song.Title,
+                Type = chart.Type,
+                ComboFlag = ComboFlags.AllPerfectPlus,
+                DXRating = (int)(chart.LevelValue * 22.512),
+                Rank = Ranks.SSSPlus,
+                SyncFlag = SyncFlags.FullSyncDXPlus
+            })).ToArray();
+        (ImmutableArray<CommonRecord> bestEver, ImmutableArray<CommonRecord> bestCurrent) =
+            allRecords.SplitTopBestsByQuota(35, 15);
         int everTotal = bestEver.Sum(x => x.DXRating);
         int currentTotal = bestCurrent.Sum(x => x.DXRating);
         CommonUser user = new()
@@ -108,26 +98,27 @@ public partial class BestsService
     public override async Task GetFromLxns(LxnsBestsRequest request, IServerStreamWriter<ImageResponse> responseStream,
         ServerCallContext context)
     {
+        FrozenSet<string> requestTags = request.Tags.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         CommonUser user;
         CommonUser? user2p = null;
         ImmutableArray<CommonRecord> bestEver;
         ImmutableArray<CommonRecord> bestCurrent;
         int everTotal;
         int currentTotal;
-        if (ScoreProcesserHelper.GetProcesserByTags(request.Tags) is not null)
+        if (ScoreProcesserHelper.GetProcesserByTags(requestTags) is not null)
         {
             (user, ImmutableArray<CommonRecord> records) =
                 await PrepareLxnsRecordsForProcessAsync(request.DevToken, request.PersonalToken);
-            (bestEver, bestCurrent, everTotal, currentTotal, user2p) = await ProcessBestsByTagsAsync(request.Tags,
+            (bestEver, bestCurrent, everTotal, currentTotal, user2p) = await ProcessBestsByTagsAsync(requestTags,
                 request.Condition, records,
                 async condition => await PrepareLxnsRecordsForProcessAsync(request.DevToken, condition));
         }
-        else if (request.Tags.Contains("common"))
+        else if (requestTags.Contains("common"))
         {
             (user, bestEver, bestCurrent, everTotal, currentTotal) =
                 await PrepareLxnsDataAsync(request.DevToken, request.Qq, request.PersonalToken);
         }
-        else if (request.Tags.Contains("riren"))
+        else if (requestTags.Contains("riren"))
         {
             (user, bestEver, bestCurrent, everTotal, currentTotal) = await PrepareRiRenLxnsDataAsync();
         }
@@ -137,7 +128,7 @@ public partial class BestsService
         }
 
         using Image bestsImage = await new Drawer().DrawBestsAsync(user, bestEver, bestCurrent, everTotal, currentTotal,
-            request.Condition, "lxns", request.Tags);
+            request.Condition, "lxns", requestTags);
 
         await responseStream.WriteToResponseAsync(bestsImage);
     }

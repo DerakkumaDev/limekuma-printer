@@ -8,52 +8,25 @@ internal static class ScoreProcesserHelper
 {
     private static readonly FrozenDictionary<string, SelectedProcesser> Processers = BuildProcessers();
 
-    internal static SelectedProcesser? GetProcesserByTags(IEnumerable<string>? tags)
-    {
-        if (tags is null)
+    internal static SelectedProcesser? GetProcesserByTags(IEnumerable<string>? tags) => tags
+        ?.Select(tag => Processers.GetValueOrDefault(tag)).FirstOrDefault(processer => processer is not null);
+
+    private static FrozenDictionary<string, SelectedProcesser> BuildProcessers() => typeof(IScoreProcesser).Assembly
+        .GetTypes().Where(type =>
+            type is { IsInterface: false, IsAbstract: false } && typeof(IScoreProcesser).IsAssignableFrom(type))
+        .Select(type => new
         {
-            return null;
-        }
-
-        foreach (string tag in tags)
+            Type = type,
+            Attribute = type.GetCustomAttribute<ScoreProcesserTagAttribute>()
+        }).Where(x => !string.IsNullOrWhiteSpace(x.Attribute?.Tag)).Select(x => new
         {
-            if (Processers.TryGetValue(tag, out SelectedProcesser? processer))
-            {
-                return processer;
-            }
-        }
-
-        return null;
-    }
-
-    private static FrozenDictionary<string, SelectedProcesser> BuildProcessers()
-    {
-        Dictionary<string, SelectedProcesser> processers = new(StringComparer.OrdinalIgnoreCase);
-
-        IEnumerable<Type> processerTypes = typeof(IScoreProcesser).Assembly.GetTypes().Where(type =>
-            type is { IsInterface: false, IsAbstract: false } && typeof(IScoreProcesser).IsAssignableFrom(type));
-
-        foreach (Type type in processerTypes)
-        {
-            if (Activator.CreateInstance(type) is not IScoreProcesser processer)
-            {
-                continue;
-            }
-
-            ScoreProcesserTagAttribute? tagAttribute = type.GetCustomAttribute<ScoreProcesserTagAttribute>();
-            string? tag = tagAttribute?.Tag;
-
-            if (string.IsNullOrWhiteSpace(tag))
-            {
-                continue;
-            }
-
-            processers[tag] = new(processer, tagAttribute?.MaskMutex ?? false,
-                tagAttribute?.RequireSecondData ?? false);
-        }
-
-        return processers.ToFrozenDictionary();
-    }
+            x.Attribute!.Tag,
+            Processer = Activator.CreateInstance(x.Type) as IScoreProcesser,
+            x.Attribute.MaskMutex,
+            x.Attribute.RequireSecondData
+        }).Where(x => x.Processer is not null).ToFrozenDictionary(x => x.Tag!,
+            x => new SelectedProcesser(x.Processer!, x.MaskMutex, x.RequireSecondData),
+            StringComparer.OrdinalIgnoreCase);
 
     internal sealed record SelectedProcesser(IScoreProcesser Processer, bool MaskMutex, bool RequireSecondData);
 }

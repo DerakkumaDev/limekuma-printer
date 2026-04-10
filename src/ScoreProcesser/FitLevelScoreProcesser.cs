@@ -17,21 +17,19 @@ public sealed class FitLevelScoreProcesser : IScoreProcesser
             throw new RpcException(new(StatusCode.PermissionDenied, "Mask enabled"));
         }
 
-        ImmutableArray<CommonRecord>.Builder ever = ImmutableArray.CreateBuilder<CommonRecord>(35);
-        ImmutableArray<CommonRecord>.Builder current = ImmutableArray.CreateBuilder<CommonRecord>(15);
-        foreach (CommonRecord record in records.SortRecordForBests())
+        CommonRecord[] projectedRecords = records.AsParallel().Select(record =>
         {
             double fitLevel = record.Chart.LevelValue;
-            if (Status.Shared.ChartStatus.TryGetValue(record.Chart.Song.Id.ToString(),
-                    out List<ChartState>? chartState))
+            if (Status.Shared.TryGetChartState(record.Chart.Song.Id, (int)record.Chart.Difficulty - 1,
+                    out ChartState chartState))
             {
-                fitLevel = chartState[(int)record.Chart.Difficulty - 1].FitLevel;
+                fitLevel = chartState.FitLevel;
             }
 
-            (_, float coefficient, _) = ConstantMap.RatingMap[record.Rank];
+            (_, float coefficient, _) = ConstantMap.GetRatingFactors(record.Rank);
             int rating = (int)(fitLevel * (record.Achievements > 100.5 ? 100.5 : record.Achievements) * coefficient);
             float level = (int)(fitLevel * 100) / 100f;
-            CommonRecord newRecord = new()
+            return (CommonRecord)new()
             {
                 Achievements = record.Achievements,
                 DXRating = rating,
@@ -51,19 +49,7 @@ public sealed class FitLevelScoreProcesser : IScoreProcesser
                 SyncFlag = record.SyncFlag,
                 ExtraInfo = (float)fitLevel
             };
-
-            (record.Chart.Song.InCurrentGenre switch
-            {
-                true => current,
-                false => ever
-            }).Add(newRecord);
-
-            if (ever.Count >= 35 && current.Count >= 15)
-            {
-                break;
-            }
-        }
-
-        return (ever.ToImmutable(), current.ToImmutable());
+        }).ToArray();
+        return projectedRecords.SplitTopBestsByQuota(35, 15);
     }
 }

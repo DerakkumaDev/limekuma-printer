@@ -132,20 +132,29 @@ public sealed partial class TemplateReader
     private async Task<Node> ParseForNodeAsync(XElement element, object? scope)
     {
         string itemsExpr = GetRequiredAttributeValue(element, "items");
-        IEnumerable<object> items = await EvaluateCollectionAsync(itemsExpr, scope);
+        object[] items = [.. await EvaluateCollectionAsync(itemsExpr, scope)];
 
         string varName = GetAttributeValueOrDefault(element, "var", "item");
         string indexName = GetAttributeValueOrDefault(element, "indexVar", "idx");
-        List<Node> children = [];
-        int index = 0;
-
-        foreach (object item in items)
+        bool hasInclude = element.Descendants().Any(x => x.Name.LocalName.Equals("Include", StringComparison.Ordinal));
+        if (hasInclude)
         {
-            Dictionary<string, object?> childScope = MergeScope(scope, varName, item, indexName, index);
-            children.AddRange(await ParseChildrenAsync(element, childScope));
-            index++;
+            List<Node> sequentialChildren = [];
+            for (int index = 0; index < items.Length; index++)
+            {
+                Dictionary<string, object?> childScope = MergeScope(scope, varName, items[index], indexName, index);
+                sequentialChildren.AddRange(await ParseChildrenAsync(element, childScope));
+            }
+
+            return new LayerNode(1f, sequentialChildren, null);
         }
 
+        Task<List<Node>>[] parseTasks =
+        [
+            .. items.Select((item, index) =>
+                ParseChildrenAsync(element, MergeScope(scope, varName, item, indexName, index)))
+        ];
+        List<Node> children = [.. (await Task.WhenAll(parseTasks)).SelectMany(x => x)];
         return new LayerNode(1f, children, null);
     }
 
@@ -190,7 +199,7 @@ public sealed partial class TemplateReader
         }
 
         string currentBaseDir = _baseDirs.Peek();
-        string rootBaseDir = _baseDirs.ToArray()[^1];
+        string rootBaseDir = _rootBaseDir ?? currentBaseDir;
         string currentPath = _loadingPathStack.Count > 0 ? _loadingPathStack.Peek() : currentBaseDir;
         string candidatePath =
             Path.IsPathRooted(relativePath) ? relativePath : Path.Combine(currentBaseDir, relativePath);
@@ -388,7 +397,7 @@ public sealed partial class TemplateReader
     private static Dictionary<string, object?> MergeScope(object? parent, string variableName, object item,
         string indexName, int index)
     {
-        Dictionary<string, object?> result = new(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, object?> result = CreateScopeDictionary(parent, 2);
         CopyParentScope(parent, result);
 
         result[variableName] = item;
@@ -398,27 +407,46 @@ public sealed partial class TemplateReader
 
     private static Dictionary<string, object?> MergeScope(object? parent, string variableName, object? value)
     {
-        Dictionary<string, object?> result = new(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, object?> result = CreateScopeDictionary(parent, 1);
         CopyParentScope(parent, result);
 
         result[variableName] = value;
         return result;
     }
 
+    private static Dictionary<string, object?> CreateScopeDictionary(object? parent, int extraEntries)
+    {
+        int capacity = GetScopeEntryCount(parent) + extraEntries;
+        return new(capacity, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static int GetScopeEntryCount(object? parent) => parent switch
+    {
+        IDictionary<string, object?> dictionaryValues => dictionaryValues.Count,
+        IDictionary dictionary => dictionary.Count,
+        _ => 0
+    };
+
     private static void CopyParentScope(object? parent, Dictionary<string, object?> target)
     {
+        if (parent is IDictionary<string, object?> dictionaryValues)
+        {
+            foreach ((string key, object? value) in dictionaryValues)
+            {
+                target[key] = value;
+            }
+
+            return;
+        }
+
         if (parent is not IDictionary dictionary)
         {
             return;
         }
 
-        foreach (DictionaryEntry entry in dictionary)
+        foreach (DictionaryEntry entry in dictionary.OfType<DictionaryEntry>().Where(entry => entry.Key is string))
         {
-            if (entry.Key is not string key)
-            {
-                continue;
-            }
-
+            string key = (string)entry.Key;
             target[key] = entry.Value;
         }
     }

@@ -6,6 +6,7 @@ namespace Limekuma.Prober.Lxns.Models;
 
 public record Player
 {
+    [JsonIgnore]
     public LxnsDeveloperClient? Client { get; internal set; }
 
     [JsonPropertyName("name")]

@@ -1,5 +1,6 @@
 using Limekuma.Prober.Common;
 using Limekuma.Prober.DivingFish.Models;
+using Limekuma.Utils;
 using System.Collections.Immutable;
 
 namespace Limekuma.ScoreProcesser;
@@ -9,36 +10,22 @@ public sealed class StdDevScoreProcesser : IScoreProcesser
 {
     public (ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>) Process(IReadOnlyList<CommonRecord> records)
     {
-        ImmutableArray<CommonRecord>.Builder ever = ImmutableArray.CreateBuilder<CommonRecord>(35);
-        ImmutableArray<CommonRecord>.Builder current = ImmutableArray.CreateBuilder<CommonRecord>(15);
-        foreach (CommonRecord record in records.OrderByDescending(x =>
-                 {
-                     double stdDev = 0;
-                     double fitLevel = x.Chart.LevelValue;
-                     if (Status.Shared.ChartStatus.TryGetValue(x.Chart.Song.Id.ToString(),
-                             out List<ChartState>? chartState))
-                     {
-                         ChartState chart = chartState[(int)x.Chart.Difficulty - 1];
-                         stdDev = chart.StandardDeviation;
-                         fitLevel = chart.FitLevel;
-                     }
-
-                     x.ExtraInfo = (float)stdDev;
-                     return x.DXRating * (1 + stdDev / 10) * (1 + fitLevel / (fitLevel > 0 ? 10 : 1));
-                 }).ThenByDescending(x => x.Chart.LevelValue).ThenByDescending(x => x.Achievements))
-        {
-            (record.Chart.Song.InCurrentGenre switch
+        CommonRecord[] rankedRecords = records.AsParallel().Select(record =>
             {
-                true => current,
-                false => ever
-            }).Add(record);
+                double stdDev = 0;
+                double fitLevel = record.Chart.LevelValue;
+                if (Status.Shared.TryGetChartState(record.Chart.Song.Id, (int)record.Chart.Difficulty - 1,
+                        out ChartState? chartState))
+                {
+                    stdDev = chartState.StandardDeviation;
+                    fitLevel = chartState.FitLevel;
+                }
 
-            if (ever.Count >= 35 && current.Count >= 15)
-            {
-                break;
-            }
-        }
-
-        return (ever.ToImmutable(), current.ToImmutable());
+                record.ExtraInfo = (float)stdDev;
+                double score = record.DXRating * (1 + stdDev / 10) * (1 + fitLevel / (fitLevel > 0 ? 10 : 1));
+                return (Record: record, Score: score);
+            }).OrderByDescending(x => x.Score).ThenByDescending(x => x.Record.Chart.LevelValue)
+            .ThenByDescending(x => x.Record.Achievements).Select(x => x.Record).ToArray();
+        return rankedRecords.SplitTopBestsByQuota(35, 15);
     }
 }

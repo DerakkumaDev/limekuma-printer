@@ -1,6 +1,7 @@
 using Limekuma.Render.ExpressionEngine;
 using Limekuma.Render.Nodes;
 using SmartFormat;
+using System.Collections.Frozen;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
@@ -9,6 +10,10 @@ namespace Limekuma.Render;
 public sealed partial class TemplateReader
 {
     private static readonly SmartFormatter Formatter = Smart.CreateDefaultSmartFormat();
+
+    private static readonly FrozenDictionary<string, Func<TemplateReader, XElement, object?, Task<Node>>> NodeParsers =
+        CreateNodeParsers();
+
     private readonly Stack<string> _baseDirs = new();
     private readonly AsyncNCalcEngine _expressionEngine;
 
@@ -16,32 +21,28 @@ public sealed partial class TemplateReader
         new(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 
     private readonly Stack<string> _loadingPathStack = new();
-    private readonly Dictionary<string, Func<XElement, object?, Task<Node>>> _nodeParsers;
+    private string? _rootBaseDir;
 
-    public TemplateReader(AsyncNCalcEngine expressionEngine)
-    {
-        _expressionEngine = expressionEngine;
-        _nodeParsers = CreateNodeParsers();
-    }
+    public TemplateReader(AsyncNCalcEngine expressionEngine) => _expressionEngine = expressionEngine;
 
-    private Dictionary<string, Func<XElement, object?, Task<Node>>> CreateNodeParsers() =>
-        new(StringComparer.Ordinal)
+    private static FrozenDictionary<string, Func<TemplateReader, XElement, object?, Task<Node>>> CreateNodeParsers() =>
+        new Dictionary<string, Func<TemplateReader, XElement, object?, Task<Node>>>(StringComparer.Ordinal)
         {
-            ["Canvas"] = ParseCanvasNodeAsync,
-            ["Layer"] = ParseLayerNodeAsync,
-            ["Positioned"] = ParsePositionedNodeAsync,
-            ["Resized"] = ParseResizedNodeAsync,
-            ["Stack"] = ParseStackNodeAsync,
-            ["Grid"] = ParseGridNodeAsync,
-            ["Image"] = ParseImageNodeAsync,
-            ["Text"] = ParseTextNodeAsync,
-            ["Set"] = ParseSetNodeAsync,
-            ["If"] = ParseIfNodeAsync,
-            ["ElseIf"] = ParseElseIfNodeAsync,
-            ["Else"] = ParseElseNodeAsync,
-            ["For"] = ParseForNodeAsync,
-            ["Include"] = ParseIncludeNodeAsync
-        };
+            ["Canvas"] = static (reader, element, scope) => reader.ParseCanvasNodeAsync(element, scope),
+            ["Layer"] = static (reader, element, scope) => reader.ParseLayerNodeAsync(element, scope),
+            ["Positioned"] = static (reader, element, scope) => reader.ParsePositionedNodeAsync(element, scope),
+            ["Resized"] = static (reader, element, scope) => reader.ParseResizedNodeAsync(element, scope),
+            ["Stack"] = static (reader, element, scope) => reader.ParseStackNodeAsync(element, scope),
+            ["Grid"] = static (reader, element, scope) => reader.ParseGridNodeAsync(element, scope),
+            ["Image"] = static (reader, element, scope) => reader.ParseImageNodeAsync(element, scope),
+            ["Text"] = static (reader, element, scope) => reader.ParseTextNodeAsync(element, scope),
+            ["Set"] = static (reader, element, scope) => reader.ParseSetNodeAsync(element, scope),
+            ["If"] = static (reader, element, scope) => reader.ParseIfNodeAsync(element, scope),
+            ["ElseIf"] = static (reader, element, scope) => reader.ParseElseIfNodeAsync(element, scope),
+            ["Else"] = static (reader, element, scope) => reader.ParseElseNodeAsync(element, scope),
+            ["For"] = static (reader, element, scope) => reader.ParseForNodeAsync(element, scope),
+            ["Include"] = static (reader, element, scope) => reader.ParseIncludeNodeAsync(element, scope)
+        }.ToFrozenDictionary(StringComparer.Ordinal);
 
     public async Task<Node> LoadAsync(string xmlPath, object? scope)
     {
@@ -95,9 +96,14 @@ public sealed partial class TemplateReader
     private async Task<T> ExecuteInBaseDirAsync<T>(string path, Func<Task<T>> action)
     {
         string? baseDir = Path.GetDirectoryName(Path.GetFullPath(path));
+        bool pushRoot = !string.IsNullOrWhiteSpace(baseDir) && _baseDirs.Count is 0;
         if (!string.IsNullOrWhiteSpace(baseDir))
         {
             _baseDirs.Push(baseDir);
+            if (pushRoot)
+            {
+                _rootBaseDir = baseDir;
+            }
         }
 
         try
@@ -109,19 +115,24 @@ public sealed partial class TemplateReader
             if (!string.IsNullOrWhiteSpace(baseDir))
             {
                 _baseDirs.Pop();
+                if (pushRoot)
+                {
+                    _rootBaseDir = null;
+                }
             }
         }
     }
 
     private async Task<Node> ParseElementAsync(XElement element, object? scope)
     {
-        if (!_nodeParsers.TryGetValue(element.Name.LocalName, out Func<XElement, object?, Task<Node>>? parser))
+        if (!NodeParsers.TryGetValue(element.Name.LocalName,
+                out Func<TemplateReader, XElement, object?, Task<Node>>? parser))
         {
             throw new InvalidOperationException(
                 $"DSL[UnknownTag] Unknown tag. Context: tag='{element.Name.LocalName}'");
         }
 
-        return await parser(element, scope);
+        return await parser(this, element, scope);
     }
 
     private static string GetRequiredAttributeValue(XElement element, string name) => element.Attribute(name)?.Value ??
@@ -135,9 +146,9 @@ public sealed partial class TemplateReader
     {
         string fullPath = Path.GetFullPath(path);
         string? root = rootPath;
-        if (string.IsNullOrWhiteSpace(root) && _baseDirs.Count > 0)
+        if (string.IsNullOrWhiteSpace(root) && !string.IsNullOrWhiteSpace(_rootBaseDir))
         {
-            root = _baseDirs.ToArray()[^1];
+            root = _rootBaseDir;
         }
 
         if (string.IsNullOrWhiteSpace(root))

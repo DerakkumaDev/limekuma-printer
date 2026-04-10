@@ -2,6 +2,8 @@ using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SmartFormat;
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
+using System.Collections.Immutable;
 using System.Xml.Linq;
 
 namespace Limekuma.Render;
@@ -10,8 +12,9 @@ public sealed class AssetProvider
 {
     private readonly ConcurrentDictionary<string, Image> _assets;
     private readonly ConcurrentDictionary<string, LoadedFont> _fontCache;
-    private readonly Dictionary<string, (string, List<string>?)> _fontRules;
-    private readonly Dictionary<string, (string, string?)> _pathRules;
+    private readonly ConcurrentDictionary<string, ImmutableArray<FontFamily>> _fontFallbackCache;
+    private readonly FrozenDictionary<string, (string, ImmutableArray<string>)> _fontRules;
+    private readonly FrozenDictionary<string, (string, string?)> _pathRules;
 
     static AssetProvider() => Shared = new();
 
@@ -21,11 +24,10 @@ public sealed class AssetProvider
 
     public AssetProvider(string resourcePath)
     {
-        _fontRules = [];
-        _pathRules = [];
         _assets = [];
         _fontCache = [];
-        LoadResources(resourcePath);
+        _fontFallbackCache = [];
+        (_pathRules, _fontRules) = LoadResources(resourcePath);
     }
 
     public static AssetProvider Shared { get; }
@@ -36,21 +38,22 @@ public sealed class AssetProvider
         return LoadImage(path);
     }
 
-    public (FontFamily, List<FontFamily>) ResolveFont(string key)
+    public (FontFamily, ImmutableArray<FontFamily>) ResolveFont(string key)
     {
-        if (!_fontRules.TryGetValue(key, out (string, List<string>?) font))
+        if (!_fontRules.TryGetValue(key, out (string, ImmutableArray<string>) font))
         {
             throw new FontFamilyNotFoundException(key);
         }
 
-        (string mainFontName, List<string>? fallbackNames) = font;
+        (string mainFontName, ImmutableArray<string> fallbackNames) = font;
         FontFamily mainFont = LoadFont(mainFontName);
-        if (fallbackNames is null)
+        if (fallbackNames.IsDefaultOrEmpty)
         {
             return (mainFont, []);
         }
 
-        List<FontFamily> fallbacks = [.. fallbackNames.Select(LoadFont)];
+        ImmutableArray<FontFamily> fallbacks =
+            _fontFallbackCache.GetOrAdd(key, _ => [.. fallbackNames.Select(LoadFont)]);
         return (mainFont, fallbacks);
     }
 
@@ -65,67 +68,46 @@ public sealed class AssetProvider
         return path;
     }
 
-    private void LoadResources(string resourcePath)
+    private static (FrozenDictionary<string, (string, string?)>,
+        FrozenDictionary<string, (string, ImmutableArray<string>)>) LoadResources(string resourcePath)
     {
         XDocument doc = XDocument.Load(resourcePath);
         XElement? resources = doc.Element("Resources");
         if (resources is null)
         {
-            return;
+            return (FrozenDictionary<string, (string, string?)>.Empty,
+                FrozenDictionary<string, (string, ImmutableArray<string>)>.Empty);
         }
 
-        LoadPathRules(resources);
-        LoadFontRules(resources);
+        return (LoadPathRules(resources), LoadFontRules(resources));
     }
 
-    private void LoadPathRules(XElement resourcesNode)
-    {
-        foreach (XElement node in resourcesNode.Elements("Path"))
+    private static FrozenDictionary<string, (string, string?)> LoadPathRules(XElement resourcesNode) => resourcesNode
+        .Elements("Path").Select(node => new
         {
-            string? ns = node.Attribute("namespace")?.Value;
-            string path = node.Value;
-            if (string.IsNullOrEmpty(ns))
+            Namespace = node.Attribute("namespace")?.Value,
+            Path = node.Value,
+            Rule = node.Attribute("rule")?.Value
+        }).Where(x => !string.IsNullOrEmpty(x.Namespace) && !string.IsNullOrEmpty(x.Path))
+        .ToFrozenDictionary(x => x.Namespace!, x => (x.Path, x.Rule));
+
+    private static FrozenDictionary<string, (string, ImmutableArray<string>)> LoadFontRules(XElement resourcesNode) =>
+        resourcesNode.Elements("FontFamily").Select(node =>
             {
-                continue;
-            }
-
-            if (string.IsNullOrEmpty(path))
-            {
-                continue;
-            }
-
-            _pathRules[ns] = new(path, node.Attribute("rule")?.Value);
-        }
-    }
-
-    private void LoadFontRules(XElement resourcesNode)
-    {
-        foreach (XElement node in resourcesNode.Elements("FontFamily"))
-        {
-            string? ns = node.Attribute("namespace")?.Value;
-            string? fontPath = node.Element("Font")?.Value;
-            if (string.IsNullOrEmpty(ns))
-            {
-                continue;
-            }
-
-            if (string.IsNullOrEmpty(fontPath))
-            {
-                continue;
-            }
-
-            XElement? fallbacks = node.Element("Fallbacks");
-            if (fallbacks is null)
-            {
-                _fontRules[ns] = new(fontPath, null);
-                continue;
-            }
-
-            List<string> fallbackPaths =
-                [.. fallbacks.Elements("Font").Select(e => e.Value).Where(p => !string.IsNullOrEmpty(p))];
-            _fontRules[ns] = new(fontPath, fallbackPaths);
-        }
-    }
+                string? fontPath = node.Element("Font")?.Value;
+                ImmutableArray<string> fallbackPaths =
+                [
+                    .. node.Element("Fallbacks")?.Elements("Font").Select(e => e.Value)
+                        .Where(p => !string.IsNullOrEmpty(p)) ?? []
+                ];
+                return new
+                {
+                    Namespace = node.Attribute("namespace")?.Value,
+                    FontPath = fontPath,
+                    Fallbacks = fallbackPaths
+                };
+            }).Where(x => !string.IsNullOrEmpty(x.Namespace) && !string.IsNullOrEmpty(x.FontPath))
+            .ToFrozenDictionary(x => x.Namespace!, x => (x.FontPath!, x.Fallbacks));
 
     private string ResolveResourcePath(string ns, string key)
     {

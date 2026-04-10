@@ -8,16 +8,14 @@ namespace Limekuma.Services;
 public sealed partial class BestsService : BestsApi.BestsApiBase
 {
     private static async Task PrepareDataAsync(CommonUser user, IReadOnlyList<CommonRecord> bestsEver,
-        IReadOnlyList<CommonRecord> bestsCurrent)
-    {
-        await ServiceHelper.PrepareUserDataAsync(user);
-        await ServiceHelper.PrepareRecordDataAsync(bestsEver);
-        await ServiceHelper.PrepareRecordDataAsync(bestsCurrent);
-    }
+        IReadOnlyList<CommonRecord> bestsCurrent) => await Task.WhenAll(
+        ServiceHelper.PrepareUserDataAsync(user),
+        ServiceHelper.PrepareRecordDataAsync(bestsEver),
+        ServiceHelper.PrepareRecordDataAsync(bestsCurrent));
 
     private static async
         Task<(ImmutableArray<CommonRecord> BestEver, ImmutableArray<CommonRecord> BestCurrent, int EverTotal, int
-            CurrentTotal, CommonUser?)> ProcessBestsByTagsAsync(IReadOnlyList<string> tags, string condition,
+            CurrentTotal, CommonUser?)> ProcessBestsByTagsAsync(IEnumerable<string> tags, string condition,
             ImmutableArray<CommonRecord> records,
             Func<string, Task<(CommonUser, ImmutableArray<CommonRecord>)>> secondDataProvider)
     {

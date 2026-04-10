@@ -3,13 +3,15 @@ using Limekuma.Render.Types;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
+using System.Collections.Concurrent;
+using System.Collections.Immutable;
 
 namespace Limekuma.Render;
 
 public static partial class NodeRenderer
 {
     private static Size Measure(Node node, AssetProvider assets, AssetProvider measurer,
-        Dictionary<Node, Size> measurementCache)
+        ConcurrentDictionary<Node, Size> measurementCache)
     {
         if (measurementCache.TryGetValue(node, out Size cached))
         {
@@ -28,8 +30,7 @@ public static partial class NodeRenderer
             CanvasNode canvas => new(canvas.Width, canvas.Height),
             _ => Size.Empty
         };
-        measurementCache[node] = measured;
-        return measured;
+        return measurementCache.GetOrAdd(node, measured);
     }
 
     private static Size MeasureImageNode(ImageNode image, AssetProvider assets)
@@ -40,7 +41,7 @@ public static partial class NodeRenderer
 
     private static Size MeasureTextNode(TextNode text, AssetProvider measurer)
     {
-        (FontFamily mainFont, List<FontFamily> fallbacks) = measurer.ResolveFont(text.FontFamily);
+        (FontFamily mainFont, ImmutableArray<FontFamily> fallbacks) = measurer.ResolveFont(text.FontFamily);
         float scaledFontSize = text.FontSize * 72 / 300;
         Font font = new(mainFont, scaledFontSize);
         RichTextOptions options = new(font)
@@ -65,7 +66,7 @@ public static partial class NodeRenderer
     }
 
     private static Size MeasureResizedNode(ResizedNode resized, AssetProvider assets, AssetProvider measurer,
-        Dictionary<Node, Size> measurementCache)
+        ConcurrentDictionary<Node, Size> measurementCache)
     {
         Size baseSize = Measure(resized.Child, assets, measurer, measurementCache);
         int width = resized.Width ?? baseSize.Width;
@@ -76,11 +77,19 @@ public static partial class NodeRenderer
     }
 
     private static Size MeasureStackNode(StackNode stack, AssetProvider assets, AssetProvider measurer,
-        Dictionary<Node, Size> measurementCache)
+        ConcurrentDictionary<Node, Size> measurementCache)
     {
         List<Node> flowChildren = ExpandFlowChildren(stack.Children);
-        List<(Node Node, Size Size)> items =
-            [.. flowChildren.Select(c => (c, Measure(c, assets, measurer, measurementCache)))];
+        List<(Node Node, Size Size)> items = [];
+        if (flowChildren.Count > 0)
+        {
+            Size[] sizes = new Size[flowChildren.Count];
+            Parallel.For(0, flowChildren.Count,
+                i => { sizes[i] = Measure(flowChildren[i], assets, measurer, measurementCache); });
+            items.EnsureCapacity(flowChildren.Count);
+            items.AddRange(flowChildren.Select((t, i) => (t, sizes[i])));
+        }
+
         bool isRow = stack.Direction is StackDirection.Row;
         float wrapMain = ResolveMainAxisContainerSize(isRow ? stack.Width : stack.Height, null, int.MaxValue);
         List<List<(Node Node, Size Size)>> lines = ResolveStackLines(items, isRow, stack.Wrap, stack.Spacing, wrapMain);
@@ -93,7 +102,7 @@ public static partial class NodeRenderer
     }
 
     private static Size MeasureGridNode(GridNode grid, AssetProvider assets, AssetProvider measurer,
-        Dictionary<Node, Size> measurementCache)
+        ConcurrentDictionary<Node, Size> measurementCache)
     {
         List<Node> flowChildren = ExpandFlowChildren(grid.Children);
         if (flowChildren.Count is 0)
@@ -103,11 +112,14 @@ public static partial class NodeRenderer
 
         int columns = Math.Max(1, grid.Columns);
         int rows = (int)Math.Ceiling(flowChildren.Count / (double)columns);
+        Size[] sizes = new Size[flowChildren.Count];
+        Parallel.For(0, flowChildren.Count,
+            i => { sizes[i] = Measure(flowChildren[i], assets, measurer, measurementCache); });
         int[] colWidths = new int[columns];
         int[] rowHeights = new int[rows];
         for (int i = 0; i < flowChildren.Count; i++)
         {
-            Size size = Measure(flowChildren[i], assets, measurer, measurementCache);
+            Size size = sizes[i];
             int r = i / columns;
             int c = i % columns;
             colWidths[c] = Math.Max(colWidths[c], size.Width);
@@ -120,7 +132,7 @@ public static partial class NodeRenderer
     }
 
     private static Size MeasurePositionedNode(PositionedNode pos, AssetProvider assets, AssetProvider measurer,
-        Dictionary<Node, Size> measurementCache)
+        ConcurrentDictionary<Node, Size> measurementCache)
     {
         Size contentSize = MeasureChildren(pos.Children, assets, measurer, measurementCache);
         int width = Math.Max(pos.Width ?? 0, contentSize.Width);
@@ -129,10 +141,11 @@ public static partial class NodeRenderer
     }
 
     private static Size MeasureLayerNode(LayerNode layer, AssetProvider assets, AssetProvider measurer,
-        Dictionary<Node, Size> measurementCache) => MeasureChildren(layer.Children, assets, measurer, measurementCache);
+        ConcurrentDictionary<Node, Size> measurementCache) =>
+        MeasureChildren(layer.Children, assets, measurer, measurementCache);
 
     private static Size MeasureChildren(IEnumerable<Node> children, AssetProvider assets, AssetProvider measurer,
-        Dictionary<Node, Size> measurementCache)
+        ConcurrentDictionary<Node, Size> measurementCache)
     {
         int width = 0;
         int height = 0;

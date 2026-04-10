@@ -20,7 +20,7 @@ public partial class ListService
         user.IconId = request.Icon;
 
         (ImmutableArray<CommonRecord> records, bool mayMask) = BuildListRecords(request.Tags, request.Condition,
-            player.Records.ConvertAll<CommonRecord>(_ => _));
+            player.Records.Select(x => (CommonRecord)x));
 
         (ImmutableArray<int> counts, int startIndex, int endIndex) =
             await PrepareDataAsync(user, records, request.Page);

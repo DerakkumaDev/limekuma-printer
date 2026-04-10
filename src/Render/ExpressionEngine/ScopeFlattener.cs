@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Reflection;
 
@@ -6,6 +8,9 @@ namespace Limekuma.Render.ExpressionEngine;
 
 internal static class ScopeFlattener
 {
+    private static readonly ConcurrentDictionary<Type, ImmutableArray<PropertyInfo>> PropertyCache = new();
+    private static readonly ConcurrentDictionary<Type, bool> LeafTypeCache = new();
+
     public static Dictionary<string, object?> Flatten(object? scope)
     {
         Dictionary<string, object?> result = new(StringComparer.OrdinalIgnoreCase);
@@ -41,13 +46,19 @@ internal static class ScopeFlattener
         }
 
         Type type = value.GetType();
-        if (type.IsPrimitive)
+        if (IsLeafType(type))
         {
             return;
         }
 
-        if (value is string or decimal or DateTime or DateTimeOffset or TimeSpan or Guid or Enum)
+        if (value is IDictionary<string, object?> genericDictionary)
         {
+            foreach ((string key, object? entryValue) in genericDictionary)
+            {
+                string childPrefix = prefix.Length is 0 ? key : string.Concat(prefix, ".", key);
+                FlattenObject(output, childPrefix, entryValue, depth + 1);
+            }
+
             return;
         }
 
@@ -56,7 +67,7 @@ internal static class ScopeFlattener
             foreach (DictionaryEntry entry in dictionary)
             {
                 string key = Convert.ToString(entry.Key, CultureInfo.InvariantCulture) ?? string.Empty;
-                string childPrefix = string.IsNullOrEmpty(prefix) ? key : $"{prefix}.{key}";
+                string childPrefix = prefix.Length is 0 ? key : string.Concat(prefix, ".", key);
                 FlattenObject(output, childPrefix, entry.Value, depth + 1);
             }
 
@@ -68,22 +79,21 @@ internal static class ScopeFlattener
             return;
         }
 
-        PropertyInfo[] properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+        ImmutableArray<PropertyInfo> properties = PropertyCache.GetOrAdd(type,
+            static t =>
+            [
+                .. t.GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(property =>
+                    property.CanRead && property.GetIndexParameters().Length is 0)
+            ]);
         foreach (PropertyInfo property in properties)
         {
-            if (!property.CanRead)
-            {
-                continue;
-            }
-
-            if (property.GetIndexParameters().Length > 0)
-            {
-                continue;
-            }
-
             object? propertyValue = property.GetValue(value);
-            string childName = string.IsNullOrEmpty(prefix) ? property.Name : $"{prefix}.{property.Name}";
+            string childName = prefix.Length is 0 ? property.Name : string.Concat(prefix, ".", property.Name);
             FlattenObject(output, childName, propertyValue, depth + 1);
         }
     }
+
+    private static bool IsLeafType(Type type) => LeafTypeCache.GetOrAdd(type,
+        static t => t.IsPrimitive || t.IsEnum || t == typeof(string) || t == typeof(decimal) || t == typeof(DateTime) ||
+                    t == typeof(DateTimeOffset) || t == typeof(TimeSpan) || t == typeof(Guid));
 }

@@ -15,26 +15,13 @@ public sealed class DxScoreScoreProcesser : IScoreProcesser
             throw new RpcException(new(StatusCode.PermissionDenied, "Mask enabled"));
         }
 
-        ImmutableArray<CommonRecord>.Builder ever = ImmutableArray.CreateBuilder<CommonRecord>(35);
-        ImmutableArray<CommonRecord>.Builder current = ImmutableArray.CreateBuilder<CommonRecord>(15);
-        foreach (CommonRecord record in records.SortRecordForBests())
+        CommonRecord[] projectedRecords = records.AsParallel().Select(record =>
         {
             float achievements = (float)record.DXScore / record.Chart.TotalDXScore * 101;
-            Ranks rank = Ranks.D;
-            float coefficient = 0;
-            foreach ((Ranks rankKey, (float minAcc, float coefficientValue, _)) in ConstantMap.RatingMap)
-            {
-                if (record.Achievements < minAcc)
-                {
-                    continue;
-                }
-
-                rank = rankKey;
-                coefficient = coefficientValue;
-            }
+            (Ranks rank, float coefficient) = ConstantMap.ResolveRankAndCoefficient(achievements);
 
             int rating = (int)(record.Chart.LevelValue * achievements * coefficient);
-            CommonRecord newRecord = new()
+            return (CommonRecord)new()
             {
                 Achievements = achievements,
                 DXRating = rating,
@@ -45,19 +32,7 @@ public sealed class DxScoreScoreProcesser : IScoreProcesser
                 Rank = rank,
                 SyncFlag = record.SyncFlag
             };
-
-            (record.Chart.Song.InCurrentGenre switch
-            {
-                true => current,
-                false => ever
-            }).Add(newRecord);
-
-            if (ever.Count >= 35 && current.Count >= 15)
-            {
-                break;
-            }
-        }
-
-        return (ever.ToImmutable(), current.ToImmutable());
+        }).ToArray();
+        return projectedRecords.SplitTopBestsByQuota(35, 15);
     }
 }

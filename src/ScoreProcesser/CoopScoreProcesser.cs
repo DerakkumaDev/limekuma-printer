@@ -19,23 +19,6 @@ public sealed class CoopScoreProcesser : IScoreProcesser
             x.ExtraInfo = 1;
             return x;
         })).DistinctBy(x => (x.Chart.Song.Id, x.Chart.Difficulty));
-
-        ImmutableArray<CommonRecord>.Builder ever = ImmutableArray.CreateBuilder<CommonRecord>(35);
-        ImmutableArray<CommonRecord>.Builder current = ImmutableArray.CreateBuilder<CommonRecord>(15);
-        foreach (CommonRecord record in records.SortRecordForBests())
-        {
-            (record.Chart.Song.InCurrentGenre switch
-            {
-                true => current,
-                false => ever
-            }).Add(record);
-
-            if (ever.Count >= 35 && current.Count >= 15)
-            {
-                break;
-            }
-        }
-
-        return (ever.ToImmutable(), current.ToImmutable());
+        return records.SplitTopBestsByQuota(35, 15);
     }
 }

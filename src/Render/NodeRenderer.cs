@@ -5,6 +5,7 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
+using System.Collections.Concurrent;
 
 namespace Limekuma.Render;
 
@@ -13,7 +14,7 @@ public static partial class NodeRenderer
     public static Image Render(CanvasNode root, AssetProvider assets, AssetProvider measurer)
     {
         Image<Rgba32> canvas = new(root.Width, root.Height);
-        Dictionary<Node, Size> measurementCache = new(ReferenceEqualityComparer.Instance);
+        ConcurrentDictionary<Node, Size> measurementCache = new(ReferenceEqualityComparer.Instance);
         if (root.Background is { } bg)
         {
             canvas.Mutate(ctx => ctx.Fill(bg));
@@ -46,7 +47,7 @@ public static partial class NodeRenderer
 
     private static void RenderChildren(Image canvas, IEnumerable<Node> children, AssetProvider assets,
         AssetProvider measurer, Point origin, float inheritedOpacity, Size? desiredSize, float scale,
-        ResamplerType resampler, Dictionary<Node, Size> measurementCache)
+        ResamplerType resampler, ConcurrentDictionary<Node, Size> measurementCache)
     {
         foreach (Node node in children)
         {
@@ -57,7 +58,7 @@ public static partial class NodeRenderer
 
     private static void RenderNode(Image canvas, Node node, AssetProvider assets, AssetProvider measurer, Point origin,
         float inheritedOpacity, Size? desiredSize, float scale, ResamplerType resampler,
-        Dictionary<Node, Size> measurementCache)
+        ConcurrentDictionary<Node, Size> measurementCache)
     {
         switch (node)
         {
