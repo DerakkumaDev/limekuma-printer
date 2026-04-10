@@ -222,8 +222,8 @@ public static partial class NodeRenderer
             rowY[r] = rowY[r - 1] + rowHeights[r - 1] + grid.RowGap;
         }
 
-        int contentWidth = colWidths.Sum() + Math.Max(0, columns - 1) * grid.ColumnGap;
-        int contentHeight = rowHeights.Sum() + Math.Max(0, rows - 1) * grid.RowGap;
+        int contentWidth = colWidths.Sum() + (Math.Max(0, columns - 1) * grid.ColumnGap);
+        int contentHeight = rowHeights.Sum() + (Math.Max(0, rows - 1) * grid.RowGap);
         int containerWidth = grid.Width ?? desiredSize?.Width ?? contentWidth;
         int containerHeight = grid.Height ?? desiredSize?.Height ?? contentHeight;
         int gridOffsetX = ResolveStartCenterEndOffset(grid.JustifyContent, containerWidth, contentWidth);

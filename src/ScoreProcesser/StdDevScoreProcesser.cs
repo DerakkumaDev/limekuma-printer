@@ -22,7 +22,7 @@ public sealed class StdDevScoreProcesser : IScoreProcesser
                 }
 
                 record.ExtraInfo = (float)stdDev;
-                double score = record.DXRating * (1 + stdDev / 10) * (1 + fitLevel / (fitLevel > 0 ? 10 : 1));
+                double score = record.DXRating * (1 + (stdDev / 10)) * (1 + (fitLevel / (fitLevel > 0 ? 10 : 1)));
                 return (Record: record, Score: score);
             }).OrderByDescending(x => x.Score).ThenByDescending(x => x.Record.Chart.LevelValue)
             .ThenByDescending(x => x.Record.Achievements).Select(x => x.Record).ToArray();

@@ -67,7 +67,7 @@ public static partial class NodeRenderer
         }
 
         float contentMain = lineSizes.Max(l => l.Main);
-        float contentCross = lineSizes.Sum(l => l.Cross) + Math.Max(0, lineSizes.Count - 1) * runSpacing;
+        float contentCross = lineSizes.Sum(l => l.Cross) + (Math.Max(0, lineSizes.Count - 1) * runSpacing);
         return (contentMain, contentCross);
     }
 
@@ -81,11 +81,11 @@ public static partial class NodeRenderer
             StackJustifyContent.Start => (0, baseSpacing),
             StackJustifyContent.Center => (remaining / 2, baseSpacing),
             StackJustifyContent.End => (remaining, baseSpacing),
-            StackJustifyContent.SpaceBetween when itemCount > 1 => (0, baseSpacing + distributable / (itemCount - 1)),
+            StackJustifyContent.SpaceBetween when itemCount > 1 => (0, baseSpacing + (distributable / (itemCount - 1))),
             StackJustifyContent.SpaceAround when itemCount > 0 => (distributable / (itemCount * 2),
-                baseSpacing + distributable / itemCount),
+                baseSpacing + (distributable / itemCount)),
             StackJustifyContent.SpaceEvenly when itemCount > 0 => (distributable / (itemCount + 1),
-                baseSpacing + distributable / (itemCount + 1)),
+                baseSpacing + (distributable / (itemCount + 1))),
             _ => (0, baseSpacing)
         };
     }

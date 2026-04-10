@@ -126,8 +126,8 @@ public static partial class NodeRenderer
             rowHeights[r] = Math.Max(rowHeights[r], size.Height);
         }
 
-        int width = colWidths.Sum() + Math.Max(0, columns - 1) * grid.ColumnGap;
-        int height = rowHeights.Sum() + Math.Max(0, rows - 1) * grid.RowGap;
+        int width = colWidths.Sum() + (Math.Max(0, columns - 1) * grid.ColumnGap);
+        int height = rowHeights.Sum() + (Math.Max(0, rows - 1) * grid.RowGap);
         return new(grid.Width ?? width, grid.Height ?? height);
     }
 

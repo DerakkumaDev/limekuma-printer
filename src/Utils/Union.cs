@@ -113,7 +113,7 @@ public sealed class Union<T1, T2>
     {
         if (obj is not Union<T1, T2> value)
         {
-            return Value?.Equals(obj) ?? obj is null;
+            return Value?.Equals(obj) ?? (obj is null);
         }
 
         if (value._valueState != _valueState)
@@ -121,7 +121,7 @@ public sealed class Union<T1, T2>
             return false;
         }
 
-        return Value?.Equals(value.Value) ?? value.Value is null;
+        return Value?.Equals(value.Value) ?? (value.Value is null);
     }
 
     public override int GetHashCode() => Value?.GetHashCode() ?? 0;
@@ -719,8 +719,8 @@ public sealed class UnionJsonConverter : JsonConverterFactory
             }
 
             return (from i in t.GetInterfaces()
-                where i.IsGenericType && i.GetGenericTypeDefinition() is IEnumerable
-                select i.GetGenericArguments()[0]).FirstOrDefault();
+                    where i.IsGenericType && i.GetGenericTypeDefinition() is IEnumerable
+                    select i.GetGenericArguments()[0]).FirstOrDefault();
         }
     }
 }
