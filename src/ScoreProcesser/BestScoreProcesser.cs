@@ -9,22 +9,25 @@ public sealed class BestScoreProcesser : IScoreProcesser
 {
     public (ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>) Process(IReadOnlyList<CommonRecord> records)
     {
-        ImmutableArray<CommonRecord>.Builder ever = ImmutableArray.CreateBuilder<CommonRecord>(35);
-        ImmutableArray<CommonRecord>.Builder current = ImmutableArray.CreateBuilder<CommonRecord>(15);
-        foreach (CommonRecord record in records.SortRecordForBests())
-        {
-            (record.Chart.Song.InCurrentGenre switch
+        (ImmutableArray<CommonRecord>.Builder Ever, ImmutableArray<CommonRecord>.Builder Current) state = (
+            ImmutableArray.CreateBuilder<CommonRecord>(35), ImmutableArray.CreateBuilder<CommonRecord>(15));
+        (ImmutableArray<CommonRecord>.Builder Ever, ImmutableArray<CommonRecord>.Builder Current) rankedState = records
+            .SortRecordForBests().Aggregate(state, static (acc, record) =>
             {
-                true => current.Count < 15 ? current : ever,
-                false => ever.Count < 35 ? ever : current
-            }).Add(record);
+                if (acc.Ever.Count >= 35 && acc.Current.Count >= 15)
+                {
+                    return acc;
+                }
 
-            if (ever.Count >= 35 && current.Count >= 15)
-            {
-                break;
-            }
-        }
-
+                (record.Chart.Song.InCurrentGenre switch
+                {
+                    true => acc.Current.Count < 15 ? acc.Current : acc.Ever,
+                    false => acc.Ever.Count < 35 ? acc.Ever : acc.Current
+                }).Add(record);
+                return acc;
+            });
+        ImmutableArray<CommonRecord>.Builder ever = rankedState.Ever;
+        ImmutableArray<CommonRecord>.Builder current = rankedState.Current;
         return (ever.ToImmutable(), current.ToImmutable());
     }
 }

@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Limekuma.Render;
 
-public sealed partial class TemplateReader
+public sealed partial class TemplateReader(AsyncNCalcEngine expressionEngine)
 {
     private static readonly SmartFormatter Formatter = Smart.CreateDefaultSmartFormat();
 
@@ -15,15 +15,12 @@ public sealed partial class TemplateReader
         CreateNodeParsers();
 
     private readonly Stack<string> _baseDirs = new();
-    private readonly AsyncNCalcEngine _expressionEngine;
 
     private readonly HashSet<string> _loadingPathSet =
         new(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 
     private readonly Stack<string> _loadingPathStack = new();
     private string? _rootBaseDir;
-
-    public TemplateReader(AsyncNCalcEngine expressionEngine) => _expressionEngine = expressionEngine;
 
     private static FrozenDictionary<string, Func<TemplateReader, XElement, object?, Task<Node>>> CreateNodeParsers() =>
         new Dictionary<string, Func<TemplateReader, XElement, object?, Task<Node>>>(StringComparer.Ordinal)
@@ -64,8 +61,8 @@ public sealed partial class TemplateReader
         if (!_loadingPathSet.Add(fullPath))
         {
             string fromPath = _loadingPathStack.Count > 0 ? _loadingPathStack.Peek() : fullPath;
-            List<string> chain =
-                [.. _loadingPathStack.Reverse().Select(path => GetDisplayPath(path)), GetDisplayPath(fullPath)];
+            IEnumerable<string> chain = _loadingPathStack.Reverse().Select(path => GetDisplayPath(path));
+            chain = chain.Append(GetDisplayPath(fullPath));
             throw new InvalidOperationException(
                 $"DSL[IncludeCircular] Circular include detected. Context: include='{GetDisplayPath(fullPath)}', from='{GetDisplayPath(fromPath)}', chain='{string.Join(" -> ", chain)}'");
         }

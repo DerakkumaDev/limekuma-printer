@@ -79,7 +79,7 @@ public static partial class NodeRenderer
         Point origin, float inheritedOpacity, Size? desiredSize, float scale, ResamplerType resampler,
         ConcurrentDictionary<Node, Size> measurementCache)
     {
-        List<Node> flowChildren = ExpandFlowChildren(stack.Children);
+        IReadOnlyList<Node> flowChildren = [.. ExpandFlowChildren(stack.Children)];
         List<(Node Node, Size Size)> items = [];
         if (flowChildren.Count > 0)
         {
@@ -97,8 +97,9 @@ public static partial class NodeRenderer
 
         bool isRow = stack.Direction is StackDirection.Row;
         float wrapMain = ResolveMainAxisContainerSize(isRow ? stack.Width : stack.Height, null, int.MaxValue);
-        List<List<(Node Node, Size Size)>> lines = ResolveStackLines(items, isRow, stack.Wrap, stack.Spacing, wrapMain);
-        List<(float Main, int Cross)> lineSizes = ResolveStackLineSizes(lines, isRow, stack.Spacing);
+        ImmutableArray<ImmutableArray<(Node Node, Size Size)>> lines =
+            ResolveStackLines(items, isRow, stack.Wrap, stack.Spacing, wrapMain);
+        ImmutableArray<(float Main, int Cross)> lineSizes = ResolveStackLineSizes([.. lines], isRow, stack.Spacing);
         (float contentMain, float contentCross) = ResolveStackContentSize(lineSizes, stack.RunSpacing);
         float resolvedContainerMain = ResolveMainAxisContainerSize(isRow ? stack.Width : stack.Height,
             isRow ? desiredSize?.Width : desiredSize?.Height, contentMain);
@@ -113,18 +114,18 @@ public static partial class NodeRenderer
             ? (int)Math.Floor(stack.RunSpacing)
             : (int)Math.Ceiling(stack.RunSpacing);
         float runSpacingFraction = stack.RunSpacing - runSpacingWhole;
-        for (int lineIndex = 0; lineIndex < lines.Count; lineIndex++)
+        for (int lineIndex = 0; lineIndex < lines.Length; lineIndex++)
         {
-            List<(Node Node, Size Size)> line = lines[lineIndex];
+            ImmutableArray<(Node Node, Size Size)> line = lines[lineIndex];
             (float lineMain, int lineCross) = lineSizes[lineIndex];
             (float startMain, float between) = ResolveMainAxisLayout(stack.JustifyContent, resolvedContainerMain,
-                lineMain, stack.Spacing, line.Count);
+                lineMain, stack.Spacing, line.Length);
             float mainBase = (isRow ? origin.X : origin.Y) + startMain;
             int mainCursor = (int)Math.Round(mainBase, MidpointRounding.AwayFromZero);
             float gapError = mainBase - mainCursor;
             int betweenWhole = between >= 0 ? (int)Math.Floor(between) : (int)Math.Ceiling(between);
             float betweenFraction = between - betweenWhole;
-            for (int itemIndex = 0; itemIndex < line.Count; itemIndex++)
+            for (int itemIndex = 0; itemIndex < line.Length; itemIndex++)
             {
                 (Node node, Size size) = line[itemIndex];
                 int itemCross = isRow ? size.Height : size.Width;
@@ -141,7 +142,7 @@ public static partial class NodeRenderer
                     (int)Math.Round(childY, MidpointRounding.AwayFromZero));
                 RenderNode(canvas, node, assets, measurer, childOrigin, inheritedOpacity, childDesiredSize, scale,
                     resampler, measurementCache);
-                if (itemIndex == line.Count - 1)
+                if (itemIndex == line.Length - 1)
                 {
                     continue;
                 }
@@ -163,7 +164,7 @@ public static partial class NodeRenderer
                 mainCursor += step;
             }
 
-            if (lineIndex == lines.Count - 1)
+            if (lineIndex == lines.Length - 1)
             {
                 continue;
             }
@@ -189,7 +190,7 @@ public static partial class NodeRenderer
         Point origin, float inheritedOpacity, Size? desiredSize, float scale, ResamplerType resampler,
         ConcurrentDictionary<Node, Size> measurementCache)
     {
-        List<Node> flowChildren = ExpandFlowChildren(grid.Children);
+        IReadOnlyList<Node> flowChildren = [.. ExpandFlowChildren(grid.Children)];
         if (flowChildren.Count is 0)
         {
             return;

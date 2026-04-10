@@ -16,29 +16,12 @@ internal static class SortExtensions
         internal (ImmutableArray<CommonRecord> Ever, ImmutableArray<CommonRecord> Current) SplitTopBestsByQuota(
             int everQuota, int currentQuota)
         {
-            ImmutableArray<CommonRecord>.Builder ever = ImmutableArray.CreateBuilder<CommonRecord>(everQuota);
-            ImmutableArray<CommonRecord>.Builder current = ImmutableArray.CreateBuilder<CommonRecord>(currentQuota);
-            foreach (CommonRecord record in records.SortRecordForBests())
-            {
-                if (record.Chart.Song.InCurrentGenre)
-                {
-                    if (current.Count < currentQuota)
-                    {
-                        current.Add(record);
-                    }
-                }
-                else if (ever.Count < everQuota)
-                {
-                    ever.Add(record);
-                }
-
-                if (ever.Count >= everQuota && current.Count >= currentQuota)
-                {
-                    break;
-                }
-            }
-
-            return (ever.ToImmutable(), current.ToImmutable());
+            IOrderedEnumerable<CommonRecord> sorted = records.SortRecordForBests();
+            ImmutableArray<CommonRecord> ever =
+                [.. sorted.Where(record => !record.Chart.Song.InCurrentGenre).Take(everQuota)];
+            ImmutableArray<CommonRecord> current =
+                [.. sorted.Where(record => record.Chart.Song.InCurrentGenre).Take(currentQuota)];
+            return (ever, current);
         }
     }
 }

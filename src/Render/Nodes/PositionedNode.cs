@@ -9,6 +9,6 @@ public sealed record PositionedNode(
     PositionAnchor AnchorY,
     int? Width,
     int? Height,
-    List<Node> Children,
+    IEnumerable<Node> Children,
     string? Key
 ) : Node(Key);

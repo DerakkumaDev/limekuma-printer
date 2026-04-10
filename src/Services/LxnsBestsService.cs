@@ -58,7 +58,7 @@ public partial class BestsService
     {
         LxnsResourceClient resource = new();
         SongData songData = await resource.GetSongsAsync(includeNotes: true);
-        CommonRecord[] allRecords = songData.Songs.AsParallel().SelectMany(song => song.Charts.Standard
+        ParallelQuery<CommonRecord> allRecords = songData.Songs.AsParallel().SelectMany(song => song.Charts.Standard
             .Concat(song.Charts.DX).Where(chart => chart.Notes is not null).Select(chart => (CommonRecord)new Record
             {
                 Achievements = 101,
@@ -73,7 +73,7 @@ public partial class BestsService
                 DXRating = (int)(chart.LevelValue * 22.512),
                 Rank = Ranks.SSSPlus,
                 SyncFlag = SyncFlags.FullSyncDXPlus
-            })).ToArray();
+            }));
         (ImmutableArray<CommonRecord> bestEver, ImmutableArray<CommonRecord> bestCurrent) =
             allRecords.SplitTopBestsByQuota(35, 15);
         int everTotal = bestEver.Sum(x => x.DXRating);

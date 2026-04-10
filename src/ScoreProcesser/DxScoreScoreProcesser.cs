@@ -15,7 +15,7 @@ public sealed class DxScoreScoreProcesser : IScoreProcesser
             throw new RpcException(new(StatusCode.PermissionDenied, "Mask enabled"));
         }
 
-        CommonRecord[] projectedRecords = records.AsParallel().Select(record =>
+        ParallelQuery<CommonRecord> projectedRecords = records.AsParallel().Select(record =>
         {
             float achievements = (float)record.DXScore / record.Chart.TotalDXScore * 101;
             (Ranks rank, float coefficient) = ConstantMap.ResolveRankAndCoefficient(achievements);
@@ -32,7 +32,7 @@ public sealed class DxScoreScoreProcesser : IScoreProcesser
                 Rank = rank,
                 SyncFlag = record.SyncFlag
             };
-        }).ToArray();
+        });
         return projectedRecords.SplitTopBestsByQuota(35, 15);
     }
 }

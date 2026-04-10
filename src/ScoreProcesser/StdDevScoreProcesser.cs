@@ -10,7 +10,7 @@ public sealed class StdDevScoreProcesser : IScoreProcesser
 {
     public (ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>) Process(IReadOnlyList<CommonRecord> records)
     {
-        CommonRecord[] rankedRecords = records.AsParallel().Select(record =>
+        ParallelQuery<CommonRecord> rankedRecords = records.AsParallel().Select(record =>
             {
                 double stdDev = 0;
                 double fitLevel = record.Chart.LevelValue;
@@ -25,7 +25,7 @@ public sealed class StdDevScoreProcesser : IScoreProcesser
                 double score = record.DXRating * (1 + (stdDev / 10)) * (1 + (fitLevel / (fitLevel > 0 ? 10 : 1)));
                 return (Record: record, Score: score);
             }).OrderByDescending(x => x.Score).ThenByDescending(x => x.Record.Chart.LevelValue)
-            .ThenByDescending(x => x.Record.Achievements).Select(x => x.Record).ToArray();
+            .ThenByDescending(x => x.Record.Achievements).Select(x => x.Record);
         return rankedRecords.SplitTopBestsByQuota(35, 15);
     }
 }

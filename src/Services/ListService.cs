@@ -33,24 +33,7 @@ public sealed partial class ListService : ListApi.ListApiBase
         int end = Math.Min(i + 55, count);
         await ServiceHelper.PrepareRecordDataAsync(records[i..end]);
 
-        int[] counts = records.AsParallel().Aggregate(() => new int[15], (left, record) =>
-        {
-            int[] right = CountRecordStats(record);
-            for (int idx = 0; idx < left.Length; idx++)
-            {
-                left[idx] += right[idx];
-            }
-
-            return left;
-        }, (left, right) =>
-        {
-            for (int idx = 0; idx < left.Length; idx++)
-            {
-                left[idx] += right[idx];
-            }
-
-            return left;
-        }, localCounts => localCounts);
+        int[] counts = records.AsParallel().Select(CountRecordStats).Aggregate(MergeCounts);
 
         return ([.. counts], i, end);
     }
@@ -140,4 +123,6 @@ public sealed partial class ListService : ListApi.ListApiBase
 
         return counts;
     }
+
+    private static int[] MergeCounts(int[] left, int[] right) => [.. left.Zip(right, static (x, y) => x + y)];
 }

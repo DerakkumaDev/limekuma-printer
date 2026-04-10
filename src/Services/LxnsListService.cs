@@ -20,7 +20,7 @@ public partial class ListService
         await Task.WhenAll(playerTask, sourceRecordsTask);
 
         CommonUser player = await playerTask;
-        List<CommonRecord> sourceRecords = [.. (await sourceRecordsTask).Select(x => (CommonRecord)x)];
+        IEnumerable<CommonRecord> sourceRecords = (await sourceRecordsTask).Select(x => (CommonRecord)x);
         (ImmutableArray<CommonRecord> cRecords, bool mayMask) =
             BuildListRecords(request.Tags, request.Condition, sourceRecords);
 

@@ -3,6 +3,7 @@ using Limekuma.Render.Types;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Collections;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Xml.Linq;
 
@@ -38,11 +39,11 @@ public sealed partial class TemplateReader
 
     private async Task<Node> ParseResizedNodeAsync(XElement element, object? scope)
     {
-        List<Node> children = await ParseChildrenAsync(element, scope);
-        if (children.Count is not 1)
+        ImmutableArray<Node> children = await ParseChildrenAsync(element, scope);
+        if (children.Length is not 1)
         {
             throw new InvalidOperationException(
-                $"DSL[ResizedChildCount] Invalid child count. Context: element='Resized', expected='1', actual='{children.Count}'");
+                $"DSL[ResizedChildCount] Invalid child count. Context: element='Resized', expected='1', actual='{children.Length}'");
         }
 
         return new ResizedNode(
@@ -119,7 +120,7 @@ public sealed partial class TemplateReader
     private async Task<Node> ParseIfNodeAsync(XElement element, object? scope)
     {
         bool pass = await EvaluateRequiredExpressionAsAsync<bool>(GetRequiredAttributeValue(element, "rule"), scope);
-        List<Node> children = pass ? await ParseChildrenAsync(element, scope) : [];
+        ImmutableArray<Node> children = pass ? await ParseChildrenAsync(element, scope) : [];
         return new LayerNode(1f, children, null);
     }
 
@@ -132,7 +133,7 @@ public sealed partial class TemplateReader
     private async Task<Node> ParseForNodeAsync(XElement element, object? scope)
     {
         string itemsExpr = GetRequiredAttributeValue(element, "items");
-        object[] items = [.. await EvaluateCollectionAsync(itemsExpr, scope)];
+        IReadOnlyList<object> items = [.. await EvaluateCollectionAsync(itemsExpr, scope)];
 
         string varName = GetAttributeValueOrDefault(element, "var", "item");
         string indexName = GetAttributeValueOrDefault(element, "indexVar", "idx");
@@ -140,21 +141,19 @@ public sealed partial class TemplateReader
         if (hasInclude)
         {
             List<Node> sequentialChildren = [];
-            for (int index = 0; index < items.Length; index++)
+            for (int index = 0; index < items.Count; index++)
             {
                 Dictionary<string, object?> childScope = MergeScope(scope, varName, items[index], indexName, index);
-                sequentialChildren.AddRange(await ParseChildrenAsync(element, childScope));
+                ImmutableArray<Node> child = await ParseChildrenAsync(element, childScope);
+                sequentialChildren.AddRange(child);
             }
 
             return new LayerNode(1f, sequentialChildren, null);
         }
 
-        Task<List<Node>>[] parseTasks =
-        [
-            .. items.Select((item, index) =>
-                ParseChildrenAsync(element, MergeScope(scope, varName, item, indexName, index)))
-        ];
-        List<Node> children = [.. (await Task.WhenAll(parseTasks)).SelectMany(x => x)];
+        IEnumerable<Task<ImmutableArray<Node>>> parseTasks = items.Select((item, index) =>
+            ParseChildrenAsync(element, MergeScope(scope, varName, item, indexName, index)));
+        IEnumerable<Node> children = (await Task.WhenAll(parseTasks)).SelectMany(x => x);
         return new LayerNode(1f, children, null);
     }
 
@@ -224,11 +223,11 @@ public sealed partial class TemplateReader
         return path.Equals(root, comparison) || path.StartsWith(normalizedRoot, comparison);
     }
 
-    private async Task<List<Node>> ParseChildrenAsync(XElement element, object? scope)
+    private async Task<ImmutableArray<Node>> ParseChildrenAsync(XElement element, object? scope)
     {
-        List<Node> children = [];
+        ImmutableArray<Node>.Builder children = ImmutableArray.CreateBuilder<Node>();
         object? currentScope = scope;
-        List<XElement> childElements = [.. element.Elements()];
+        IReadOnlyList<XElement> childElements = [.. element.Elements()];
         for (int i = 0; i < childElements.Count; i++)
         {
             XElement child = childElements[i];
@@ -267,16 +266,16 @@ public sealed partial class TemplateReader
             children.Add(node);
         }
 
-        return children;
+        return children.ToImmutable();
     }
 
-    private async Task<(Node Node, int LastConsumedIndex)> ParseConditionalChainAsync(List<XElement> siblings,
+    private async Task<(Node Node, int LastConsumedIndex)> ParseConditionalChainAsync(IReadOnlyList<XElement> siblings,
         int index, object? scope)
     {
         XElement ifElement = siblings[index];
         bool branchMatched =
             await EvaluateRequiredExpressionAsAsync<bool>(GetRequiredAttributeValue(ifElement, "rule"), scope);
-        List<Node> selectedChildren = branchMatched ? await ParseChildrenAsync(ifElement, scope) : [];
+        ImmutableArray<Node> selectedChildren = branchMatched ? await ParseChildrenAsync(ifElement, scope) : [];
         bool hasElse = false;
 
         int cursor = index + 1;
@@ -335,7 +334,7 @@ public sealed partial class TemplateReader
 
     private async Task<IEnumerable<object>> EvaluateCollectionAsync(string expression, object? scope)
     {
-        object? rawItems = await _expressionEngine.EvalAsync(expression, scope);
+        object? rawItems = await expressionEngine.EvalAsync(expression, scope);
         return rawItems switch
         {
             null => throw BuildInvalidForItemsException(expression, null, "resolved to null"),
@@ -380,7 +379,7 @@ public sealed partial class TemplateReader
         }
 
         int count = decimal.ToInt32(numericValue);
-        return Enumerable.Range(0, count).Cast<object>();
+        return Enumerable.Range(0, count).Select(static value => (object)value);
     }
 
     private static InvalidOperationException BuildInvalidForItemsException(string expression, object? value,

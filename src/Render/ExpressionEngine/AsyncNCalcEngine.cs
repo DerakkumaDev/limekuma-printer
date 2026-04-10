@@ -40,7 +40,7 @@ public sealed class AsyncNCalcEngine
             return (T?)ConvertValue(result, typeof(T));
         }
 
-        return (T)(object)enumerable.Cast<object?>().Where(item => item is not null).Cast<object>().ToArray();
+        return (T)enumerable.OfType<object>();
     }
 
     public async Task<object?> EvalAsync(string expr, object? scope)
@@ -57,15 +57,12 @@ public sealed class AsyncNCalcEngine
             }
 
             ParameterInfo[] parameters = _functionParameters.GetOrAdd(name, _ => func.Method.GetParameters());
-            object?[] funcArgs = new object[args.Parameters.Length];
-            for (int i = 0; i < args.Parameters.Length; ++i)
-            {
-                object? paramValue = await args.Parameters[i].EvaluateAsync();
-                funcArgs[i] = CoerceValue(paramValue,
-                    i < parameters.Length ? parameters[i].ParameterType : typeof(object));
-            }
+            object?[] evaluatedArgs =
+                await Task.WhenAll(args.Parameters.Select(parameter => parameter.EvaluateAsync().AsTask()));
+            IEnumerable<object?> funcArgs = evaluatedArgs.Select((paramValue, index) =>
+                CoerceValue(paramValue, index < parameters.Length ? parameters[index].ParameterType : typeof(object)));
 
-            object? result = func.DynamicInvoke(funcArgs);
+            object? result = func.DynamicInvoke([.. funcArgs]);
             args.Result = result;
         };
 

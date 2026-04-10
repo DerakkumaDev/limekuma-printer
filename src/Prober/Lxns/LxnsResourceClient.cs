@@ -9,20 +9,14 @@ public class LxnsResourceClient : LxnsClient
         CancellationToken cancellationToken = default)
     {
         string url = $"/api/v0/maimai/{type}/list";
-        List<string> queryParts = [];
-        if (version.HasValue)
+        string query = string.Join("&", new[]
         {
-            queryParts.Add($"version={version.Value}");
-        }
-
-        if (include.HasValue)
+            version.HasValue ? $"version={version.Value}" : null,
+            include.HasValue ? $"{includeType}={include.Value.ToString().ToLowerInvariant()}" : null
+        }.OfType<string>());
+        if (!string.IsNullOrWhiteSpace(query))
         {
-            queryParts.Add($"{includeType}={include.Value.ToString().ToLowerInvariant()}");
-        }
-
-        if (queryParts.Count > 0)
-        {
-            url += $"?{string.Join("&", queryParts)}";
+            url += $"?{query}";
         }
 
         T response = await GetAsync<T>(url, cancellationToken);

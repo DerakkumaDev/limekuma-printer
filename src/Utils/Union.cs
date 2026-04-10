@@ -472,13 +472,8 @@ public sealed class UnionJsonConverter : JsonConverterFactory
 
             if (info?.Kind is JsonTypeInfoKind.Object)
             {
-                foreach (JsonPropertyInfo p in info.Properties)
-                {
-                    if (!string.IsNullOrEmpty(p.Name))
-                    {
-                        set.Add(p.Name);
-                    }
-                }
+                set.UnionWith(info.Properties.Select(static p => p.Name).OfType<string>()
+                    .Where(static name => !string.IsNullOrEmpty(name)));
 
                 if (set.Count > 0)
                 {
@@ -486,43 +481,19 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                 }
             }
 
-            foreach (PropertyInfo prop in t.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-            {
-                if (prop.GetCustomAttribute<JsonIgnoreAttribute>() is not null)
-                {
-                    continue;
-                }
+            set.UnionWith(t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(static prop => prop.GetCustomAttribute<JsonIgnoreAttribute>() is null &&
+                                      !(prop.GetMethod is null && prop.SetMethod is null)).Select(prop =>
+                    prop.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? (options.PropertyNamingPolicy is null
+                        ? prop.Name
+                        : options.PropertyNamingPolicy.ConvertName(prop.Name))));
 
-                if (prop.GetMethod is null && prop.SetMethod is null)
-                {
-                    continue;
-                }
-
-                JsonPropertyNameAttribute? nameAttr = prop.GetCustomAttribute<JsonPropertyNameAttribute>();
-                string name = nameAttr is not null ? nameAttr.Name :
-                    options.PropertyNamingPolicy is null ? prop.Name :
-                    options.PropertyNamingPolicy.ConvertName(prop.Name);
-                set.Add(name);
-            }
-
-            foreach (FieldInfo field in t.GetFields(BindingFlags.Public | BindingFlags.Instance))
-            {
-                if (field.GetCustomAttribute<JsonIgnoreAttribute>() is not null)
-                {
-                    continue;
-                }
-
-                if (field.GetCustomAttribute<JsonIncludeAttribute>() is null)
-                {
-                    continue;
-                }
-
-                JsonPropertyNameAttribute? nameAttr = field.GetCustomAttribute<JsonPropertyNameAttribute>();
-                string name = nameAttr is not null ? nameAttr.Name :
-                    options.PropertyNamingPolicy is null ? field.Name :
-                    options.PropertyNamingPolicy.ConvertName(field.Name);
-                set.Add(name);
-            }
+            set.UnionWith(t.GetFields(BindingFlags.Public | BindingFlags.Instance)
+                .Where(static field => field.GetCustomAttribute<JsonIgnoreAttribute>() is null &&
+                                       field.GetCustomAttribute<JsonIncludeAttribute>() is not null).Select(field =>
+                    field.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? (options.PropertyNamingPolicy is null
+                        ? field.Name
+                        : options.PropertyNamingPolicy.ConvertName(field.Name))));
 
             return set.ToFrozenSet(comparer);
         }
@@ -660,22 +631,15 @@ public sealed class UnionJsonConverter : JsonConverterFactory
                 return false;
             }
 
-            foreach (Type i in t.GetInterfaces())
+            IEnumerable<Type> genericInterfaces = t.GetInterfaces().Where(static i => i.IsGenericType);
+            if (genericInterfaces.Any(static i => i.GetGenericTypeDefinition() is IDictionary))
             {
-                if (!i.IsGenericType)
-                {
-                    continue;
-                }
+                return false;
+            }
 
-                if (i.GetGenericTypeDefinition() is IDictionary)
-                {
-                    return false;
-                }
-
-                if (i.GetGenericTypeDefinition() is IEnumerable)
-                {
-                    return true;
-                }
+            if (genericInterfaces.Any(static i => i.GetGenericTypeDefinition() is IEnumerable))
+            {
+                return true;
             }
 
             return typeof(IEnumerable).IsAssignableFrom(t) && !typeof(IDictionary).IsAssignableFrom(t);
@@ -719,8 +683,8 @@ public sealed class UnionJsonConverter : JsonConverterFactory
             }
 
             return (from i in t.GetInterfaces()
-                    where i.IsGenericType && i.GetGenericTypeDefinition() is IEnumerable
-                    select i.GetGenericArguments()[0]).FirstOrDefault();
+                where i.IsGenericType && i.GetGenericTypeDefinition() is IEnumerable
+                select i.GetGenericArguments()[0]).FirstOrDefault();
         }
     }
 }

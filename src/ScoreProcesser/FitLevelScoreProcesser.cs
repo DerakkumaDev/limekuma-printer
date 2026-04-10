@@ -17,7 +17,7 @@ public sealed class FitLevelScoreProcesser : IScoreProcesser
             throw new RpcException(new(StatusCode.PermissionDenied, "Mask enabled"));
         }
 
-        CommonRecord[] projectedRecords = records.AsParallel().Select(record =>
+        ParallelQuery<CommonRecord> projectedRecords = records.AsParallel().Select(record =>
         {
             double fitLevel = record.Chart.LevelValue;
             if (Status.Shared.TryGetChartState(record.Chart.Song.Id, (int)record.Chart.Difficulty - 1,
@@ -49,7 +49,7 @@ public sealed class FitLevelScoreProcesser : IScoreProcesser
                 SyncFlag = record.SyncFlag,
                 ExtraInfo = (float)fitLevel
             };
-        }).ToArray();
+        });
         return projectedRecords.SplitTopBestsByQuota(35, 15);
     }
 }

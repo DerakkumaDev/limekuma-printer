@@ -16,9 +16,9 @@ internal static class ScoreFilterHelper
             return (_ => true, false);
         }
 
-        (IScoreFilter, bool)[] selectedFilters =
-            [.. tags.Select(tag => Filters.GetValueOrDefault(tag))];
-        Func<CommonRecord, bool>[] predicates = [.. selectedFilters.Select(x => x.Item1.GetFilter(condition))];
+        IEnumerable<(IScoreFilter, bool)> selectedFilters =
+            tags.Select(tag => Filters.GetValueOrDefault(tag));
+        IEnumerable<Func<CommonRecord, bool>> predicates = selectedFilters.Select(x => x.Item1.GetFilter(condition));
         bool maskMutex = selectedFilters.Any(x => x.Item2);
 
         return (record => predicates.All(predicate => predicate(record)), maskMutex);

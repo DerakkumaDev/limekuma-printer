@@ -79,21 +79,21 @@ public static partial class NodeRenderer
     private static Size MeasureStackNode(StackNode stack, AssetProvider assets, AssetProvider measurer,
         ConcurrentDictionary<Node, Size> measurementCache)
     {
-        List<Node> flowChildren = ExpandFlowChildren(stack.Children);
+        IReadOnlyList<Node> flowChildren = [.. ExpandFlowChildren(stack.Children)];
         List<(Node Node, Size Size)> items = [];
         if (flowChildren.Count > 0)
         {
             Size[] sizes = new Size[flowChildren.Count];
             Parallel.For(0, flowChildren.Count,
                 i => { sizes[i] = Measure(flowChildren[i], assets, measurer, measurementCache); });
-            items.EnsureCapacity(flowChildren.Count);
-            items.AddRange(flowChildren.Select((t, i) => (t, sizes[i])));
+            items = [.. flowChildren.Select((child, index) => (child, sizes[index]))];
         }
 
         bool isRow = stack.Direction is StackDirection.Row;
         float wrapMain = ResolveMainAxisContainerSize(isRow ? stack.Width : stack.Height, null, int.MaxValue);
-        List<List<(Node Node, Size Size)>> lines = ResolveStackLines(items, isRow, stack.Wrap, stack.Spacing, wrapMain);
-        List<(float Main, int Cross)> lineSizes = ResolveStackLineSizes(lines, isRow, stack.Spacing);
+        ImmutableArray<ImmutableArray<(Node Node, Size Size)>> lines =
+            ResolveStackLines(items, isRow, stack.Wrap, stack.Spacing, wrapMain);
+        ImmutableArray<(float Main, int Cross)> lineSizes = ResolveStackLineSizes([.. lines], isRow, stack.Spacing);
         (float contentMain, float contentCross) = ResolveStackContentSize(lineSizes, stack.RunSpacing);
 
         int contentWidth = (int)Math.Ceiling(isRow ? contentMain : contentCross);
@@ -104,7 +104,7 @@ public static partial class NodeRenderer
     private static Size MeasureGridNode(GridNode grid, AssetProvider assets, AssetProvider measurer,
         ConcurrentDictionary<Node, Size> measurementCache)
     {
-        List<Node> flowChildren = ExpandFlowChildren(grid.Children);
+        IReadOnlyList<Node> flowChildren = [.. ExpandFlowChildren(grid.Children)];
         if (flowChildren.Count is 0)
         {
             return Size.Empty;
@@ -115,16 +115,10 @@ public static partial class NodeRenderer
         Size[] sizes = new Size[flowChildren.Count];
         Parallel.For(0, flowChildren.Count,
             i => { sizes[i] = Measure(flowChildren[i], assets, measurer, measurementCache); });
-        int[] colWidths = new int[columns];
-        int[] rowHeights = new int[rows];
-        for (int i = 0; i < flowChildren.Count; i++)
-        {
-            Size size = sizes[i];
-            int r = i / columns;
-            int c = i % columns;
-            colWidths[c] = Math.Max(colWidths[c], size.Width);
-            rowHeights[r] = Math.Max(rowHeights[r], size.Height);
-        }
+        IEnumerable<int> colWidths = Enumerable.Range(0, columns).Select(c =>
+            sizes.Where((_, i) => i % columns == c).DefaultIfEmpty(Size.Empty).Max(size => size.Width));
+        IEnumerable<int> rowHeights = Enumerable.Range(0, rows).Select(r =>
+            sizes.Where((_, i) => i / columns == r).DefaultIfEmpty(Size.Empty).Max(size => size.Height));
 
         int width = colWidths.Sum() + (Math.Max(0, columns - 1) * grid.ColumnGap);
         int height = rowHeights.Sum() + (Math.Max(0, rows - 1) * grid.RowGap);
@@ -147,32 +141,14 @@ public static partial class NodeRenderer
     private static Size MeasureChildren(IEnumerable<Node> children, AssetProvider assets, AssetProvider measurer,
         ConcurrentDictionary<Node, Size> measurementCache)
     {
-        int width = 0;
-        int height = 0;
-        foreach (Node child in children)
-        {
-            Size size = Measure(child, assets, measurer, measurementCache);
-            width = Math.Max(width, size.Width);
-            height = Math.Max(height, size.Height);
-        }
-
+        (int width, int height) = children.Select(child => Measure(child, assets, measurer, measurementCache))
+            .Aggregate((Width: 0, Height: 0),
+                static (acc, size) => (Math.Max(acc.Width, size.Width), Math.Max(acc.Height, size.Height)));
         return new(width, height);
     }
 
-    private static List<Node> ExpandFlowChildren(IEnumerable<Node> children)
-    {
-        List<Node> output = [];
-        foreach (Node child in children)
-        {
-            if (child is LayerNode { Opacity: 1, Key: null, Children: var nested })
-            {
-                output.AddRange(ExpandFlowChildren(nested));
-                continue;
-            }
-
-            output.Add(child);
-        }
-
-        return output;
-    }
+    private static IEnumerable<Node> ExpandFlowChildren(IEnumerable<Node> children) =>
+        children.SelectMany(static child => child is LayerNode { Opacity: 1, Key: null, Children: var nested }
+            ? ExpandFlowChildren(nested)
+            : [child]);
 }

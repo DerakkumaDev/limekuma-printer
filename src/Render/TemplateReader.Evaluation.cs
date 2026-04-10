@@ -103,17 +103,18 @@ public sealed partial class TemplateReader
         List<string> expressionTexts = [];
         StringBuilder safeTemplateBuilder = new(template.Length);
         int templateOffset = 0;
-        int tokenIndex = 0;
-        foreach (Match match in ExprSegmentRegex().Matches(template))
-        {
-            safeTemplateBuilder.Append(template, templateOffset, match.Index - templateOffset);
-            safeTemplateBuilder.Append("__EXPR_TOKEN_");
-            safeTemplateBuilder.Append(tokenIndex);
-            safeTemplateBuilder.Append("__");
-            expressionTexts.Add(match.Groups[1].Value);
-            templateOffset = match.Index + match.Length;
-            tokenIndex++;
-        }
+        IEnumerable<Match> matches = ExprSegmentRegex().Matches(template);
+        templateOffset = matches.Select((match, tokenIndex) => (match, tokenIndex)).Aggregate(templateOffset,
+            (offset, item) =>
+            {
+                Match match = item.match;
+                safeTemplateBuilder.Append(template, offset, match.Index - offset);
+                safeTemplateBuilder.Append("__EXPR_TOKEN_");
+                safeTemplateBuilder.Append(item.tokenIndex);
+                safeTemplateBuilder.Append("__");
+                expressionTexts.Add(match.Groups[1].Value);
+                return match.Index + match.Length;
+            });
 
         safeTemplateBuilder.Append(template, templateOffset, template.Length - templateOffset);
         string safeTemplate = safeTemplateBuilder.ToString();
@@ -139,7 +140,7 @@ public sealed partial class TemplateReader
                 continue;
             }
 
-            object? value = await _expressionEngine.EvalAsync(expressionTexts[exprIndex], scope);
+            object? value = await expressionEngine.EvalAsync(expressionTexts[exprIndex], scope);
             output.Append(Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty);
             formattedOffset = match.Index + match.Length;
         }
@@ -165,7 +166,7 @@ public sealed partial class TemplateReader
             throw BuildInvalidEnumException(nonNullableType, templateValue, raw);
         }
 
-        object? expressionValue = await _expressionEngine.EvalAsync(raw, scope);
+        object? expressionValue = await expressionEngine.EvalAsync(raw, scope);
         if (expressionValue is null)
         {
             return default;

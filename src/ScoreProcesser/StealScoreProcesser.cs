@@ -21,7 +21,7 @@ public sealed class StealScoreProcesser : IScoreProcesser
         IReadOnlyList<CommonRecord> controlRecords = handleType ? records1p : records2p;
         FrozenDictionary<(int SongId, CommonDifficulties Difficulty), CommonRecord> controlLookup =
             controlRecords.ToFrozenDictionary(x => (x.Chart.Song.Id, x.Chart.Difficulty));
-        CommonRecord[] selectedRecords = processRecords.AsParallel()
+        ParallelQuery<CommonRecord> selectedRecords = processRecords.AsParallel()
             .Where(processRecord => processRecord.Chart.Song.Type is not CommonSongTypes.Utage).Select(processRecord =>
             {
                 if (!controlLookup.TryGetValue((processRecord.Chart.Song.Id, processRecord.Chart.Difficulty),
@@ -45,7 +45,7 @@ public sealed class StealScoreProcesser : IScoreProcesser
                     ExtraInfo = anotherRecord.DXRating
                 };
                 return selected;
-            }).OfType<CommonRecord>().ToArray();
+            }).OfType<CommonRecord>();
 
         ImmutableArray<CommonRecord> current =
         [

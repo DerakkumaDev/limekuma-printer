@@ -15,7 +15,7 @@ public sealed class OldScoreProcesser : IScoreProcesser
             throw new RpcException(new(StatusCode.PermissionDenied, "Mask enabled"));
         }
 
-        CommonRecord[] projectedRecords = records.AsParallel().Select(record =>
+        ParallelQuery<CommonRecord> projectedRecords = records.AsParallel().Select(record =>
         {
             (_, _, float oldCoefficient) = ConstantMap.GetRatingFactors(record.Rank);
             int rating = (int)(record.Achievements * (record.Achievements > 100.5 ? 100.5 : record.Achievements) *
@@ -31,7 +31,7 @@ public sealed class OldScoreProcesser : IScoreProcesser
                 Rank = record.Rank,
                 SyncFlag = record.SyncFlag
             };
-        }).ToArray();
+        });
         return projectedRecords.SplitTopBestsByQuota(25, 15);
     }
 }

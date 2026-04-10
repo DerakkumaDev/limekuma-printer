@@ -1,6 +1,7 @@
 using Limekuma.Render.Nodes;
 using Limekuma.Render.Types;
 using SixLabors.ImageSharp;
+using System.Collections.Immutable;
 
 namespace Limekuma.Render;
 
@@ -9,11 +10,14 @@ public static partial class NodeRenderer
     private static float ResolveMainAxisContainerSize(int? explicitSize, int? desiredSize, float fallback) =>
         explicitSize ?? desiredSize ?? fallback;
 
-    private static List<List<(Node Node, Size Size)>> ResolveStackLines(IEnumerable<(Node Node, Size Size)> items,
+    private static ImmutableArray<ImmutableArray<(Node Node, Size Size)>> ResolveStackLines(
+        IEnumerable<(Node Node, Size Size)> items,
         bool isRow, bool wrap, float spacing, float containerMain)
     {
-        List<List<(Node Node, Size Size)>> lines = [];
-        List<(Node Node, Size Size)> currentLine = [];
+        ImmutableArray<ImmutableArray<(Node Node, Size Size)>>.Builder lines =
+            ImmutableArray.CreateBuilder<ImmutableArray<(Node Node, Size Size)>>();
+        ImmutableArray<(Node Node, Size Size)>.Builder currentLine =
+            ImmutableArray.CreateBuilder<(Node Node, Size Size)>();
         float currentMain = 0;
         foreach ((Node node, Size size) in items)
         {
@@ -22,8 +26,8 @@ public static partial class NodeRenderer
             bool wrapNow = wrap && currentLine.Count > 0 && nextMain > containerMain;
             if (wrapNow)
             {
-                lines.Add(currentLine);
-                currentLine = [];
+                lines.Add(currentLine.ToImmutable());
+                currentLine = ImmutableArray.CreateBuilder<(Node Node, Size Size)>();
                 currentMain = 0;
             }
 
@@ -33,32 +37,25 @@ public static partial class NodeRenderer
 
         if (currentLine.Count > 0)
         {
-            lines.Add(currentLine);
+            lines.Add(currentLine.ToImmutable());
         }
 
-        return lines;
+        return lines.ToImmutable();
     }
 
-    private static List<(float Main, int Cross)> ResolveStackLineSizes(
-        IEnumerable<IReadOnlyList<(Node Node, Size Size)>> lines, bool isRow, float spacing)
-    {
-        List<(float Main, int Cross)> lineSizes = [];
-        foreach (IReadOnlyList<(Node Node, Size Size)> line in lines)
+    private static ImmutableArray<(float Main, int Cross)> ResolveStackLineSizes(
+        IEnumerable<IReadOnlyList<(Node Node, Size Size)>> lines, bool isRow, float spacing) =>
+    [
+        .. lines.Select(line =>
         {
-            float lineMain = line.Sum(i => isRow ? i.Size.Width : i.Size.Height);
-            if (line.Count > 1)
-            {
-                lineMain += spacing * (line.Count - 1);
-            }
-
+            float lineMain = line.Sum(i => isRow ? i.Size.Width : i.Size.Height) +
+                             (line.Count > 1 ? spacing * (line.Count - 1) : 0);
             int lineCross = line.Max(i => isRow ? i.Size.Height : i.Size.Width);
-            lineSizes.Add((lineMain, lineCross));
-        }
+            return (lineMain, lineCross);
+        })
+    ];
 
-        return lineSizes;
-    }
-
-    private static (float Main, float Cross) ResolveStackContentSize(List<(float Main, int Cross)> lineSizes,
+    private static (float Main, float Cross) ResolveStackContentSize(IReadOnlyList<(float Main, int Cross)> lineSizes,
         float runSpacing)
     {
         if (lineSizes.Count is 0)

@@ -53,7 +53,7 @@ public partial class BestsService
     private static async Task<(CommonUser, ImmutableArray<CommonRecord>, ImmutableArray<CommonRecord>, int, int)>
         PrepareRiRenDfDataAsync()
     {
-        CommonRecord[] allRecords = Songs.Shared.AsParallel().SelectMany(song =>
+        ParallelQuery<CommonRecord> allRecords = Songs.Shared.AsParallel().SelectMany(song =>
         {
             if (!int.TryParse(song.Id, out int id))
             {
@@ -77,7 +77,7 @@ public partial class BestsService
                 Title = song.Title,
                 Type = song.Type
             });
-        }).ToArray();
+        });
         (ImmutableArray<CommonRecord> bestEver, ImmutableArray<CommonRecord> bestCurrent) =
             allRecords.SplitTopBestsByQuota(35, 15);
         int everTotal = bestEver.Sum(x => x.DXRating);

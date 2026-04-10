@@ -2,6 +2,6 @@ namespace Limekuma.Render.Nodes;
 
 public sealed record LayerNode(
     float Opacity,
-    List<Node> Children,
+    IEnumerable<Node> Children,
     string? Key
 ) : Node(Key);
